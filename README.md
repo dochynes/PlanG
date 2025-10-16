@@ -1,1 +1,5 @@
 # PlanG
+
+Plantri a geng jsou programy pro efektivní generování grafů z různých tříd (rovinné grafy, obecné grafy s různými omezeními). Při jejich použití k řešení výzkumných problémů je obecně nutné generované grafy dále filtrovat či doplnit dalšími informacemi (grafy zakořenit v specifických vrcholech, generovat je včetně obarvení, ...). Oba programy pro toto poskytují podporu pomocí možnosti implementace pluginů; nicméně k jejich implementaci je potřeba znát vnitřní struktury používané těmito programy a detailně rozumět jejich fungování.
+
+Cílem práce je navrhnout a implementovat rozhraní k těmto programům, které by zjednodušovalo realizaci těchto modifikací a poskytovalo uniformní přístup k těmto programům (a případně i dalším generátorům). Důraz by měl být kladen na efektivitu, výsledné řešení by mělo být obdobně rychlé jako to s pluginy přímo implementovanými pro tyto programy. 
