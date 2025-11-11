@@ -1,4 +1,4 @@
-#include "plantri/BridgeAPI.hpp"  
+#include "plantri/BridgeAPI.hpp"
 #include <utility>
 #include <functional>
 
@@ -14,6 +14,8 @@ int*  pt_degree_array(void);
 int   pt_missing_vertex(void);
 
 EDGE** pt_firstedge_array(void);
+
+int pt_maxnv(void);
 }
 
 
@@ -79,6 +81,11 @@ int pt_missing_vertex()
 EDGE** pt_firstedge_array() 
 { 
     return ::pt_firstedge_array(); 
+}
+
+int pt_maxnv() 
+{ 
+    return ::pt_maxnv(); 
 }
 
 } 

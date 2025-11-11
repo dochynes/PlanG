@@ -4,7 +4,7 @@
 extern "C" {
 
 
-typedef struct EDGE /* The data type used for edges */
+typedef struct e /* The data type used for edges */
 { 
     int start;         /* vertex where the edge starts */
     int end;           /* vertex where the edge ends */ 
@@ -40,4 +40,5 @@ int   pt_missing_vertex();
 
 // firstedge[v] -> EDGE*
 EDGE** pt_firstedge_array();  // //ukazatel na pole na pole firstedge[0 ... nv-1]
+int pt_maxnv();
 }

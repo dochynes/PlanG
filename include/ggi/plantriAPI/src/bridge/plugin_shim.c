@@ -46,10 +46,13 @@ void pt_set_filter   (filter_cb_t    f) { g_filter_cb    = f; }
 
 // uzitecne glovbaly z plantri.c
 extern int nv, ne, missing_vertex;
-extern int *degree;
+extern int degree[];
 
-typedef struct EDGE EDGE;     // 
-extern EDGE **firstedge;      // firstedge[v] -> hrana z vrcholu v
+typedef struct e EDGE;     // 
+extern EDGE *firstedge[];     // firstedge[v] -> hrana z vrcholu v
+
+extern int maxnv;
+
 
 
 int  pt_nv(void) { return nv; }
@@ -57,6 +60,8 @@ int  pt_ne_oriented(void) { return ne; }          // orient 2*E
 int* pt_degree_array(void) { return degree; }
 int  pt_missing_vertex(void) { return missing_vertex; }
 EDGE** pt_firstedge_array(void) { return firstedge; }
+
+int pt_maxnv(void) { return maxnv; }
 
 
 int plantri_run(int argc, char** argv); //TODO: v CMake bude  -Dmain=plantri_run
