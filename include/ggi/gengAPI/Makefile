@@ -7,13 +7,16 @@ MKDIR   ?= mkdir -p
 
 BUILD_DIR := build
 NAUTY_DIR := vendor/nauty/nauty2_9_1
-INC_DIRS  := -I$(NAUTY_DIR) -Iinclude
+BOOST_DIR := vendor
+INC_DIRS  := -I$(NAUTY_DIR) -I$(BOOST_DIR) -Iinclude
+
 
 
 
 CFLAGS   ?= -O2 -std=c11   -Wall -Wextra -Wpedantic
 CXXFLAGS ?= -O2 -std=c++20 -Wall -Wextra -Wpedantic
 LDFLAGS  ?=
+#CXXFLAGS += -I/home/stas/plantri/boost_1_89_0 ## TODO nakopirovat do include
 
 
 GENG_C := $(NAUTY_DIR)/geng.c

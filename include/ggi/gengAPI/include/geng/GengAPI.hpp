@@ -4,10 +4,16 @@
 
 namespace geng {
 
+struct GraphView;
+
+using OutprocFn = std::function<void(FILE* f, const GraphView& g)>;
+using PruneFn = std::function<int (const GraphView& g)>;
+using PrepruneFn = std::function<int (const GraphView& g)>;
+
 // registrace callbacku
-void setOutproc(std::function<void(FILE* f, const void* g, int n)> f);
-void setPrune(std::function<int(const void* g, int n, int maxn)> f);
-void setPreprune(std::function<int(const void* g, int n, int maxn)> f); 
+void setOutproc(OutprocFn);
+void setPrune(PruneFn);
+void setPreprune(PrepruneFn); 
 
 
 int run(int argc, char** argv);
