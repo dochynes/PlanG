@@ -23,7 +23,61 @@ struct graph_traits<geng::GraphView>
     using vertex_iterator = boost::counting_iterator<int>;
     //TODO ...
 
-    //struct out_edge_iterator :
+    //https://www.boost.org/doc/libs/latest/libs/iterator/doc/iterator_facade.html
+    struct out_edge_iterator : boost::iterator_facade<out_edge_iterator,edge_descriptor,boost::forward_traversal_tag,edge_descriptor>
+    {
+        int u; // zdrojovy vrchol
+        int v; // soused
+        const geng::GraphView* g;
+
+        out_edge_iterator(): u(0), v(0), g(nullptr)
+        {
+
+        }
+
+        out_edge_iterator(int u,int v, const geng::GraphView* g) : u(u), v(v),g(g)
+        {
+            skip_non_neighbors();
+        }
+
+        edge_descriptor dereference() const  //&
+        {
+            return edge_descriptor{u, v};
+        }
+
+        void increment() 
+        {
+            v++;
+            skip_non_neighbors();
+        }
+        
+        bool equal(out_edge_iterator const& other) const 
+        {
+            return g == other.g && u == other.u && v == other.v;
+        }
+
+        void skip_non_neighbors()
+        {
+            if(!g) 
+                return;
+
+            for(;v<g->num_vertices();++v)
+            {
+                const set* row = GRAPHROW(g->data(), u, g->m());
+
+                if(ISELEMENT(row, v))
+                    break; // nasli jsme souseda
+            }
+
+        }
+
+        private:
+            friend class boost::iterator_core_access;
+
+    };
+    using out_edge_iterator = out_edge_iterator;
+    //in_edge_iterator zatim ne, predpokladame neorientovany graf
+    //adjacency_iterator  ne, muzeme pouzit out_edge_iterator
 
 
 
