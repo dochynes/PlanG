@@ -78,6 +78,7 @@ struct graph_traits<geng::GraphView>
     using out_edge_iterator = out_edge_iterator;
     //in_edge_iterator zatim ne, predpokladame neorientovany graf
     //adjacency_iterator  ne, muzeme pouzit out_edge_iterator
+    //
 
 
 
