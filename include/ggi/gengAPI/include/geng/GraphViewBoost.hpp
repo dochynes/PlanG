@@ -19,6 +19,7 @@ struct graph_traits<geng::GraphView>
     using traversal_category = adjacency_graph_tag;
     using vertices_size_type = std::size_t;
     using degree_size_type = std::size_t;
+    using edges_size_type = std::size_t;
 
     using vertex_iterator = boost::counting_iterator<int>;
     //TODO ...
@@ -79,6 +80,75 @@ struct graph_traits<geng::GraphView>
     //in_edge_iterator zatim ne, predpokladame neorientovany graf
     //adjacency_iterator  ne, muzeme pouzit out_edge_iterator
     //
+
+    struct edge_iterator : boost::iterator_facade<edge_iterator, edge_descriptor const, boost::forward_traversal_tag, edge_descriptor>
+    {
+
+        const geng::GraphView* g;
+        int u; // prvni vrchol    
+        int v; // druhy vrchol (u < v)
+
+        edge_iterator():g(nullptr),u(0),v(0)
+        {
+
+        }
+
+        edge_iterator(const geng::GraphView* g, int u, int v): g(g), u(u),v(v)
+        {
+            skip_nonedges();
+        }
+
+        edge_descriptor dereference() const 
+        {
+            return edge_descriptor{u, v};
+        }
+
+        void increment() 
+        {
+            v++;
+            skip_nonedges();
+        }
+
+        bool equal(edge_iterator const& other) const 
+        {
+            return g == other.g && u == other.u && v == other.v;
+        }
+
+        private:
+            friend class boost::iterator_core_access;
+
+
+        void skip_nonedges()
+        {
+            if(!g)
+                return;
+
+            int n = g->num_vertices();
+
+            for(;u<n;++u)
+            {
+                if(v<u)
+                    v=u+1; // protoze musi platit v > u
+
+                const set* row = GRAPHROW(g->data(), u, g->m());
+
+                for (;v<n;v++)
+                {
+                    if(ISELEMENT(row,v))
+                    {
+                        return; //nasle jsme hranu
+                    }
+                }
+
+                v = u + 1;
+        
+            }
+            //konec (end iterator)
+        }
+
+    };
+
+    using edge_iterator = edge_iterator;
 
 
 
