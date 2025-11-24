@@ -81,6 +81,61 @@ struct graph_traits<geng::GraphView>
     //adjacency_iterator  ne, muzeme pouzit out_edge_iterator
     //
 
+
+    struct adjacency_iterator : boost::iterator_facade<adjacency_iterator,vertex_descriptor, boost::forward_traversal_tag, vertex_descriptor>
+    {
+        const geng::GraphView* g;
+        int u;
+        int v; //soused
+
+
+        adjacency_iterator() : g(nullptr),u(0), v(0) 
+        {
+
+        }
+
+        adjacency_iterator(const geng::GraphView* g, int u, int v) : g(g), u(u), v(v)
+        {
+            skip_non_neighbors();
+        }
+
+        vertex_descriptor dereference() const 
+        {
+            return v;
+        }
+
+        bool equal(adjacency_iterator const& other) const 
+        {
+            return g == other.g && u == other.u && v == other.v;
+        }
+
+        void increment() 
+        {
+            ++v;
+            skip_non_neighbors();
+        }
+
+        private:
+            friend class boost::iterator_core_access;
+        
+        void skip_non_neighbors()
+        {
+            if (!g) 
+                return;
+            int n= g->num_vertices();
+            for(;v<n;++v)
+            {
+                const set* row = GRAPHROW(g->data(), u, g->m());
+                if (ISELEMENT(row, v)) 
+                {
+                    break;
+                }
+            }
+        }
+
+
+    };
+
     struct edge_iterator : boost::iterator_facade<edge_iterator, edge_descriptor const, boost::forward_traversal_tag, edge_descriptor>
     {
 
@@ -149,6 +204,11 @@ struct graph_traits<geng::GraphView>
     };
 
     using edge_iterator = edge_iterator;
+
+    static vertex_descriptor null_vertex() 
+    {
+        return -1;
+    }
 
 
 
