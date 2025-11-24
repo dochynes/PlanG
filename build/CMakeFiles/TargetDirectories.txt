@@ -1,3 +1,0 @@
-/home/stas/PlanG/PlanG/build/CMakeFiles/ggi_demo.dir
-/home/stas/PlanG/PlanG/build/CMakeFiles/edit_cache.dir
-/home/stas/PlanG/PlanG/build/CMakeFiles/rebuild_cache.dir
