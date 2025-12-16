@@ -1,5 +1,7 @@
 #pragma once
 #include <functional>
+#include <cstdio>
+
 
 extern "C" {
 
@@ -23,20 +25,31 @@ typedef struct e /* The data type used for edges */
 
 }
 
+#include "plantri/GraphView.hpp"
+
 
 namespace plantri {
+
+
+using PrefilterFn = std::function<int(const GraphView&)>;
+using FilterFn = std::function<int (const GraphView&)>;
+using OutprocFn = std::function<void (FILE* f, const GraphView&)>;
     // PRE-FILTER / FILTER registrace
-void setPrefilter(std::function<int()> f);
-void setFilter(std::function<int(int,int,int)> f);
+//void setPrefilter(std::function<int()> f);
+//void setFilter(std::function<int(int,int,int)> f);
+
+void setPrefilter(PrefilterFn);
+void setFilter(FilterFn);
+void setOutproc(OutprocFn);
 
 
-int  pt_run(int argc, char** argv);
+int pt_run(int argc, char** argv);
 
 
-int   pt_nv();   // pocet vrcholu aktualniho grafu
-int   pt_ne_oriented();  // pocet orientovanych hran (2xpocet hran) 
-int*  pt_degree_array();  // ukazatel na interni pole stupnu vrcholu 
-int   pt_missing_vertex();
+int pt_nv();   // pocet vrcholu aktualniho grafu
+int pt_ne_oriented();  // pocet orientovanych hran (2xpocet hran) 
+int* pt_degree_array();  // ukazatel na interni pole stupnu vrcholu 
+int pt_missing_vertex();
 
 // firstedge[v] -> EDGE*
 EDGE** pt_firstedge_array();  // //ukazatel na pole na pole firstedge[0 ... nv-1]
