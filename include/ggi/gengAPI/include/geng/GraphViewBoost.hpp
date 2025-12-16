@@ -81,7 +81,7 @@ struct graph_traits<geng::GraphView>
     //adjacency_iterator  ne, muzeme pouzit out_edge_iterator
     //
 
-
+    
     struct adjacency_iterator : boost::iterator_facade<adjacency_iterator,vertex_descriptor, boost::forward_traversal_tag, vertex_descriptor>
     {
         const geng::GraphView* g;
@@ -135,6 +135,8 @@ struct graph_traits<geng::GraphView>
 
 
     };
+
+    using adjacency_iterator = adjacency_iterator;
 
     struct edge_iterator : boost::iterator_facade<edge_iterator, edge_descriptor const, boost::forward_traversal_tag, edge_descriptor>
     {
