@@ -6,7 +6,7 @@ MKDIR   ?= mkdir -p
 
 
 BUILD_DIR := build
-INC_DIRS  := -Iinclude -Ivendor/plantri
+INC_DIRS  := -Iinclude -Ivendor/plantri -I../gengAPI/vendor ## TODO nesahat do gengAPI!!
 
 PLUGIN_SHIM := $(CURDIR)/src/bridge/plugin_shim.c
 
