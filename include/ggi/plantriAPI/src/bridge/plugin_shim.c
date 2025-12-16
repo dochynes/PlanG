@@ -21,28 +21,28 @@ static int bridge_filter_common(int nbtot, int nbop, int doflip)
 {
     //0 = nepsat ven
     if (!g_filter_cb) 
-        return 0;
+        return 1;  //   vratit 1
     return g_filter_cb(nbtot, nbop, doflip);
 }
 
 
 //premapovani vsech beznych pre-filter maker na jednu funkci
-#define PRE_FILTER_SIMPLE       bridge_prefilter_common()
-#define PRE_FILTER_MIN4         bridge_prefilter_common()
-#define PRE_FILTER_BIP          bridge_prefilter_common()
-#define PRE_FILTER_POLY         bridge_prefilter_common()
-#define PRE_FILTER_DOUBLE       bridge_prefilter_common()
-#define PRE_FILTER_ORDLOOP      bridge_prefilter_common()
-#define PRE_FILTER_SPECIALLOOP  bridge_prefilter_common()
-#define PRE_FILTER_QUAD         bridge_prefilter_common()
-#define PRE_FILTER_MIN5         bridge_prefilter_common()
+#define PRE_FILTER_SIMPLE bridge_prefilter_common()
+#define PRE_FILTER_MIN4 bridge_prefilter_common()
+#define PRE_FILTER_BIP bridge_prefilter_common()
+#define PRE_FILTER_POLY bridge_prefilter_common()
+#define PRE_FILTER_DOUBLE bridge_prefilter_common()
+#define PRE_FILTER_ORDLOOP bridge_prefilter_common()
+#define PRE_FILTER_SPECIALLOOP bridge_prefilter_common()
+#define PRE_FILTER_QUAD bridge_prefilter_common()
+#define PRE_FILTER_MIN5 bridge_prefilter_common()
 
 
 #define FILTER(nbtot, nbop, doflip) bridge_filter_common((nbtot),(nbop),(doflip))
 
 // setter funkce
-void pt_set_prefilter(prefilter_cb_t f) { g_prefilter_cb = f; }
-void pt_set_filter   (filter_cb_t    f) { g_filter_cb    = f; }
+void pt_set_prefilter (prefilter_cb_t f) { g_prefilter_cb = f; }
+void pt_set_filter (filter_cb_t f) { g_filter_cb = f; }
 
 // uzitecne glovbaly z plantri.c
 extern int nv, ne, missing_vertex;
@@ -66,3 +66,5 @@ int pt_maxnv(void) { return maxnv; }
 
 int plantri_run(int argc, char** argv); //TODO: v CMake bude  -Dmain=plantri_run
 int pt_run(int argc, char** argv) { return plantri_run(argc, argv); } 
+
+FILE* pt_outfile(void) { return outfile; }
