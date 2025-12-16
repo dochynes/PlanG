@@ -16,26 +16,82 @@ int   pt_missing_vertex(void);
 EDGE** pt_firstedge_array(void);
 
 int pt_maxnv(void);
+
+FILE* pt_outfile(void);
+
+
 }
 
 
 namespace {
-    std::function<int()> g_cpp_prefilter;
-    std::function<int(int,int,int)> g_cpp_filter;
+
+    plantri::PrefilterFn g_cpp_prefilter;
+    plantri::FilterFn    g_cpp_filter;
+    plantri::OutprocFn   g_cpp_outproc;
+    inline plantri::GraphView make_view()
+    {
+        plantri::GraphView v{
+            ::pt_firstedge_array(),
+            ::pt_degree_array(),
+            ::pt_nv(),
+            ::pt_ne_oriented(),
+            ::pt_missing_vertex(),
+            ::pt_maxnv()
+        };
+        return v;
+    }
+
+    //std::function<int()> g_cpp_prefilter;
+    //std::function<int(int,int,int)> g_cpp_filter;
 
     int c_prefilter_trampoline() 
     {
         try { 
-            return g_cpp_prefilter ? g_cpp_prefilter() : 1; 
+            
+            if(!g_cpp_prefilter)
+                return 1;
+            auto view = make_view();
+            return g_cpp_prefilter(view);
         }
         catch(...) 
         { 
-            return 0; 
+            return 0;  // pri vymce vetev utneme
         }
     }
-    int c_filter_trampoline(int nbtot, int nbop, int doflip) {
+
+
+    int c_filter_trampoline(int nbtot, int nbop, int doflip) 
+    {
+
+        (void)nbtot;
+        (void)nbop;
+        (void)doflip;
+
         try {
-             return g_cpp_filter ? g_cpp_filter(nbtot, nbop, doflip) : 0; 
+
+            if( g_cpp_filter && g_cpp_outproc )
+                return 1;// zapis standartnim zpusobem
+            auto view = make_view();
+
+            //1) Filter 
+            int keep = 1;
+            if(g_cpp_filter)
+            {
+                keep = g_cpp_filter(view);
+            }
+
+            if(keep==0)
+                return 0;
+
+            //2)Outproc
+            if(g_cpp_outproc)
+            {
+                g_cpp_outproc(pt_outfile(), view);
+                return 0;
+            }
+
+            return 1; // pis standardne
+
             }
         catch(...) 
         {
@@ -47,17 +103,26 @@ namespace {
 
 namespace plantri {
 
-void setPrefilter(std::function<int()> f) {
+void setPrefilter(PrefilterFn f) 
+{
     g_cpp_prefilter = std::move(f);
     ::pt_set_prefilter(&c_prefilter_trampoline);
 }
 
-void setFilter(std::function<int(int,int,int)> f) {
+void setFilter(FilterFn f) 
+{
     g_cpp_filter = std::move(f);
     ::pt_set_filter(&c_filter_trampoline);
 }
 
-int pt_run(int argc, char** argv) {
+void setOutproc(OutprocFn f)
+{
+    g_cpp_outproc = std::move(f);
+    ::pt_set_filter(&c_filter_trampoline);
+}
+
+int pt_run(int argc, char** argv) 
+{
     return ::pt_run(argc, argv);
 }
 
