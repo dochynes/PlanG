@@ -280,8 +280,8 @@ struct graph_traits<plantri::GraphView>
             if (g != other.g || u != other.u) 
                 return false;
 
-            const bool this_end  = (!e || remaining == 0);
-            const bool other_end = (!other.e || other.remaining == 0);
+            bool this_end  = (!e || remaining == 0);
+            bool other_end = (!other.e || other.remaining == 0);
 
             if (this_end || other_end)
                 return this_end == other_end;
@@ -292,6 +292,72 @@ struct graph_traits<plantri::GraphView>
 
     };
     using adjacency_iterator = adjacency_iterator;
+
+
+    struct out_edge_iterator : boost::iterator_facade<out_edge_iterator, edge_descriptor,boost::forward_traversal_tag, edge_descriptor>
+    {
+        const plantri::GraphView* g;
+        int u; 
+        EDGE* e;
+        int remaining;
+
+        out_edge_iterator() : g(nullptr), u(0), e(nullptr), remaining(0)
+        {
+
+        }
+
+        out_edge_iterator(const plantri::GraphView* gg,int uu, EDGE* e0, int deg):g(gg),u(uu), e(e0),remaining(deg)
+        {
+
+        }
+
+        friend class boost::iterator_core_access;
+
+        edge_descriptor dereference() const
+        {
+            return edge_descriptor{e};
+        }
+
+        void increment()
+        {
+            if (!g || !e || remaining <= 0) 
+            {
+                e = nullptr;
+                remaining = 0;
+                return;
+            }
+
+            if (remaining > 1) 
+            {
+                e = e->next;
+                --remaining;
+            } 
+            else 
+            {
+                e = nullptr;
+                remaining = 0;
+            }
+        }
+
+
+        bool equal(out_edge_iterator const& other) const
+        {
+            if (g != other.g || u != other.u) 
+                return false;
+
+            bool this_end  = (!e || remaining == 0);
+            bool other_end = (!other.e || other.remaining == 0);
+
+            if (this_end || other_end)
+                return this_end == other_end;
+
+            return e == other.e;
+
+        }
+
+    };
+
+    using out_edge_iterator = out_edge_iterator;
 
 
     };
