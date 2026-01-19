@@ -1,4 +1,7 @@
 #include "plantri/BridgeAPI.hpp"
+#include "plantri/GraphView.hpp"
+#include "plantri/GraphViewBoost.hpp"
+#include "plantri/GraphViewFunctions.hpp"
 #include <iostream>
 
 
@@ -23,6 +26,22 @@ static bool commonedge(int a, int b) {
 int main() 
 {
 
+    
+
+    std::string n = "14";  // plantri 10 (např. triangulace s 10 vrcholy)
+
+    const char* args[] = {
+        "plantri",   // jméno programu (jen informativní)
+        n.c_str(),   // povinný parametr: počet vrcholů
+        nullptr
+    };
+
+    int pargc = 0;
+    while (args[pargc]) ++pargc;
+
+    return plantri::pt_run(pargc, const_cast<char**>(args));
+
+    /*
     // Prefilter: heuristika pro casne prorezani
     plantri::setPrefilter([] {
         
@@ -78,6 +97,8 @@ int main()
 
 
 
+
+
     //TODO graphview : //bez kopirovani
     // pocet vrcholu
     // stupen vrcholu
@@ -88,6 +109,7 @@ int main()
     //udelat bridge pro geng/nauty analogicky? (dosahnout graphView nad graph*)
 
     //dekorace az na vystupnich grafech (koreneni, obarveni...)?
+    */
 }
 
 //testovani  // plantri","-g","22" s maxdeg 6

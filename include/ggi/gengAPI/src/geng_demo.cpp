@@ -88,11 +88,12 @@ int main(int argc, char** argv){
 
     // 
 
-    /*geng::setOutproc([=](FILE* f, const auto& g) 
+    geng::setOutproc([=](FILE* f, const auto& g) 
     {
 
+        std::cout<<geng::maxdeg();
         std::fprintf(f," ggg  ");
-    });*/ //TODO zabalit FILE* f  do nejake vlastni tridy Output
+    }); //TODO zabalit FILE* f  do nejake vlastni tridy Output
 
     std::string nstr = std::to_string(n);
     const char* args[] = {
