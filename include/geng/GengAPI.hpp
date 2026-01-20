@@ -1,12 +1,24 @@
 #pragma once
 #include <functional>
 #include <cstdio>
+#include "gtools.h"
+#include "common/Output.hpp"
+#include "geng/GraphView.hpp"
 
 namespace geng {
 
+
 struct GraphView;
 
-using OutprocFn = std::function<void(FILE* f, const GraphView& g)>;
+inline Output& operator<<(Output& out,GraphView& g)
+{
+    if(out.raw())
+        ::writeg6(out.raw(),const_cast<graph*>(g.data()),1,g.num_vertices());
+    
+    return out;
+}
+
+using OutprocFn = std::function<void(Output& out, const GraphView& g)>;
 using PruneFn = std::function<int (const GraphView& g)>;
 using PrepruneFn = std::function<int (const GraphView& g)>;
 

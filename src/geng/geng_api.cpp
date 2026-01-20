@@ -70,8 +70,9 @@ static void c_outproc(FILE* f, void* gg, int n)
         n,
         n
     };
+    Output o(f);
 
-    s_outproc(f, view);
+    s_outproc(o, view);
 }
 
 static int c_preprune(void* gg, int n, int maxn)
