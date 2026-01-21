@@ -10,7 +10,7 @@ namespace geng {
 
 struct GraphView;
 
-inline Output& operator<<(Output& out,GraphView& g)
+inline Output& operator<<(Output& out, const GraphView& g)
 {
     if(out.raw())
         ::writeg6(out.raw(),const_cast<graph*>(g.data()),1,g.num_vertices());
@@ -60,7 +60,7 @@ struct Backend
         geng::setPreprune(f);
     }
 
-    static void setOutproc(std::function<int(Output&,const ViewType&)> f)
+    static void setOutproc(std::function<void(Output&,const ViewType&)> f)
     {
         geng::setOutproc(f);
     }
