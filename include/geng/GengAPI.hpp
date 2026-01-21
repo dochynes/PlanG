@@ -45,6 +45,33 @@ bool flagNautyFormat();
 bool flagCanonise();
 
 
+struct Backend
+{
+
+    using ViewType = geng::GraphView;
+    
+    static void setPrune(std::function<int(const ViewType&)> f )
+    {
+        geng::setPrune(f);
+    }
+
+    static void setPreprune(std::function<int(const ViewType&)> f)
+    {
+        geng::setPreprune(f);
+    }
+
+    static void setOutproc(std::function<int(Output&,const ViewType&)> f)
+    {
+        geng::setOutproc(f);
+    }
+
+    static int run(int argc, char** argv)
+    { 
+        return geng::run(argc, argv); 
+    }
+};
+
+
 //TODO pridat helpery do budoucna jako edgeCount,hasEdge(u,v), degree(vrchol u) ....
 
 
