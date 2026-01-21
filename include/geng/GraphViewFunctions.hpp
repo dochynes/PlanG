@@ -25,14 +25,21 @@ namespace geng
     {
 
         const set* row = GRAPHROW(g.data(), u, g.m());
+        int m = g.m();
+
+        if (__builtin_expect(m == 1, 1)) 
+        {
+            return POPCOUNT(row[0]);
+        }
+
         std::size_t deg = 0;
-        auto m = g.m();
         for (int i = 0; i < m; ++i) 
         {
             deg += POPCOUNT(row[i]);
         }
 
         return static_cast<Traits::degree_size_type>(deg);
+
 
 
         /*auto [first, last] = out_edges(u,g); //pomalejsi nez pres Popcount??? 
