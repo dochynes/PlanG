@@ -80,6 +80,15 @@ class Output
             return *this;
         }
 
+        Output& operator<<(unsigned long val) 
+        {
+            if (f_)
+            {
+                std::fprintf(f_, "%lu", val);
+            }
+            return *this;
+        }
+
 
 
 };
