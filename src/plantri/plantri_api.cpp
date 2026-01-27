@@ -1,4 +1,5 @@
-#include "plantri/BridgeAPI.hpp"
+#include "plantri/PlantriAPI.hpp"
+#include "common/Output.hpp"
 #include <utility>
 #include <functional>
 
@@ -26,8 +27,8 @@ FILE* pt_outfile(void);
 namespace {
 
     plantri::PrefilterFn g_cpp_prefilter;
-    plantri::FilterFn    g_cpp_filter;
-    plantri::OutprocFn   g_cpp_outproc;
+    plantri::FilterFn g_cpp_filter;
+    plantri::OutprocFn g_cpp_outproc;
     inline plantri::GraphView make_view()
     {
         plantri::GraphView v{
@@ -68,29 +69,24 @@ namespace {
         (void)doflip;
 
         try {
+                auto view = make_view();
+                if (g_cpp_filter)
+                {
+                    int should_prune = g_cpp_filter(view);
+                    if(should_prune == 1)
+                    {
+                        return 0;
+                    }
+                }
+                if (g_cpp_outproc)
+                {
+                    FILE* f = ::pt_outfile();
+                    Output out(f);
+                    g_cpp_outproc(out, view);
+                    return 0;
+                }
 
-            if( g_cpp_filter && g_cpp_outproc )
-                return 1;// zapis standartnim zpusobem
-            auto view = make_view();
-
-            //1) Filter 
-            int keep = 1;
-            if(g_cpp_filter)
-            {
-                keep = g_cpp_filter(view);
-            }
-
-            if(keep==0)
-                return 0;
-
-            //2)Outproc
-            if(g_cpp_outproc)
-            {
-                g_cpp_outproc(pt_outfile(), view);
-                return 0;
-            }
-
-            return 1; // pis standardne
+                return 1;
 
             }
         catch(...) 

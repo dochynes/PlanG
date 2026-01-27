@@ -1,4 +1,5 @@
 #include <stddef.h>
+#include <stdio.h>
 
 //typy ukazatelu
 typedef int (*prefilter_cb_t)(void);
@@ -52,6 +53,7 @@ typedef struct e EDGE;     //
 extern EDGE *firstedge[];     // firstedge[v] -> hrana z vrcholu v
 
 extern int maxnv;
+extern FILE* outfile;
 
 
 
@@ -62,6 +64,8 @@ int  pt_missing_vertex(void) { return missing_vertex; }
 EDGE** pt_firstedge_array(void) { return firstedge; }
 
 int pt_maxnv(void) { return maxnv; }
+
+
 
 
 int plantri_run(int argc, char** argv); //TODO: v CMake bude  -Dmain=plantri_run
