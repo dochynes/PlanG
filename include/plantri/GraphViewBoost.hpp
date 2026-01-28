@@ -1,5 +1,5 @@
 #pragma once
-
+#include "PlantriAPI.hpp"
 #include "plantri/GraphView.hpp"
 #include <boost/graph/graph_traits.hpp>
 #include <boost/iterator/iterator_facade.hpp>
@@ -13,6 +13,11 @@ struct graph_traits<plantri::GraphView>
 {
 
     using vertex_descriptor = int;
+
+    static vertex_descriptor null_vertex() 
+    {
+        return -1;
+    }
     using edge_descriptor = plantri::edge;//const EDGE*; // kvuli paralelnim hranam
     using directed_category = undirected_tag;
     using edge_parallel_category = allow_parallel_edge_tag;

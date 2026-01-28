@@ -86,6 +86,27 @@ inline auto num_edges(const GraphView& g)
     return g.num_edges();
 }
 
+inline std::pair<Traits::adjacency_iterator, Traits::adjacency_iterator> adjacent_vertices(Traits::vertex_descriptor u, const GraphView& g)
+{
+
+    if(u <0 || u>=g.nv || u == g.missing_vertex)
+    {
+        return std::make_pair(Traits::adjacency_iterator(&g, u, nullptr, 0), Traits::adjacency_iterator(&g, u, nullptr, 0));
+
+    }
+
+    int deg = g.degree[u];
+    EDGE* start_edge = nullptr;
+
+    if (deg > 0) 
+    {
+        start_edge = g.firstedge[u];
+    }
+
+    return std::make_pair(Traits::adjacency_iterator(&g, u, start_edge, deg), Traits::adjacency_iterator(&g, u, nullptr, 0));
+
+}
+
 
 
 }
