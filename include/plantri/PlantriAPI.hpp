@@ -4,6 +4,8 @@
 #include "common/Output.hpp"
 
 
+
+
 extern "C" {
 
 
@@ -27,7 +29,7 @@ typedef struct e /* The data type used for edges */
 }
 
 extern "C" {
-    void write_planar_code(FILE *f, int doflip);
+    void pt_write_planar_code(FILE* f, int header);
 }
 
 
@@ -98,7 +100,7 @@ inline Output& operator<<(Output& out, const GraphView& g)
         return out; 
     }
 
-    write_planar_code(out.raw(),0);
+    ::pt_write_planar_code(out.raw(),0);
 
     return out;
 }
