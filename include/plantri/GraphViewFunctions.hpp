@@ -108,5 +108,28 @@ inline std::pair<Traits::adjacency_iterator, Traits::adjacency_iterator> adjacen
 }
 
 
+//
+
+inline Traits::edge_descriptor opposite_edge(Traits::edge_descriptor e)
+{
+    return {e.ptr->invers};
+}
+
+inline Traits::edge_descriptor next_edge(Traits::edge_descriptor e)
+{
+    return {e.ptr->next};
+}
+
+inline Traits::edge_descriptor prev_edge(Traits::edge_descriptor e)
+{
+    return {e.ptr->prev};
+}
+
+
+inline int maxnv(const GraphView& g)
+{
+    return g.maxnv;
+}
+
 
 }
