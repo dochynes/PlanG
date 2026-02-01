@@ -86,6 +86,11 @@ namespace geng
         return e.second;
     }
 
+    inline int maxnv(const GraphView& g)
+    {
+        return g.maxn();
+    }
+
 
 
 
