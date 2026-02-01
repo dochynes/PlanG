@@ -72,3 +72,9 @@ int plantri_run(int argc, char** argv); //TODO: v CMake bude  -Dmain=plantri_run
 int pt_run(int argc, char** argv) { return plantri_run(argc, argv); } 
 
 FILE* pt_outfile(void) { return outfile; }
+
+static void write_planar_code(FILE *f, int doflip);
+void pt_write_planar_code(FILE* f, int header)
+{
+    write_planar_code(f, header);
+}
