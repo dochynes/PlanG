@@ -75,7 +75,7 @@ namespace {
                     int should_prune = g_cpp_filter(view);
                     if(should_prune == 1)
                     {
-                        return 0;
+                        return 1;   //0
                     }
                 }
                 if (g_cpp_outproc)
@@ -83,15 +83,15 @@ namespace {
                     FILE* f = ::pt_outfile();
                     Output out(f);
                     g_cpp_outproc(out, view);
-                    return 0;
+                    return 1; // 0
                 }
 
-                return 1;
+                return 0;  // 1
 
             }
         catch(...) 
         {
-            return 0; 
+            return 1;  //0
         }
     }
 }
