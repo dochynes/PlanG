@@ -5,7 +5,7 @@
 // Uncomment the one you wish to use. The rest of the code remains unchanged.
 
 // A) General graph generation (nauty/geng)
-using App = common::Generator<geng::Backend>;
+using App = Generator<geng::Backend>;
 
 // B) Planar graph generation (plantri)
 // using App = common::Generator<plantri::Backend>;

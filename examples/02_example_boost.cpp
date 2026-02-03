@@ -3,7 +3,7 @@
 #include <vector>
 
 
-using App = common::Generator<plantri::Backend>;
+using App = Generator<plantri::Backend>;
 
 int main(int argc, char** argv) 
 {
