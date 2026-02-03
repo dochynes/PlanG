@@ -68,6 +68,41 @@ namespace {
         (void)nbop;
         (void)doflip;
 
+        try
+        {
+            auto view = make_view();
+            int keep = 1;
+
+            if (g_cpp_filter)
+            {
+                keep = g_cpp_filter(view);
+            }
+
+            if (keep == 0) 
+            {
+                return 0; 
+            }
+
+            if (g_cpp_outproc)
+            {
+                // Máme vlastní výpis -> provedeme ho.
+                FILE* f = ::pt_outfile();
+                Output out(f); // Wrapper
+                g_cpp_outproc(out, view);
+                
+                // DŮLEŽITÉ: Vrátíme 0.
+                // Říkáme Plantri: "My už jsme si to vypsali sami, ty nic nedělej."
+                return 0;
+            }
+
+            return 1;
+
+        }
+        catch(...) 
+        {
+            return 0; // Při chybě raději zahodit
+        }
+/*
         try {
                 auto view = make_view();
                 if (g_cpp_filter)
@@ -93,6 +128,8 @@ namespace {
         {
             return 1;  //0
         }
+
+        */
     }
 }
 
