@@ -48,19 +48,19 @@ bool flagCanonise();
 struct Backend
 {
 
-    using ViewType = geng::GraphView;
+    using GraphView = geng::GraphView;
     
-    static void setPrune(std::function<int(const ViewType&)> f )
+    static void setPrune(std::function<int(const GraphView)> f )
     {
         geng::setPrune(f);
     }
 
-    static void setPreprune(std::function<int(const ViewType&)> f)
+    static void setPreprune(std::function<int(const GraphView&)> f)
     {
         geng::setPreprune(f);
     }
 
-    static void setOutproc(std::function<void(Output&,const ViewType&)> f)
+    static void setOutproc(std::function<void(Output&,const GraphView&)> f)
     {
         geng::setOutproc(f);
     }
