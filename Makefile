@@ -16,7 +16,7 @@ PLANTRI_LIB_NAME := libplantri_wrapper.a
 PLANTRI_LIB_PATH := $(SRC_PLANTRI_DIR)/$(PLANTRI_LIB_NAME)
 
 DEMO_SRC := main.cpp
-DEMO_EXE := demo_app
+DEMO_EXE := plang
 
 all: libs demo
 
