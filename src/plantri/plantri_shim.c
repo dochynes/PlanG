@@ -1,6 +1,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
+
 //typy ukazatelu
 typedef int (*prefilter_cb_t)(void);
 typedef int (*filter_cb_t)(int nbtot, int nbop, int doflip);
@@ -78,3 +79,4 @@ void pt_write_planar_code(FILE* f, int header)
 {
     write_planar_code(f, header);
 }
+
