@@ -7,7 +7,7 @@
 template<typename Backend>
 struct Generator
 {
-    using GraphView = typename Backend::ViewType;
+    using GraphView = typename Backend::GraphView;
 
     static int run(int argc, char** argv)
     {
