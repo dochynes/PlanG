@@ -30,6 +30,7 @@ typedef struct e /* The data type used for edges */
 
 extern "C" {
     void pt_write_planar_code(FILE* f, int header);
+    void pt_mute_status_output();
 }
 
 
@@ -67,25 +68,28 @@ int pt_maxnv();
 
 struct Backend 
 {
-    using ViewType = plantri::GraphView;
 
-    static void setPrune(std::function<int(const ViewType&)> f)
+    using GraphView = plantri::GraphView;
+
+
+    static void setPrune(std::function<int(const GraphView&)> f)
     {
         plantri::setFilter(f);
     }
 
-    static void setPreprune(std::function<int(const ViewType&)> f)
+    static void setPreprune(std::function<int(const GraphView&)> f)
     {
         plantri::setPrefilter(f);
     }
 
-    static void setOutproc(std::function<void(Output&, const ViewType&)> f) 
+    static void setOutproc(std::function<void(Output&, const GraphView&)> f) 
     { 
         plantri::setOutproc(f); 
     }
 
     static int run(int argc, char** argv) 
     { 
+
         return plantri::pt_run(argc, argv); 
     }
 
