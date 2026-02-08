@@ -2,6 +2,7 @@
 #include "common/Output.hpp"
 #include <utility>
 #include <functional>
+#include <iostream>
 
 extern "C" {
 
@@ -47,17 +48,21 @@ namespace {
 
     int c_prefilter_trampoline() 
     {
-        try { 
-            
-            if(!g_cpp_prefilter)
+
+
+         try { 
+            if(!g_cpp_prefilter) // --- 
+            {
                 return 1;
+            }
             auto view = make_view();
             return g_cpp_prefilter(view);
         }
         catch(...) 
         { 
-            return 0;  // pri vymce vetev utneme
+            return 0;  
         }
+       
     }
 
 
@@ -68,68 +73,42 @@ namespace {
         (void)nbop;
         (void)doflip;
 
-        try
+          try
         {
             auto view = make_view();
-            int keep = 1;
+            int should_prune = 1;
 
             if (g_cpp_filter)
             {
-                keep = g_cpp_filter(view);
+                should_prune = g_cpp_filter(view);
             }
 
-            if (keep == 0) 
+            if (should_prune == 1) 
             {
-                return 0; 
+                return 1; 
             }
 
             if (g_cpp_outproc)
             {
-                // Máme vlastní výpis -> provedeme ho.
+                
                 FILE* f = ::pt_outfile();
-                Output out(f); // Wrapper
+                Output out(f);
                 g_cpp_outproc(out, view);
                 
-                // DŮLEŽITÉ: Vrátíme 0.
-                // Říkáme Plantri: "My už jsme si to vypsali sami, ty nic nedělej."
-                return 0;
+               
+                return 1;
             }
 
-            return 1;
+            return 0;
 
         }
         catch(...) 
         {
-            return 0; // Při chybě raději zahodit
-        }
-/*
-        try {
-                auto view = make_view();
-                if (g_cpp_filter)
-                {
-                    int should_prune = g_cpp_filter(view);
-                    if(should_prune == 1)
-                    {
-                        return 1;   //0
-                    }
-                }
-                if (g_cpp_outproc)
-                {
-                    FILE* f = ::pt_outfile();
-                    Output out(f);
-                    g_cpp_outproc(out, view);
-                    return 1; // 0
-                }
-
-                return 0;  // 1
-
-            }
-        catch(...) 
-        {
-            return 1;  //0
+            return 1; 
         }
 
-        */
+
+        
     }
 }
 
