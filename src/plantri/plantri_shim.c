@@ -16,7 +16,7 @@ static int bridge_prefilter_common(void)
     // 1=expandovat 0=orezat vetev
     if (!g_prefilter_cb) 
         return 1;
-    return g_prefilter_cb();
+    return !g_prefilter_cb();
 }
 
 static int bridge_filter_common(int nbtot, int nbop, int doflip)
@@ -24,7 +24,7 @@ static int bridge_filter_common(int nbtot, int nbop, int doflip)
     //0 = nepsat ven
     if (!g_filter_cb) 
         return 1;  //   vratit 1
-    return g_filter_cb(nbtot, nbop, doflip);
+    return !g_filter_cb(nbtot, nbop, doflip);
 }
 
 
