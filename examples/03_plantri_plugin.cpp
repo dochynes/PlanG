@@ -36,7 +36,7 @@ bool commonedge(int a, int b, const auto& g)
 int main(int argc, char** argv)
 {
     // 1. PRE-PRUNE (Heuristic from maxdeg_prune)
-    App::setPreprune([=](const auto g) -> int {
+    App::setPreprune([=](const auto g) {
 
         int target_nv = maxnv(g);
         int current_nv = num_vertices(g);
@@ -65,36 +65,37 @@ int main(int argc, char** argv)
         }
 
         
-        if (excess == 0) return 1; 
+        if (excess == 0) return 0; 
 
-        if (d3 > 2) return 0; 
+        if (d3 > 2) return 1; 
 
-        if (d3 == 2 && !commonedge(d3a, d3b, g)) return 0; 
+        if (d3 == 2 && !commonedge(d3a, d3b, g)) return 1; 
 
-        if (d3 > 0 && excess >= levs) return 0; 
+        if (d3 > 0 && excess >= levs) return 1; 
 
         int i_calc = d3 + d3 + d4;
-        if (i_calc > 0 && excess > levs - i_calc + 2) return 0; /
+        if (i_calc > 0 && excess > levs - i_calc + 2) return 1;
 
-        return 1; 
+        return 0; 
     });
 
 
     // 2. PRUNE (Final filter)
-    App::setPrune([=](const App::GraphView& g) -> int {
+    App::setPrune([=](const App::GraphView& g) {
         
         int nv = num_vertices(g);
         for (int i = 0; i < nv; ++i) {
             // Check if any vertex exceeds the maximum allowed degree
             if (out_degree(i, g) > MAX_DEG) {
-                return 0; // PRUNE
+                return 1; // PRUNE
             }
         }
-        return 1; // KEEP
+        return 0; // KEEP
     });
 
     return App::run(argc, argv);
 }
+
 
 
 //  Testing results MAXDEG7 a pocet vrcholu

@@ -22,10 +22,10 @@ int main(int argc, char** argv)
 
         // 3. Decision (Prune/Keep)
         if (num_colors >= 4) {
-            return 1; // KEEP
+            return 0; // KEEP
         }
         
-        return 0; // PRUNE
+        return 1; // PRUNE
     });
 
     App::setOutproc([](auto& out, const auto& g) 
