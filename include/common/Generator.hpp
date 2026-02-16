@@ -1,16 +1,30 @@
 #pragma once
 #include "Output.hpp"
+#include <string>
+#include <vector>
 
 
 // T = geng::Backend nebo plantri::Backend
 
 template<typename Backend>
-struct Generator
+struct Generator : public Backend
 {
     using GraphView = typename Backend::GraphView;
 
-    static int run(int argc, char** argv)
+    static int run()
     {
+        std::vector<std::string> args = Backend::prepare_args();
+
+        std::vector<char*> c_args;
+
+        for(auto& s :args)
+        {
+            c_args.push_back(s.data());
+        }
+
+        int argc = args.size();
+        char** argv = c_args.data();
+
         return Backend::run(argc, argv);
     }
 

@@ -204,6 +204,123 @@ struct Backend
 
 
     //TODO add params processor
+    static std::vector<std::string> prepare_args()
+    {
+        std::vector<std::string> args;
+        args.push_back("plantri");
+
+        switch(graph_class)
+        {
+            case GraphClass::Quadrangulation:
+                args.push_back("-q");
+                break;
+            case GraphClass::GeneralQuad:
+                args.push_back("-Q");
+                break;
+            case GraphClass::SimplePlane:
+                args.push_back("-p");
+                break;
+            case GraphClass::Bipartite:
+                args.push_back("-bp");
+                break;
+            case GraphClass::Eulerian:
+                args.push_back("-b");
+                break;
+            case GraphClass::Apollonian:
+                args.push_back("-A");
+                break;
+            case GraphClass::Disk:
+                if(param_disk_outer > 0)
+                {
+                    std::string flag = "-P" + std::to_string(param_disk_outer);
+                    args.push_back(flag);
+                }
+                else
+                {
+                    args.push_back("-P");
+                }
+                break;
+            case GraphClass::Trinagulation:
+                break;
+       }
+
+       if(param_min_deg>0)
+       {
+            args.push_back("-m" + std::to_string(param_min_deg));
+       }
+
+       if(param_conn>=0)
+       {
+            std::string flag = "-c" + std::to_string(param_conn);
+            if(param_exact_conn)
+                flag += "x";
+            args.push_back(flag);
+       }
+
+       if(param_max_face>=0)
+       {
+            args.push_back("-f" + std::to_string(param_max_face));
+       }
+
+       switch(param_format)
+       {
+            case OutputFormat::Graph6:
+                args.push_back("-g");
+                break;
+            case OutputFormat::Sprase6:
+                args.push_back("-g");
+                break;
+            case OutputFormat::Ascii:
+                args.push_back("-a");
+                break;
+            case OutputFormat::EdgeCode:
+                args.push_back("-E");
+                break;
+            case OutputFormat::DoubleCode:
+                args.push_back("-T");
+                break;
+            case OutputFormat::None:
+                args.push_back("-u");
+                break;
+            default: break;
+       }
+
+       if(param_header)
+            args.push_back("-h");
+       if(param_output_dual)
+            args.push_back("-d");
+        
+       if(param_one_iso_class)
+            args.push_back("-o");
+       if(param_group)
+            args.push_back("-G");
+       if(param_nontriv_group)
+            args.push_back("-V");
+        
+
+       //splitting
+       if(param_split_level>0)
+       {
+            std::string x_flag = "-";
+            for(int i =0 ;i<param_split_level;i++)
+            {
+                x_flag+="X";
+            }
+            args.push_back(x_flag);
+       }
+
+
+       std::string n_arg = std::to_string(n);
+       if(dual)
+            n_arg+="d";
+       args.push_back(n_arg);
+
+       if(param_res>=0 && param_mod>0)
+            args.push_back(std::to_string(param_res) + "/" + std::to_string(param_mod));
+
+        return args;
+
+    }
 
 
 
