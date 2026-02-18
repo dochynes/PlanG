@@ -4,7 +4,8 @@
 #include "gtools.h"
 #include "common/Output.hpp"
 #include "geng/GraphView.hpp"
-
+#include <vector>
+#include <string>
 namespace geng {
 
 
@@ -49,6 +50,231 @@ struct Backend
 {
 
     using GraphView = geng::GraphView;
+
+
+    enum class OutputFormat
+    {
+        Graph6, //default nebo -g
+        Sprase6, //-s
+        NoOutput, //-u
+        NautyBinary // -n 
+    };
+
+    inline static int n = 1;
+    inline static int mine = -1; //min edges
+    inline static int maxe = -1; //max edges
+
+    inline static int param_res = -1;
+    inline static int param_mod = -1;
+
+    inline static bool param_connected = false; //-c
+    inline static bool param_biconnected = false; //-C
+    inline static bool param_triangle_free=false; //-t
+    inline static bool param_square_free = false; //-f
+    inline static bool param_bipartite = false; //-b
+
+    inline static int param_min_deg = -1;  // -d
+    inline static int param_max_deg = -1;  // -D
+
+    inline static OutputFormat out_format = OutputFormat::Graph6;
+
+    inline static bool param_header = false; // -h
+    inline static bool param_label = false; // -l
+    inline static bool param_verbose = false; //-v
+
+    inline static bool param_quiet = false; //-q
+    inline static bool param_save_mem = false; // -m
+
+    inline static int param_adv_split = -1; // -x
+    inline static int param_adv_start = -1; // -X
+
+
+    static void setVertices(int nn)
+    {
+        n=nn;
+    }
+
+    static void setEdgeRange(int min_edges, int max_edges = -1)
+    {
+        mine = min_edges;
+        maxe = max_edges;
+    }
+
+    static void setConnected(bool c = true)
+    {
+        param_connected = c;
+    }
+    static void setBiconnected(bool b = true)
+    {
+        param_biconnected = b;
+    }
+
+    static void setTriangleFree(bool t = true)
+    {
+        param_triangle_free = t;
+    }
+
+    static void setSquareFree(bool s = true)
+    {
+        param_square_free = s;
+    }
+
+    static void setBipartite(bool b = true)
+    {
+        param_bipartite = b;
+
+    }
+
+    static void setMinDegree(int d)
+    {
+        param_min_deg = d;
+    }
+
+    static void setMaxDegree(int D)
+    {
+        param_max_deg = D;
+    }
+
+    static void setFormat(OutputFormat f)
+    {
+        out_format = f;
+    }
+
+    static void setNoOutput()
+    {
+        out_format = OutputFormat::NoOutput;
+    }
+
+    static void setCanonicalLabeling(bool l = true)
+    {
+        param_label = l;
+    }
+
+    static void setHeader (bool h=true)
+    {
+        param_header = h;
+    }
+
+    static void setQuiet(bool q=true)
+    {
+        param_quiet=q;
+    }
+
+    static void setVerbose( bool v =true)
+    {
+        param_verbose = true;
+    }
+
+    static void setSaveMemory (bool m = true)
+    {
+        param_save_mem = m;
+    }
+
+    static void setDistribution(int res, int mod)
+    {
+        param_res = res;
+        param_mod = mod;
+    }
+
+    static void setAdvancedSplit(int x)
+    {
+        param_adv_split = x;
+    }
+
+    static void setAdvancedStartLevel(int X)
+    {
+        param_adv_start = X;
+    }
+
+    static std::vector<std::string> prepare_args()
+    {
+        std::vector<std::string> args;
+
+        if(param_connected)
+            args.push_back("-c");
+        if(param_biconnected)
+            args.push_back("-C");
+        if(param_triangle_free)
+            args.push_back("-t");
+        if(param_square_free)
+            args.push_back("-f");
+        if(param_bipartite)
+            args.push_back("-b");
+
+        if(param_min_deg>=0)
+        {
+            args.push_back("-d" + std::to_string(param_min_deg));
+        }
+        if(param_max_deg>=0)
+        {
+            args.push_back("-D" + std::to_string(param_max_deg));
+        }
+
+        switch(out_format)
+        {
+            case OutputFormat::Sprase6:
+                args.push_back("-s");
+                break;
+            case OutputFormat::NoOutput:
+                args.push_back("-u");
+                break;
+            case OutputFormat::NautyBinary:
+                args.push_back("-n");
+                break;
+            case OutputFormat::Graph6:
+                break;
+
+        }
+
+        if(param_header)
+            args.push_back("-h");
+        if(param_label)
+            args.push_back("-l");
+        if(param_verbose)
+            args.push_back("-v");
+        if(param_quiet)
+            args.push_back("-q");
+        if(param_save_mem)
+            args.push_back("-m");
+        
+        if(param_adv_split >= 0)
+        {
+            args.push_back("-x" + std::to_string(param_adv_split));
+        }
+        if(param_adv_start>=0)
+        {
+            args.push_back("-X" + std::to_string(param_adv_start));
+        }
+
+
+
+        args.push_back(std::to_string(n));
+
+        if(mine >= 0)
+        {
+            std::string edge_arg = std::to_string(mine);
+            if(maxe>=0)
+            {
+                edge_arg += ":" + std::to_string(maxe);
+            }
+            args.push_back(edge_arg);
+        }
+
+
+        if(param_res>=0 && param_mod > 0)
+        {
+            args.push_back(std::to_string(param_res) + "/" + std::to_string(param_mod));
+        }
+
+        return args;
+
+
+    }
+
+
+
+
+
     
     static void setPrune(std::function<int(const GraphView)> f )
     {
@@ -72,7 +298,7 @@ struct Backend
 };
 
 
-//TODO pridat helpery do budoucna jako edgeCount,hasEdge(u,v), degree(vrchol u) ....
+
 
 
 } 
