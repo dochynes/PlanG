@@ -67,26 +67,40 @@ struct Backend
     inline static int param_res = -1;
     inline static int param_mod = -1;
 
+    // [-cCmtfkbd#D#]
     inline static bool param_connected = false; //-c
     inline static bool param_biconnected = false; //-C
+    inline static bool param_save_mem = false; // -m
     inline static bool param_triangle_free=false; //-t
     inline static bool param_square_free = false; //-f
+    inline static bool param_regular = false; // -k
     inline static bool param_bipartite = false; //-b
 
     inline static int param_min_deg = -1;  // -d
     inline static int param_max_deg = -1;  // -D
 
-    inline static OutputFormat out_format = OutputFormat::Graph6;
+    //[-kTSPF]
+    inline static bool param_chordal = false; // -T
+    inline static bool param_split = false; // -S
+    inline static bool param_perfect = false; // -P
+    inline static bool param_claw_free = false; //-F
 
+
+
+    //[-uygsnh]
+    inline static OutputFormat out_format = OutputFormat::Graph6;
     inline static bool param_header = false; // -h
+
+    //[-lvq]
     inline static bool param_label = false; // -l
     inline static bool param_verbose = false; //-v
-
     inline static bool param_quiet = false; //-q
-    inline static bool param_save_mem = false; // -m
-
+    
+    //[-x#X#]
     inline static int param_adv_split = -1; // -x
     inline static int param_adv_start = -1; // -X
+
+    inline static std::string param_out_file = "";
 
 
     static void setVertices(int nn)
@@ -162,7 +176,7 @@ struct Backend
 
     static void setVerbose( bool v =true)
     {
-        param_verbose = true;
+        param_verbose = v;
     }
 
     static void setSaveMemory (bool m = true)
@@ -186,9 +200,44 @@ struct Backend
         param_adv_start = X;
     }
 
+    static void setRegular(bool r = true)
+    {
+        param_regular = r;
+    }
+
+    static void setChordal(bool enable = true) 
+    {
+        param_chordal = enable;
+    }
+
+    
+    static void setSplit(bool enable = true) 
+    {
+        param_split = enable;
+    }
+
+    
+    static void setPerfect(bool enable = true) 
+    {
+        param_perfect = enable;
+    }
+
+    
+    static void setClawFree(bool enable = true) 
+    {
+        param_claw_free = enable;
+    }
+
+    static void setOutputFile(const std::string& filename)
+    {
+        param_out_file = filename;
+    }
+
     static std::vector<std::string> prepare_args()
     {
         std::vector<std::string> args;
+
+        args.push_back("geng");
 
         if(param_connected)
             args.push_back("-c");
@@ -200,6 +249,10 @@ struct Backend
             args.push_back("-f");
         if(param_bipartite)
             args.push_back("-b");
+        if(param_save_mem)
+            args.push_back("-m");
+        if(param_regular)
+            args.push_back("-k");
 
         if(param_min_deg>=0)
         {
@@ -210,6 +263,17 @@ struct Backend
             args.push_back("-D" + std::to_string(param_max_deg));
         }
 
+        if(param_chordal)
+            args.push_back("-T");
+        if(param_split)
+            args.push_back("-S");
+        if(param_perfect)
+            args.push_back("-P");
+        if(param_claw_free)
+            args.push_back("-F");
+
+
+        // -y chybi
         switch(out_format)
         {
             case OutputFormat::Sprase6:
@@ -226,16 +290,19 @@ struct Backend
 
         }
 
+
         if(param_header)
             args.push_back("-h");
+
+
         if(param_label)
             args.push_back("-l");
         if(param_verbose)
             args.push_back("-v");
         if(param_quiet)
             args.push_back("-q");
-        if(param_save_mem)
-            args.push_back("-m");
+
+
         
         if(param_adv_split >= 0)
         {
@@ -265,6 +332,12 @@ struct Backend
         {
             args.push_back(std::to_string(param_res) + "/" + std::to_string(param_mod));
         }
+
+        if(param_out_file != "")
+        {
+            args.push_back(param_out_file);
+        }
+
 
         return args;
 
