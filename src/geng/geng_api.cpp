@@ -25,33 +25,7 @@ int  geng_flag_canonise(void);
 }
 
 namespace 
-{/*
-    std::function<void(FILE*,const void*,int)> g_outproc;
-    std::function<int(const void*,int,int)> g_prune;
-    std::function<int(const void*,int,int)> g_preprune;
-
-    void c_outproc(FILE* f, void* g, int n)
-    {
-        try { 
-            if (g_outproc) g_outproc(f, g, n); 
-            } 
-        catch(...) {}
-    }
-    int c_prune(void* g, int n, int maxn)
-    {
-        try{ 
-            return g_prune ? g_prune(g, n, maxn) : 0; 
-            } 
-        catch(...) { return 1; }
-    }
-    int c_preprune(void* g, int n, int maxn)
-    {
-        try{ 
-            return g_preprune ? g_preprune(g, n, maxn) : 0; 
-           } 
-        catch(...) { return 1; }
-    }
-        */
+{
 }
 
 namespace geng {
