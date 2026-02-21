@@ -65,33 +65,37 @@ int pt_missing_vertex();
 EDGE** pt_firstedge_array();  // //ukazatel na pole na pole firstedge[0 ... nv-1]
 int pt_maxnv();
 
-enum class GraphClass
-{
-    Trinagulation, //dafault
-    Quadrangulation, // -q
-    GeneralQuad, // -Q
-    SimplePlane, // -p
-    Bipartite, // -bp  bipartite plane
-    Eulerian, // -b 
-    Disk, // -P   triangulations of a disk
-    Apollonian //--A
-};
 
-enum class OutputFormat
-{
-    PlanarCode, // default
-    Graph6, // -g
-    Sprase6, //-s
-    Ascii, // -a
-    EdgeCode, //-E
-    DoubleCode, //-T
-    None //u
-
-};
 
 
 struct Backend 
 {
+
+
+    enum class GraphClass
+    {
+        Trinagulation, //dafault
+        Quadrangulation, // -q
+        GeneralQuad, // -Q
+        SimplePlane, // -p
+        Bipartite, // -bp  bipartite plane
+        Eulerian, // -b 
+        Disk, // -P   triangulations of a disk
+        Apollonian //--A
+    };
+
+    enum class OutputFormat
+    {
+        PlanarCode, // default
+        Graph6, // -g
+        Sprase6, //-s
+        Ascii, // -a
+        EdgeCode, //-E
+        DoubleCode, //-T
+        NoOutput //u
+
+    };
+
 
     using GraphView = plantri::GraphView;
 
@@ -163,7 +167,7 @@ struct Backend
 
     static void setNoOutput()
     {
-        param_format = OutputFormat::None;
+        param_format = OutputFormat::NoOutput;
     }
 
     static void setOutputDual(bool output_dual = true)
@@ -279,7 +283,7 @@ struct Backend
             case OutputFormat::DoubleCode:
                 args.push_back("-T");
                 break;
-            case OutputFormat::None:
+            case OutputFormat::NoOutput:
                 args.push_back("-u");
                 break;
             default: break;
