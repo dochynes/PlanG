@@ -12,16 +12,16 @@ using App = Generator<geng::Backend>;
 
 int main(int argc, char** argv) 
 {
-    std::cout << "API Example\n";
+    std::cout << "API Example";
+    // STEP 2: Configure generator parameters
+    App::setVertices(11);
+    App::setTriangleFree();
 
-    // STEP 2(optional): Define the output
+    // (optional): Define the output
     // Here we use 'operator<<', which is implemented for both backends
-    App::setOutproc([](auto& out, const auto& g) {
+    App::setOutproc([](Output& out, const App::GraphView& g) {   // We can use 'auto' here thanks to type deduction.
         out << g; 
     });
 
-    // STEP 3: Execution
-    // geng:    ./plang -c 5 (5 vertices, connected)
-    // plantri: ./plang 10 (10 vertices, triangulations)
-    return App::run(argc, argv);
+    return App::run();
 }

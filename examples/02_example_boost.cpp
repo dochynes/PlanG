@@ -7,6 +7,9 @@ using App = Generator<plantri::Backend>;
 
 int main(int argc, char** argv) 
 {
+
+    App::setVertices(12);
+
     // Search for graphs that require at least 4 colors
     App::setPrune([=](const auto& g){
         
@@ -22,17 +25,17 @@ int main(int argc, char** argv)
 
         // 3. Decision (Prune/Keep)
         if (num_colors >= 4) {
-            return 0; // KEEP
+            return KEEP;
         }
         
-        return 1; // PRUNE
+        return PRUNE; 
     });
 
     App::setOutproc([](auto& out, const auto& g) 
     {
-        out << "Found graph with chrom. number >= 4:\n";
+        out << "Found graph with chrom. number >= 4:";
         out << g;
     });
 
-    return App::run(argc, argv);
+    return App::run();
 }

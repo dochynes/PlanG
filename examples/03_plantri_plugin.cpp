@@ -1,7 +1,7 @@
 /*
- * Usage: ./plang 14
+ * Usage: ./plang
  *
- * This will generate planar triangulations with 14 vertices
+ * This will generate planar triangulations with n(14) vertices
  * and apply the max degree filter defined below.
  */
 /// !!!Logic adapted from maxdeg.c!!!
@@ -35,6 +35,8 @@ bool commonedge(int a, int b, const auto& g)
 
 int main(int argc, char** argv)
 {
+
+    App::setVertices(14);
     // 1. PRE-PRUNE (Heuristic from maxdeg_prune)
     App::setPreprune([=](const auto g) {
 
@@ -65,18 +67,18 @@ int main(int argc, char** argv)
         }
 
         
-        if (excess == 0) return 0; 
+        if (excess == 0) return KEEP; 
 
-        if (d3 > 2) return 1; 
+        if (d3 > 2) return PRUNE; 
 
-        if (d3 == 2 && !commonedge(d3a, d3b, g)) return 1; 
+        if (d3 == 2 && !commonedge(d3a, d3b, g)) return PRUNE; 
 
-        if (d3 > 0 && excess >= levs) return 1; 
+        if (d3 > 0 && excess >= levs) return PRUNE; 
 
         int i_calc = d3 + d3 + d4;
-        if (i_calc > 0 && excess > levs - i_calc + 2) return 1;
+        if (i_calc > 0 && excess > levs - i_calc + 2) return PRUNE;
 
-        return 0; 
+        return KEEP; 
     });
 
 
@@ -87,13 +89,13 @@ int main(int argc, char** argv)
         for (int i = 0; i < nv; ++i) {
             // Check if any vertex exceeds the maximum allowed degree
             if (out_degree(i, g) > MAX_DEG) {
-                return 1; // PRUNE
+                return PRUNE; 
             }
         }
-        return 0; // KEEP
+        return KEEP;
     });
 
-    return App::run(argc, argv);
+    return App::run();
 }
 
 
@@ -102,7 +104,7 @@ int main(int argc, char** argv)
 
 
 /* PERFORMANCE BENCHMARK
- * Comparison between native './plantri_maxd -D7 x' (C implementation) and this C++ wrapper.
+ * Comparison between native './plantri_maxd -D7 14' (C implementation) and this C++ wrapper.
  *
  * Vertices (n) | Native Plantri (s) | C++ Wrapper (s)
  * -------------|--------------------|----------------
