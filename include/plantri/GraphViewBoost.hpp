@@ -7,7 +7,7 @@
 
 namespace boost
 {
-
+/*
 template<>
 struct graph_traits<plantri::GraphView>
 {
@@ -366,6 +366,13 @@ struct graph_traits<plantri::GraphView>
 
 
     };
+    */
+   template<>
+   struct property_map<plantri::GraphView,vertex_index_t>
+   {
+        typedef identity_property_map type;
+        typedef identity_property_map const_type;
+   };
 
 
 

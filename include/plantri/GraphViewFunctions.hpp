@@ -113,5 +113,10 @@ inline int maxnv(const GraphView& g)
     return g.maxnv;
 }
 
+inline boost::identity_property_map get(boost::vertex_index_t,const GraphView&)
+{
+    return boost::identity_property_map();
+}
+
 
 }

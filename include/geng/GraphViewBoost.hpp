@@ -9,7 +9,7 @@ namespace boost
 {
 
 //https://www.boost.org/doc/libs/latest/libs/graph/doc/graph_traits.html
-template<>
+/*template<>
 struct graph_traits<geng::GraphView>
 {
     using vertex_descriptor = int;
@@ -214,6 +214,13 @@ struct graph_traits<geng::GraphView>
 
 
 
+};*/
+
+template<>
+struct property_map<geng::GraphView, vertex_index_t>
+{
+    typedef identity_property_map type;
+    typedef identity_property_map const_type;
 };
 
 }
