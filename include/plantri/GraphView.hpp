@@ -1,5 +1,8 @@
 #pragma once
 //#include "plantri/BridgeAPI.hpp"
+#include <boost/graph/graph_traits.hpp>
+#include <boost/iterator/iterator_facade.hpp>
+#include <boost/range/iterator_range.hpp>
 namespace plantri
 {
 
