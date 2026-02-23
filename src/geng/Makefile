@@ -3,6 +3,8 @@ NAUTY_DIR := $(ROOT_DIR)/vendor/nauty/nauty2_9_1
 INCLUDE_DIR := $(ROOT_DIR)/include
 BOOST_DIR := $(ROOT_DIR)/vendor
 
+NAUTY_CONFIG := $(NAUTY_DIR)/nauty.h
+
 INC_DIRS := -I$(NAUTY_DIR) -I$(INCLUDE_DIR) -I$(BOOST_DIR)
 
 CC ?= gcc
@@ -11,7 +13,7 @@ CXX ?= g++
 AR ?= gcc-ar 
 RM ?= rm -f
 
-OPT_FLAGS := -O3 -flto -march=native -DNDEBUG -DMAXN=32
+OPT_FLAGS := -O3 -flto -march=native -DNDEBUG -DMAXN=WORDSIZE
 
 CFLAGS ?= $(OPT_FLAGS) -std=c11 -Wall -Wextra -Wpedantic $(INC_DIRS)
 CXXFLAGS ?= $(OPT_FLAGS) -std=c++20 -Wall -Wextra -Wpedantic $(INC_DIRS)
@@ -64,7 +66,7 @@ $(BUILD_DIR)/api.o: $(API_SRC)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # nauty core compilation
-$(BUILD_DIR)/nauty/%.o: $(NAUTY_DIR)/%.c
+$(BUILD_DIR)/nauty/%.o: $(NAUTY_DIR)/%.c $(NAUTY_CONFIG)
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) \
 	 -Wno-unused-parameter \
@@ -73,6 +75,9 @@ $(BUILD_DIR)/nauty/%.o: $(NAUTY_DIR)/%.c
 	 -Wno-implicit-function-declaration \
 	 -Wno-int-conversion \
 	 -c $< -o $@
+
+$(NAUTY_CONFIG):
+	cd $(NAUTY_DIR) && ./configure
 
 clean:
 	$(RM) -r $(BUILD_DIR) $(TARGET_LIB)
