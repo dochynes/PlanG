@@ -123,6 +123,13 @@ struct Backend
     inline static int param_mod = -1;
     inline static int param_split_level = 0;  // -X , -XX...
 
+    inline static std::string param_out_file = "";
+
+    static void setOutputFile(std::string outFile)
+    {
+        param_out_file = outFile;
+    }
+
     static void setVertices(int nn) 
     {
         n = nn; 
@@ -321,6 +328,8 @@ struct Backend
 
        if(param_res>=0 && param_mod>0)
             args.push_back(std::to_string(param_res) + "/" + std::to_string(param_mod));
+       if(param_out_file != "")
+            args.push_back(param_out_file);
 
         return args;
 
