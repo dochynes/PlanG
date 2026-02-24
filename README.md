@@ -435,7 +435,7 @@ Další ukázky použití knihovny lze nalézt ve složce [examples](./examples/
 ---
 
 
-> [!IMPORTANT] Poznámky a omezení
+## > [!IMPORTANT] Poznámky a omezení
 
 1) Pokud používáme **Plantri backend** a definujeme vlastní callback pro výstup (`setOutproc`),  
    na konci generování se vždy na `stderr` vypíše diagnostická hláška: `0 triangulations written to stdout;`
