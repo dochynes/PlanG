@@ -117,7 +117,7 @@ Celá knihovna je navržena okolo tří hlavních callbacků, které uživatel d
    - **Vstup:** `Output&` (wrapper nad `FILE*`) a graf  
    - **Použití:** Výpis grafu do souboru nebo na `stdout`, pokud chce uživatel sám řídit proces výpisu
 
-Priklad použiti: [1](./examples/04_test_geng_planarity_filter.cpp), [2](./examples/example_boost.cpp)
+Priklad použiti: [1](./examples/04_test_geng_planarity_filter.cpp), [2](./examples/02_example_boost.cpp)
 
 ## Strategie výstupu
 
