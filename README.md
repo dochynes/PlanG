@@ -44,7 +44,7 @@ Generátory jako geng mohou produkovat miliony grafů za sekundu. Jakákoliv kon
 
 - `src/plantri/` – Backend pro Plantri
 
-- `vendor/` – Původní zdrojové kódy Nauty a Plantri (beze změn). **Pozor: Velikost cca 140 MB.**
+- `vendor/` – Původní zdrojové kódy Nauty a Plantri (beze změn). **Pozor: Velikost cca 110 MB.**
 
 - `examples/` – Ukázkové programy (viz níže)
 
@@ -87,7 +87,7 @@ using App = Generator<geng::Backend>;
 
 int main(int argc, char** argv) {
     // ... nastavení callbacků ...
-    return App::run(argc, argv);
+    return App::run();
 }
 ```
 
@@ -98,8 +98,8 @@ Celá knihovna je navržena okolo tří hlavních callbacků, které uživatel d
 
    - **Vstup:** Částečně vytvořený graf  
    - **Návratová hodnota:**  
-     - `1` – PRUNE (zahodit větev)  
-     - `0` – KEEP (pokračovat)  
+     -  PRUNE (zahodit větev)  
+     -  KEEP (pokračovat)  
    - **Použití:** Kontrola stupňů, specifické topologické vlastnosti
 
 2. **`setPrune` (Filtr)**  
@@ -107,59 +107,164 @@ Celá knihovna je navržena okolo tří hlavních callbacků, které uživatel d
 
    - **Vstup:** Kompletní graf splňující základní parametry generátoru  
    - **Návratová hodnota:**  
-     - `1` – PRUNE (zahodit)  
-     - `0` – KEEP (ponechat)  
+     -  PRUNE (zahodit)  
+     -  KEEP (ponechat)  
    - **Použití:** Volání složitějších algoritmů (např. Boost coloring, isomorfismus)
 
 3. **`setOutproc` (Výstup)**  
    Volá se pro grafy, které prošly filtrem.
 
    - **Vstup:** `Output&` (wrapper nad `FILE*`) a graf  
-   - **Použití:** Výpis grafu do souboru nebo na `stdout`
+   - **Použití:** Výpis grafu do souboru nebo na `stdout`, pokud chce uživatel sám řídit proces výpisu
 
+Priklad použiti: [1](./examples/04_test_geng_planarity_filter.cpp), [2](./examples/example_boost.cpp)
 
+## Strategie výstupu
 
-**Strategie výstupu:**
-
-Knihovna inteligentně volí způsob výpisu grafů:
-
-1. **Výchozí chování (Bez `setOutproc`):**
-   Pokud uživatel callback nenastaví, použije se **nativní formát generátoru** (`graph6` pro Geng, `planar_code` pro Plantri). Výstup směřuje na `stdout` (nebo do souboru specifikovaného v argumentech).
-
-2. **Vlastní výstup (S `setOutproc`):**
-   Pokud je callback nastaven, nativní výpis se potlačí a zavolá se vaše funkce.
-   - Callback dostává `Output&`, což je bezpečný wrapper nad C `FILE*`.
-   - Pokud v argumentech nebyl zadán výstupní soubor, wrapper automaticky píše na `stdout`.
-
-```cpp
-App::setOutproc([](auto& out, const auto& g) {
-    // Použije operátor<< pro formátovaný výpis (planar_code/graph6)
-    out << g;
-});
-
-```
-### Argumenty příkazové řádky
-
-Použití výsledné aplikace je **identické s originálními nástroji**. Argumenty (`argc`, `argv`) se předávají přímo backendu.
-
-- **Geng:** `./plang -c 5` (vygeneruje souvislé grafy na 5 vrcholech)
-- **Plantri:** `./plang -m3 10` (vygeneruje triangulace na 10 vrcholech)
+Knihovna flexibilně volí způsob výpisu grafů podle toho, jakou míru kontroly uživatel požaduje.
 
 ---
-V callbacku můžete s grafem pracovat dvěma způsoby:
+### 1. Nativní výstup (bez `setOutproc`)
+
+Pokud uživatel nenastaví vlastní callback, výpis zajišťuje přímo generátor pomocí svých interních, optimalizovaných C rutin.  
+Výstup je směrován na `stdout`, případně do souboru nastaveného pomocí:
 
 ```cpp
-   App::setPrune([](const auto& g) { ... }); // program automaticky dedukuje použitý backend
+App::setOutputFile(...);
 ```
-  
-  nebo 
+V tomto režimu jsou dostupné všechny nativní formáty generátoru, které lze zvolit pomocí:
 ```cpp
-   using App = Generator<plantri::Backend>; // nebo geng::Backend
+App::setFormat(App::OutputFormat::...);
+```
+Dostupné formáty: 
+- Plantri: `PlanarCode(default)`,`Graph6`,`Sparse6`,`Ascii`,`EdgeCode`,`DoubleCode`,`NoOutput`
+- Geng: `Graph6(default)`, `Sparse6`, `NautyBinary`, `NoOutput `
 
-App::setPrune([](const App::GraphView& g) {
-    ...
+### 2. Vlastní výstup (pomocí `setOutproc`)
+
+Jakmile je nastaven callback `setOutproc`, nativní výpis generátoru se zcela potlačí a uživatel přebírá plnou odpovědnost za výpis grafů (případně dalších dat nebo statistik).
+
+Callback dostává objekt `Output&`, což je bezpečný C++ wrapper nad nízkoúrovňovým C `FILE*`.
+
+Pokud nebyl přes API(`setOutputFile(string)`) nastaven výstupní soubor, output == `stdout`.
+
+Přiklad:
+```cpp
+App::setOutproc([](Output& out, const App::GraphView& g) {
+    // V tomto bloku máte absolutní kontrolu nad tím, co se zapíše.
+    // Můžete vypisovat vlastní texty, statistiky, nebo výsledky algoritmů.
+    
+    out << "Nalezen graf splňující podmínky: ";
+    
+    // Použije operátor << pro formátovaný výpis (zatím jen planar_code / graph6)
+    out << g;
 });
 ```
+
+> [!NOTE] **Omezení aktuální implementace**
+
+Přetížený operátor výpisu (`out << g`) uvnitř tohoto wrapperu zatím podporuje pouze základní formáty (`planar_code` pro Plantri a `graph6` pro Geng). 
+TODO: v budoucich verzich rozšířit implementaci tak, aby `out << g` respektovalo nastavení z `App::setOutput(App::OutputFormat::...)`;
+
+
+
+## Konfigurace generátoru Geng
+
+API poskytuje přímé mapování na parametry původního nástroje.  
+Pomocí následujících metod generator nastavime přímo z C++.
+
+---
+
+### Velikost generovaného grafu
+
+- `setVertices(int n)` – počet vrcholů
+- `setEdgeRange(int min, int max = -1)` – povolený rozsah počtu hran
+
+---
+
+### Strukturální vlastnosti grafu
+
+- `setConnected(bool)`
+- `setBiconnected(bool)`
+- `setTriangleFree(bool)`
+- `setSquareFree(bool)`
+- `setBipartite(bool)`
+- `setChordal(bool)`
+- `setPerfect(bool)`
+- `setClawFree(bool)`
+
+
+---
+
+### Omezení stupňů vrcholů
+
+- `setMinDegree(int)`
+- `setMaxDegree(int)`
+- `setRegular(bool)`
+
+---
+
+### Nastavení výstupu
+
+- `setFormat(OutputFormat)`
+- `setNoOutput()`
+- `setOutputFile(std::string)`
+
+---
+
+### Pokročilé volby generátoru
+
+- `setCanonicalLabeling(bool)`
+- `setHeader(bool)`
+- `setQuiet(bool)`
+- `setVerbose(bool)`
+- `setSaveMemory(bool)`
+- `setDistribution(int res, int mod)`
+- `setAdvancedSplit(int)`
+- `setAdvancedStartLevel(int)`
+- `setSplit(bool)`
+
+
+## Konfigurace generátoru Plantri
+
+### Velikost grafu
+
+- `setVertices(int)`
+
+### Třída grafu
+
+- `setClass(GraphClass)`
+- `setDiskSize(int)`
+
+### Strukturální omezení
+
+- `setMinDegree(int)`
+- `setConnectivity(int, bool exact=false)`
+- `setMaxFaceSize(int)`
+
+### Výstup
+
+- `setFormat(OutputFormat)`
+- `setNoOutput()`
+- `setOutputFile(string)`
+- `setOutputDual(bool)`
+
+### Symetrie a izomorfismy
+
+- `setOrientationPreserving(bool)`
+- `setFullGroup(bool)`
+- `setNonTrivialGroup(bool)`
+
+### Paralelizace
+
+- `setDistribution(res, mod)`
+- `setSplitLevel(int)`
+
+---
+[Priklad použiti](./examples/05_api_usage.cpp)
+
+
+
 
 ## 4. Boost.Graph integrace
 
@@ -214,7 +319,31 @@ Poskytované funkce:
 - `source(e, g)`
 - `target(e, g)`
 
+### Částečná podpora `PropertyGraph`
 
+`GraphView` neposkytuje plnou implementaci konceptu **PropertyGraph**,  
+protože graf je pouze **read-only pohled** do paměti generátoru.
+
+Je však implementována základní vlastnost nutná pro většinu algoritmů Boost: `vertex_index`
+
+```cpp
+get(boost::vertex_index, g)
+```
+Tato funkce vrací property mapu, která každému vrcholu přiřazuje jeho index v rozsahu `0 ... num_vertices(g) - 1`.
+Díky tomu lze používat algoritmy, které vyžadují externí úložiště vlastností.
+
+Vlastnosti nejsou uloženy přímo v grafu, protože by to zpomalilo generování grafů kvůli kopírování dat.
+Proto optimálni přistup je využit **externí property mapy** z Boost.Graph:
+
+```cpp
+std::vector<int> colors(num_vertices(g)); // Boost dokáže přijmout obyčejný vektor. 
+//Nebo bezpečnější: boost::make_property_map ...
+.
+.
+.
+boost::sequential_vertex_coloring(g,colors.data());
+
+```
 
 
 Podrobné definice jednotlivých konceptů viz oficiální dokumentace
@@ -223,32 +352,6 @@ Boost.Graph:
  https://www.boost.org/doc/libs/latest/libs/graph/doc/graph_concepts.html
 ---
 
-### Proč `GraphView` není `PropertyGraph`?
-
-Koncept **`PropertyGraph`** v Boostu předpokládá, že vlastnosti
-(barva vrcholu, váha hrany, apod.) jsou uloženy **uvnitř grafu**.
-
-`GraphView` je však **read-only pohled** do paměti generátoru,
-která je optimalizovaná pro bity a pointery.  
-Z tohoto důvodu do ní nelze bezpečně zapisovat uživatelská data.
-
----
-
-### Řešení: Externí Property Mapy
-
-V souladu s filozofií Boostu používáme **externí property mapy**:
-
-```cpp
-// Příklad: Barvení grafu
-std::vector<int> colors(num_vertices(g)); // Externí úložiště
-
-auto map = boost::make_iterator_property_map(
-    colors.begin(),
-    boost::get(boost::vertex_index, g)
-);
-
-boost::sequential_vertex_coloring(g, map);
-```
 
 ## 5. Porovnání backendů: Geng vs. Plantri
 
@@ -285,11 +388,10 @@ pro oba typy grafů**.
 #### Geng (Nauty)
 
 Backend Geng pracuje s obecnými neorientovanými grafy reprezentovanými
-maticí sousednosti. Navigace je proto zaměřena především na vztahy
-sousednosti mezi vrcholy.
+maticí sousednosti.
 
 
-TODO: Přidat užitečné funkce
+TODO: Specificke funkce
 
 
 
@@ -299,8 +401,7 @@ Plantri je určen pro rovinné grafy a používá reprezentaci typu
 **half-edge**, která umožňuje detailní topologickou navigaci v grafu,
 včetně práce se stěnami.
 
-Na rozdíl od Gengu Plantri **podporuje i multigrafy (multihrany)**,
-pokud je tato možnost povolena přepínači generátoru.
+Na rozdíl od Gengu Plantri **podporuje i multigrafy (multihrany)**
 
 Proto Plantri poskytuje **dodatečné navigační funkce**, které nejsou
 k dispozici u Gengu, například:
@@ -308,9 +409,8 @@ k dispozici u Gengu, například:
 - `next_edge(e)`
 - `prev_edge(e)`
 - `opposite_edge(e)`
+TODO: dalši
 
-Tyto operace umožňují procházet hrany okolo vrcholu nebo stěny a jsou
-nezbytné pro algoritmy pracující s rovinnou topologií.
 
 
 ## 6. Case Study: Výkon a replikace pluginů
@@ -333,4 +433,30 @@ Další ukázky použití knihovny lze nalézt ve složce [examples](./examples/
 
 
 ---
-**TODO:**  rozšířit knihovnu o sadu dalších užitečných pomocných funkcí
+
+
+> [!IMPORTANT] Poznámky a omezení
+
+1) Pokud používáme **Plantri backend** a definujeme vlastní callback pro výstup (`setOutproc`),  
+   na konci generování se vždy na `stderr` vypíše diagnostická hláška: `0 triangulations written to stdout;`
+   Uživatel by měl tuto hlášku **ignorovat**.  
+   Snažil jsem se ji odstranit, ale z důvodu interního fungování Plantri se mi to nepodařilo.  
+   **Důvod:** Kvůli "hezkému" API odchytáváme grafy dříve, než projdou nativním I/O systémem Plantri.
+
+2) **missing_vertex**
+Interně Plantri obsahuje statickou proměnnou `missing_vertex`, která se používá pouze při generování **polygon triangulací**:
+```c
+static int missing_vertex = -1;
+/* The vertices are numbered 0..nv-1 if missing_vertex<0, and
+   0..missing_vertex-1, missing_vertex..nv otherwise.
+   This is only used in the code for polygon triangulations. */
+```
+
+Ve všech funkcích (kromě `get_property_map`) počítám s tím, že může existovat "chybějící" vrchol,
+a všude je ošetřen podmínkou if (missing_vertex ...).
+
+**Poznámka:** Přemýšlím, zda toto větvení může zpomalovat jiné algoritmy pro běžné typy grafů,  
+protože mnoho operací musí kontrolovat přítomnost `missing_vertex`, což představuje dodatečné větvení.
+
+
+
