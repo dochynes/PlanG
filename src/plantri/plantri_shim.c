@@ -55,13 +55,19 @@ extern EDGE *firstedge[];     // firstedge[v] -> hrana z vrcholu v
 
 extern int maxnv;
 extern FILE* outfile;
+extern int dosummary;
+
+void disable_summary(void)
+{
+    dosummary = -1;
+}
 
 
 
-int  pt_nv(void) { return nv; }
-int  pt_ne_oriented(void) { return ne; }          // orient 2*E
+int pt_nv(void) { return nv; }
+int pt_ne_oriented(void) { return ne; }          // orient 2*E
 int* pt_degree_array(void) { return degree; }
-int  pt_missing_vertex(void) { return missing_vertex; }
+int pt_missing_vertex(void) { return missing_vertex; }
 EDGE** pt_firstedge_array(void) { return firstedge; }
 
 int pt_maxnv(void) { return maxnv; }

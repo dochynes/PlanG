@@ -21,6 +21,8 @@ int pt_maxnv(void);
 
 FILE* pt_outfile(void);
 
+void disable_summary(void);
+
 
 }
 
@@ -69,6 +71,8 @@ namespace {
     int c_filter_trampoline(int nbtot, int nbop, int doflip) 
     {
 
+        //std::cout << "trampoline";
+
         (void)nbtot;
         (void)nbop;
         (void)doflip;
@@ -76,12 +80,14 @@ namespace {
           try
         {
             auto view = make_view();
-            int should_prune = 1;
+            int should_prune = 0; //  1
 
             if (g_cpp_filter)
             {
+                
                 should_prune = g_cpp_filter(view);
             }
+            
 
             if (should_prune == 1) 
             {
@@ -131,6 +137,8 @@ void setOutproc(OutprocFn f)
 {
     g_cpp_outproc = std::move(f);
     ::pt_set_filter(&c_filter_trampoline);
+
+    ::disable_summary();
 }
 
 int pt_run(int argc, char** argv) 

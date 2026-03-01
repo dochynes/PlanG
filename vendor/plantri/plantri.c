@@ -20379,7 +20379,16 @@ main(int argc, char *argv[])
         if (oswitch) totalout_op += nout_op[i];
     }
 
-    dosummary = 1;
+    if(dosummary != -1)
+    {
+        dosummary = 1;
+    }
+    else
+    {
+        dosummary=0;
+    }
+
+    //dosummary = 1;
 #ifdef SUMMARY
     nv = maxnv;
     SUMMARY();
@@ -20458,3 +20467,4 @@ main(int argc, char *argv[])
 
     return 0;
 }
+
