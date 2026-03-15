@@ -27,6 +27,9 @@ using PrepruneFn = std::function<int (const GraphView& g)>;
 void setOutproc(OutprocFn);
 void setPrune(PruneFn);
 void setPreprune(PrepruneFn); 
+void setFixedVertices(const std::vector<int>& vertices);
+bool hasFixedVertices();
+int distance_between(const GraphView& g, int src, int dst);
 
 
 int run(int argc, char** argv);
@@ -301,6 +304,8 @@ struct Backend
             args.push_back("-v");
         if(param_quiet)
             args.push_back("-q");
+        else if (geng::hasFixedVertices())
+            args.push_back("-q");
 
 
         
@@ -367,6 +372,16 @@ struct Backend
     static int run(int argc, char** argv)
     { 
         return geng::run(argc, argv); 
+    }
+
+    static void setFixedVertices(const std::vector<int>& vertices)
+    {
+        geng::setFixedVertices(vertices);
+    }
+
+    static int distance_between(const GraphView& g, int src, int dst)
+    {
+        return geng::distance_between(g, src, dst);
     }
 };
 

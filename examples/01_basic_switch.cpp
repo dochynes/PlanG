@@ -8,7 +8,7 @@
 using App = Generator<geng::Backend>;
 
 // B) Planar graph generation (plantri)
-// using App = common::Generator<plantri::Backend>;
+// using App = Generator<plantri::Backend>;
 
 int main(int argc, char** argv) 
 {

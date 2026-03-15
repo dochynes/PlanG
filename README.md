@@ -225,6 +225,7 @@ Pomocí následujících metod generator nastavime přímo z C++.
 - `setSplit(bool)`
 
 
+
 ## Konfigurace generátoru Plantri
 
 ### Velikost grafu
@@ -390,8 +391,8 @@ pro oba typy grafů**.
 Backend Geng pracuje s obecnými neorientovanými grafy reprezentovanými
 maticí sousednosti.
 
+- `distance_between`
 
-TODO: Specificke funkce
 
 
 
@@ -437,13 +438,8 @@ Další ukázky použití knihovny lze nalézt ve složce [examples](./examples/
 
 ## > [!IMPORTANT] Poznámky a omezení
 
-1) Pokud používáme **Plantri backend** a definujeme vlastní callback pro výstup (`setOutproc`),  
-   na konci generování se vždy na `stderr` vypíše diagnostická hláška: `0 triangulations written to stdout;`
-   Uživatel by měl tuto hlášku **ignorovat**.  
-   Snažil jsem se ji odstranit, ale z důvodu interního fungování Plantri se mi to nepodařilo.  
-   **Důvod:** Kvůli "hezkému" API odchytáváme grafy dříve, než projdou nativním I/O systémem Plantri.
 
-2) **missing_vertex**
+1) **missing_vertex**
 Interně Plantri obsahuje statickou proměnnou `missing_vertex`, která se používá pouze při generování **polygon triangulací**:
 ```c
 static int missing_vertex = -1;
@@ -460,3 +456,63 @@ protože mnoho operací musí kontrolovat přítomnost `missing_vertex`, což p�
 
 
 
+
+## New Extension
+
++= `distance_between()`
+---
+
+Cílem bylo rozšířit projekt nad `nauty/geng` tak, aby bylo možné generovat grafy ne pouze "až na obyčejný izomorfismus", ale vzhledem k situaci, kdy některé vrcholy hrají speciální roli a musí zůstat pevně dané. Například chci generovat grafy na `n` vrcholech, ale vrcholy `1...k` beru jako speciálně označené a dva grafy považuji za stejné jen tehdy, když existuje izomorfismus, který každý z těchto vrcholů zobrazí sám na sebe. Jinými slovy, neuvažuji všechny permutace vrcholů, ale jen ty, které ponechávají vybranou množinu fixovaných vrcholů na místě.
+
+Takový model pak umožňuje formulovat podmínky nad konkrétními vrcholy, například že vzdálenost mezi vrcholy `1` a `2` je alespoň `3`, nebo že všechny vrcholy kromě několika fixovaných mají předepsaný stupeň.
+
+### První pokus: zásah do nativního `geng`
+
+První moje myšlenka byla zasáhnout přímo do nativního kódu `geng` a změnit canonical generation tak, aby `geng` od začátku rozlišoval fixované vrcholy a generoval jen jeden reprezentant z každé třídy vzhledem k této nové, jemnější relaci ekvivalence. Výhodou by bylo pravděpodobně zachování výkonu a možnost ořezávat už během samotného generování.
+
+Myšlenka byla taková, že při kanonizaci nastavím pole `lab[]` a `ptn[]` tak, aby fixované vrcholy tvořily samostatné singletonové classy a ostatní vrcholy byly v jiné části partition. Tím jsem chtěl `nauty` donutit, aby při hledání kanonické formy nerozpoznával jako ekvivalentní ty permutace, které fixované vrcholy přesouvají.
+
+Při studiu zdrojového kódu geng jsem dospěl k závěru, že `geng` nepoužívá kanonizaci izolovaně. Canonical generation je součást celé logiky generování a rozhodování, které rozšíření grafu je kanonické. Aby to bylo správně pro více fixovaných vrcholů, je potřeba zasáhnout do celého mechanismu generace, jinak jsem ne vždy dostával správné počty. Podle mě `geng` není v tomto směru snadno modifikovatelná komponenta(pokud je to vůbec možné), takže jsem tuto cestu vzdal.
+
+### Druhý pokus: standardní geng + dodatečná deduplikace podle fixovaných vrcholů
+
+Pak jsem se pustil do jiného nápadu. Tady už se nedá počítat s nějakým velkým výkonem. Nechal jsem `geng` pracovat standardním způsobem, tedy generovat běžné neoznačené grafy po jednom reprezentantu na obyčejnou izomorfní třídu. Nad každým takovým grafem pak provedu dodatečné rozvinutí všech relevantních možností umístění fixovaných vrcholů a korektní deduplikaci vzhledem k jejich fixaci.
+
+Myšlenka je následující:
+
+- `geng` vygeneruje jeden neoznačený graf `G`.
+- Vezmu množinu fixovaných pozic, například `{0,1}`.
+- Pro tento graf projdu všechny možné uspořádané `k-tice` různých vrcholů `(v_1, ..., v_k)`, které by mohly hrát roli fixovaných vrcholů.
+- Pro každou takovou `k-tici` spočitam kanonický podpis (hash) grafu vzhledem k tomu, že právě tyto vrcholy jsou fixovane.
+- Pokud takový podpis ještě nebyl viděn, vytvořím reprezentanta, ve kterém jsou vybrané vrcholy přeznačeny na požadované fixované indexy `0,1,...,k-1`, a ten pošlu dál do uživatelského callbacku nebo do výstupu.
+
+Tím dostanu přesně jednu reprezentaci za každou třídu izomorfismu, kde fixované vrcholy musí zůstat na místě.
+
+Do API jsem přidal možnost zadat fixované vrcholy takto:
+
+```cpp
+App::setFixedVertices({0, 1});
+```
+
+To znamená, že vrcholy `0` a `1` mají v každém výsledném grafu zvláštní význam a při porovnávání grafů smím připustit jen takové izomorfismy, které `0` nechají na `0` a `1` na `1`.
+
+
+
+### Nevýhody tohoto řešení
+
+- Dodatečná výpočetní cena. Pro každý graf se musí projít všechny kandidátní `k-tice` fixovaných vrcholů. To je řádově `n * (n-1) * ... * (n-k+1)`, což rychle roste.
+- Opakované volání kanonizace. Pro každou kandidátní `k-tici` se znovu volá `nauty` na výpočet podpisu. To je výrazně dražší než čisté generování standardního `geng`.
+- Pruning se v fixovanem režimu nedá použít stejným způsobem jako při nativní canonical generation, protože deduplikace probíhá až nad hotovými grafy (lze použít pouze Prune, Preprune použít nelze).
+
+ Ukázkové použití je v souboru [examples/06_fixed_vertices_distance2.cpp](./examples/06_fixed_vertices_distance2.cpp), kde se generují grafy s fixovanými vrcholy a filtruje se podmínka nad jejich vzdáleností.
+
+
+
+## Fixed issues: 
+1) Pokud používáme **Plantri backend** a definujeme vlastní callback pro výstup (`setOutproc`),  
+   na konci generování se vždy na `stderr` vypíše diagnostická hláška: `0 triangulations written to stdout;`
+   Uživatel by měl tuto hlášku **ignorovat**.  
+   Snažil jsem se ji odstranit, ale z důvodu interního fungování Plantri se mi to nepodařilo.  
+   **Důvod:** Kvůli "hezkému" API odchytáváme grafy dříve, než projdou nativním I/O systémem Plantri.
+
+  

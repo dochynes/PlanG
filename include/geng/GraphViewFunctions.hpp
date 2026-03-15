@@ -1,3 +1,9 @@
+#pragma once
+
+#include <boost/graph/breadth_first_search.hpp>
+#include <boost/graph/visitors.hpp>
+#include <vector>
+
 namespace geng
 {
 
@@ -97,8 +103,18 @@ namespace geng
         return boost::identity_property_map();
     }
 
+    inline int distance_between(const GraphView& g, int src, int dst)
+    {
+        const int n = g.num_vertices();
+        if (src < 0 || dst < 0 || src >= n || dst >= n)
+            return -1;
 
+        std::vector<int> dist(n, -1);
 
+        dist[src] = 0;
+        boost::breadth_first_search(g, src, boost::visitor( boost::make_bfs_visitor( boost::record_distances(dist.data(), boost::on_tree_edge{}))));
 
+        return dist[dst];
+    }
 
 }

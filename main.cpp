@@ -1,6 +1,5 @@
 #include "MyGraphLib.hpp"
 #include <iostream>
-
 // STEP 1: Select a backend.
 // Uncomment the one you wish to use. The rest of the code remains unchanged.
 
