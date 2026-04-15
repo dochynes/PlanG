@@ -12,7 +12,9 @@ struct GraphView
 {
     const graph* g_;   
     int n_;            
-    int maxn_;         
+    int maxn_;
+    const int* colors_ = nullptr;
+    int color_count_ = 0;
         
     int num_vertices() const
     { 
@@ -30,6 +32,23 @@ struct GraphView
     const graph* data() const
     {
          return g_; 
+    }
+
+    bool has_coloring() const
+    {
+        return colors_ != nullptr && color_count_ > 0;
+    }
+
+    int color_count() const
+    {
+        return color_count_;
+    }
+
+    int color(int v) const
+    {
+        if (!colors_ || v < 0 || v >= n_) 
+            return -1;
+        return colors_[v];
     }
 
     using vertex_descriptor = int;

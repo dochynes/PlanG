@@ -9,6 +9,9 @@ static prune_cb_t g_prune = NULL;
 static prune_cb_t g_preprune = NULL;
 
 extern int sparse6, graph6, quiet, nooutput, nautyformat, canonise;
+extern int geng_vertex_color_count;
+extern int geng_vertex_color_target[MAXN];
+extern int geng_current_vertex_color[MAXN];
 
 
 void bridge_outproc(FILE* f, graph* g, int n) 
@@ -60,6 +63,29 @@ void geng_set_prune(prune_cb_t f)
 void geng_set_preprune(prune_cb_t f)
 {
     g_preprune = f;
+}
+void geng_set_color_count(int count)
+{
+    geng_vertex_color_count = count;
+}
+void geng_clear_color_target_counts(void)
+{
+    int i;
+    for (i = 0; i < MAXN; ++i) 
+        geng_vertex_color_target[i] = -1;
+}
+void geng_set_color_target_count(int color, int count)
+{
+    if (color >= 0 && color < MAXN)
+        geng_vertex_color_target[color] = count;
+}
+const int* geng_get_current_vertex_colors(void)
+{
+    return geng_current_vertex_color;
+}
+int geng_get_current_color_count(void)
+{
+    return geng_vertex_color_count;
 }
 
 

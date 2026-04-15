@@ -460,6 +460,10 @@ static TLS_ATTR int mindeg,maxdeg,maxn,mine,maxe,mod,res;
 #define PRUNEMULT 50   /* bigger -> more even split at greater cost */
 static TLS_ATTR int min_splitlevel,odometer,splitlevel,multiplicity;
 static TLS_ATTR graph gcan[MAXN];
+int TLS_ATTR geng_vertex_color_count = 0;
+int TLS_ATTR geng_vertex_color_target[MAXN];
+int TLS_ATTR geng_current_vertex_color[MAXN];
+static TLS_ATTR int geng_current_color_size[MAXN];
 
 #define XBIT(i) ((xword)1 << (i))
 #define XPOPCOUNT(x) POPCOUNT(x)
@@ -538,6 +542,94 @@ static TLS_ATTR int maxepft[66] =    /* max edges for -pft */
   96,100,105,106,108, 110,115,118,122,126,
   130,134,138,142,147, 151,156,160,165,170,
   175,180,186,187,189, -1};
+
+/**************************************************************************/
+
+
+static boolean colouring_active(void)
+{
+    return geng_vertex_color_count > 0;
+}
+//zadna barva neni preplnena, pocet chybejicich vrcholu musi sedet
+static boolean colour_assignment_feasible(int n)
+{
+    int c,need;
+
+    if (!colouring_active()) 
+        return TRUE;
+
+    need = 0;
+
+    for (c = 0; c < geng_vertex_color_count; ++c)
+    {
+        if (geng_current_color_size[c] > geng_vertex_color_target[c])
+            return FALSE;
+
+        need += geng_vertex_color_target[c] - geng_current_color_size[c];
+    }
+
+    if (need != maxn - n)
+        return FALSE;
+
+    return TRUE;
+}
+// vezmeme kazdou bunku, seskupime podle barvy, vyrobime nove bunky podle barev
+static void refine_partition_by_colours(int *lab, int *ptn, int n, int *numcells, set *active)
+{
+    int i,j,k,start,end,newnumcells,colour;
+    int newlab[MAXN],newptn[MAXN];
+
+    if (!colouring_active()) 
+        return;
+
+    j = 0;
+    newnumcells = 0;
+    active[0] = 0;
+    start = 0;
+
+    while (start < n)
+    {
+        end = start;
+        while (end < n-1 && ptn[end] > 0) 
+            end++;
+
+        //seskupeni podle barev pro aktualni bunku
+        for (colour = 0; colour < geng_vertex_color_count; ++colour)
+        {
+            for (i = start; i <= end; ++i)
+            {
+                if (geng_current_vertex_color[lab[i]] == colour)
+                    newlab[j++] = lab[i];
+            }
+        }
+
+
+        for (k = start; k < j; ++k) 
+            newptn[k] = 1;
+        if (j > start) 
+            newptn[j-1] = 0;
+
+        for (k = start; k < j; ++k)
+        {
+            if (k == start || geng_current_vertex_color[newlab[k-1]] != geng_current_vertex_color[newlab[k]])
+            {
+                ++newnumcells;
+                active[0] |= bit[k];
+                if (k > start) 
+                    newptn[k-1] = 0;
+            }
+        }
+
+        start = end + 1;
+    }
+
+    for (i = 0; i < n; ++i)
+    {
+        lab[i] = newlab[i];
+        ptn[i] = newptn[i];
+    }
+    *numcells = newnumcells;
+}
 static TLS_ATTR int maxebf[66] =    /* max edges for -bf */
   {0,0,1,2,3, 4,6,7,9,10,
   12,14,16,18,21, 22,24,26,29,31,
@@ -1316,6 +1408,17 @@ static void
 refinex(graph *g, int *lab, int *ptn, int level, int *numcells,
      int *count, set *active, boolean goodret, int *code, int m, int n)
 {
+
+
+    if(*numcells == n)
+    {
+        if (lab[n-1] != n-1)
+        {
+            *code = -1;
+            return;
+        }
+    }
+
     int i,c1,c2,labc1;
     setword x,lact;
     int split1,split2,cell1,cell2;
@@ -1449,18 +1552,43 @@ refinex(graph *g, int *lab, int *ptn, int level, int *numcells,
 
 /**************************************************************************/
 
+
+
 static void
 makecanon(graph *g, graph *gcan, int n)
 /* gcan := canonise(g) */
 {
     int lab[MAXN],ptn[MAXN],orbits[MAXN];
+    int numcells;
+    set active[MAXM];
     static TLS_ATTR DEFAULTOPTIONS_GRAPH(options);
     setword workspace[50];
 
     options.getcanon = TRUE;
+    if (colouring_active())
+    {
+        options.defaultptn = FALSE; // rikame nauty nepouzivej svou implicitni partition, ale pouzij lab ptn co mu dame my
+        for (numcells = 0; numcells < n; ++numcells)
+        {
+            lab[numcells] = numcells;
+            ptn[numcells] = 1;
+        }   // jedna bunka 0,1,2...n-1
 
-    nauty(g,lab,ptn,NULL,orbits,&options,&nauty_stats,
-          workspace,50,1,n,gcan);
+
+        if (n > 0)
+            ptn[n-1] = 0;
+
+        numcells = 1;
+        active[0] = bit[0];
+
+        refine_partition_by_colours(lab,ptn,n,&numcells,active);
+
+        nauty(g,lab,ptn,active,orbits,&options,&nauty_stats,
+              workspace,50,1,n,gcan);
+    }
+    else
+        nauty(g,lab,ptn,NULL,orbits,&options,&nauty_stats,
+              workspace,50,1,n,gcan);
 }
 
 /**************************************************************************/
@@ -1771,6 +1899,8 @@ accept1(graph *g, int n, xword x, graph *gx, int *deg, boolean *rigid)
         active[0] = bit[0] | bit[i1+1];
         ptn[i1] = 0;
     }
+
+    refine_partition_by_colours(lab,ptn,nx,&numcells,active);
     refinex(gx,lab,ptn,0,&numcells,count,active,FALSE,&code,1,nx);
 
     if (code < 0) return FALSE;
@@ -1874,6 +2004,9 @@ accept1b(graph *g, int n, xword x, graph *gx, int *deg, boolean *rigid,
         active[0] = bit[0] | bit[i1+1];
         ptn[i1] = 0;
     }
+
+
+    refine_partition_by_colours(lab,ptn,nx,&numcells,active);
     refinex(gx,lab,ptn,0,&numcells,count,active,FALSE,&code,1,nx);
 
     if (code < 0) return FALSE;
@@ -2082,6 +2215,8 @@ accept2(graph *g, int n, xword x, graph *gx, int *deg, boolean nuniq)
             active[0] |= bit[j0];
         }
     }
+   
+    refine_partition_by_colours(lab,ptn,nx,&numcells,active);
 
     refinex(gx,lab,ptn,0,&numcells,count,active,TRUE,&code,1,nx);
 
@@ -2317,6 +2452,7 @@ genextend(graph *g, int n, int *deg, int ne, boolean rigid, int xlb, int xub)
     xword *xset,*xcard,*xorb;
     xword i,imin,imax;
     int nx,xc,j,dmax,dcrit;
+    int k;
     int xlbx,xubx;
     graph gx[MAXN];
     int degx[MAXN];
@@ -2329,6 +2465,22 @@ genextend(graph *g, int n, int *deg, int ne, boolean rigid, int xlb, int xub)
     if (rigid) ++rigidnodes[n];
 #endif
     ++nodes[n];
+
+    if (colouring_active() && n == 1 && geng_current_vertex_color[0] < 0)
+    {
+        for (j = 0; j < geng_vertex_color_count; ++j)
+        {
+            if (geng_vertex_color_target[j] == 0) 
+                continue;
+            geng_current_vertex_color[0] = j;
+            ++geng_current_color_size[j];
+            if (colour_assignment_feasible(1))
+                genextend(g,1,deg,ne,rigid,xlb,xub);
+            --geng_current_color_size[j];
+            geng_current_vertex_color[0] = -1;
+        }
+        return;
+    }
 
     nx = n + 1;
     dmax = deg[n-1];
@@ -2366,8 +2518,55 @@ genextend(graph *g, int n, int *deg, int ne, boolean rigid, int xlb, int xub)
             xc = (int)xcard[i];
             if (xc == dmax && (x & d) != 0) continue;
             if ((dlow & ~x) != 0) continue;
-
-            if (accept2(g,n,x,gx,deg,
+            if (colouring_active())
+            {
+                for (j = 0; j < geng_vertex_color_count; ++j)
+                {
+                    if (geng_vertex_color_target[j] == 0) 
+                        continue;
+                    geng_current_vertex_color[n] = j;
+                    ++geng_current_color_size[j];
+                    if (colour_assignment_feasible(nx)
+                        && accept2(g,n,x,gx,deg,
+                            xc > dmax+1 || (xc == dmax+1 && (x & d) == 0))
+                        && (!connec || (connec==1 && isconnected(gx,nx))
+                                    || (connec>1 && isbiconnected(gx,nx))))
+                    {
+                        if (splitgraph && notsplit(gx,nx,maxn))
+                        {
+                            --geng_current_color_size[j];
+                            geng_current_vertex_color[n] = -1;
+                            continue;
+                        }
+		        if (chordal && ((bipartite && notchordal5(gx,nx,maxn))
+		            || (!bipartite && notchordal(gx,nx,maxn))))
+                        {
+                            --geng_current_color_size[j];
+                            geng_current_vertex_color[n] = -1;
+                            continue;
+                        }
+                        if (perfect && notperfect(gx,nx,maxn))
+                        {
+                            --geng_current_color_size[j];
+                            geng_current_vertex_color[n] = -1;
+                            continue;
+                        }
+#ifdef PRUNE
+                        if (!PRUNE(gx,nx,maxn))
+#endif
+                        {
+#ifdef INSTRUMENT
+                            haschild = TRUE;
+#endif
+                            ++ecount[ne+xc];
+                            (*outproc)(outfile,canonise ? gcan : gx,nx);
+                        }
+                    }
+                    --geng_current_color_size[j];
+                    geng_current_vertex_color[n] = -1;
+                }
+            }
+            else if ( accept2(g,n,x,gx,deg,
                         xc > dmax+1 || (xc == dmax+1 && (x & d) == 0)))
                 if (!connec || (connec==1 && isconnected(gx,nx))
                             || (connec>1 && isbiconnected(gx,nx)))
@@ -2411,12 +2610,36 @@ genextend(graph *g, int n, int *deg, int ne, boolean rigid, int xlb, int xub)
 
             data[nx].lo = data[nx].xstart[xlbx];
             data[nx].hi = data[nx].xstart[xubx+1];
-            if (accept1(g,n,x,gx,degx,&rigidx))
+            if (!colouring_active() && accept1(g,n,x,gx,degx,&rigidx))
             {
 #ifdef INSTRUMENT
                 haschild = TRUE;
 #endif
                 genextend(gx,nx,degx,ne+xc,rigidx,xlbx,xubx);
+            }
+            else if (colouring_active())
+            {
+                for (j = 0; j < geng_vertex_color_count; ++j)
+                {
+                    if (geng_vertex_color_target[j] == 0) 
+                        continue;
+                    geng_current_vertex_color[n] = j;
+                    ++geng_current_color_size[j];
+
+                    for (k = 0; k < n; ++k) 
+                        degx[k] = deg[k];
+
+                    if (colour_assignment_feasible(nx)
+                        && accept1(g,n,x,gx,degx,&rigidx))
+                    {
+#ifdef INSTRUMENT
+                        haschild = TRUE;
+#endif
+                        genextend(gx,nx,degx,ne+xc,rigidx,xlbx,xubx);
+                    }
+                    --geng_current_color_size[j];
+                    geng_current_vertex_color[n] = -1;
+                }
             }
         }
 
@@ -2466,6 +2689,13 @@ main(int argc, char *argv[])
 
     maxdeg = MAXN; 
     mindeg = 0;
+    for (i = 0; i < MAXN; ++i)
+    {
+        geng_current_vertex_color[i] = -1;
+        geng_current_color_size[i] = 0;
+        if (geng_vertex_color_count <= 0) 
+            geng_vertex_color_target[i] = -1;
+    }
     
     gotX = gotx = gotd = gotD = gote = gotmr = gotf = FALSE;
 

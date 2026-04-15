@@ -27,8 +27,7 @@ using PrepruneFn = std::function<int (const GraphView& g)>;
 void setOutproc(OutprocFn);
 void setPrune(PruneFn);
 void setPreprune(PrepruneFn); 
-void setFixedVertices(const std::vector<int>& vertices);
-bool hasFixedVertices();
+void setColorClassSizes(const std::vector<int>& sizes);
 int distance_between(const GraphView& g, int src, int dst);
 
 
@@ -304,8 +303,6 @@ struct Backend
             args.push_back("-v");
         if(param_quiet)
             args.push_back("-q");
-        else if (geng::hasFixedVertices())
-            args.push_back("-q");
 
 
         
@@ -374,9 +371,22 @@ struct Backend
         return geng::run(argc, argv); 
     }
 
-    static void setFixedVertices(const std::vector<int>& vertices)
+    static void setRootedVertices(int count)
     {
-        geng::setFixedVertices(vertices);
+        std::vector<int> sizes;
+        const int rooted_count = std::max(0, count);
+
+        sizes.reserve(static_cast<std::size_t>(rooted_count) + 1);
+        sizes.push_back(std::max(0, n - rooted_count));
+        for (int i = 0; i < rooted_count; ++i)
+            sizes.push_back(1);
+
+        geng::setColorClassSizes(sizes);
+    }
+
+    static void setColorClassSizes(const std::vector<int>& sizes)
+    {
+        geng::setColorClassSizes(sizes);
     }
 
     static int distance_between(const GraphView& g, int src, int dst)
