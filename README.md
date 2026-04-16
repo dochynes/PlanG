@@ -102,14 +102,17 @@ Celá knihovna je navržena okolo tří hlavních callbacků, které uživatel d
      -  KEEP (pokračovat)  
    - **Použití:** Kontrola stupňů, specifické topologické vlastnosti
 
-2. **`setPrune` (Filtr)**  
-   Volá se pro hotový graf. Slouží k finální validaci.
+2. **`setPrune` (Pruning / filtr)**  
+   V backendu `geng` se volá i pro mezistavy generování, tedy také pro grafy s `g.num_vertices() < g.maxn()`.
 
-   - **Vstup:** Kompletní graf splňující základní parametry generátoru  
+   - **Vstup:** Částečně vytvořený nebo finální graf  
    - **Návratová hodnota:**  
      -  PRUNE (zahodit)  
      -  KEEP (ponechat)  
    - **Použití:** Volání složitějších algoritmů (např. Boost coloring, isomorfismus)
+
+
+   Pokud chce mít uživatel jistotu, že pracuje pouze s finální verzí grafu, měl by graf zpracovat v `setOutproc`.
 
 3. **`setOutproc` (Výstup)**  
    Volá se pro grafy, které prošly filtrem.
@@ -457,62 +460,191 @@ protože mnoho operací musí kontrolovat přítomnost `missing_vertex`, což p�
 
 
 
-## New Extension
 
-+= `distance_between()`
----
+## Obarvené grafy v `geng`
 
-Cílem bylo rozšířit projekt nad `nauty/geng` tak, aby bylo možné generovat grafy ne pouze "až na obyčejný izomorfismus", ale vzhledem k situaci, kdy některé vrcholy hrají speciální roli a musí zůstat pevně dané. Například chci generovat grafy na `n` vrcholech, ale vrcholy `1...k` beru jako speciálně označené a dva grafy považuji za stejné jen tehdy, když existuje izomorfismus, který každý z těchto vrcholů zobrazí sám na sebe. Jinými slovy, neuvažuji všechny permutace vrcholů, ale jen ty, které ponechávají vybranou množinu fixovaných vrcholů na místě.
+Aktuální implementace rozšiřuje `geng` o generování grafů vzhledem k barevným třídám vrcholů. Základní myšlenka je, že izomorfismus už nesmí libovolně permutovat všechny vrcholy, ale musí respektovat barvy. Vrcholy stejné barvy se mezi sebou mohou zaměňovat, ale vrcholy různých barev ne.
 
-Takový model pak umožňuje formulovat podmínky nad konkrétními vrcholy, například že vzdálenost mezi vrcholy `1` a `2` je alespoň `3`, nebo že všechny vrcholy kromě několika fixovaných mají předepsaný stupeň.
+Interně jsou barvy reprezentovány pomocí barevných tříd:
 
-### První pokus: zásah do nativního `geng`
-
-První moje myšlenka byla zasáhnout přímo do nativního kódu `geng` a změnit canonical generation tak, aby `geng` od začátku rozlišoval fixované vrcholy a generoval jen jeden reprezentant z každé třídy vzhledem k této nové, jemnější relaci ekvivalence. Výhodou by bylo pravděpodobně zachování výkonu a možnost ořezávat už během samotného generování.
-
-Myšlenka byla taková, že při kanonizaci nastavím pole `lab[]` a `ptn[]` tak, aby fixované vrcholy tvořily samostatné singletonové classy a ostatní vrcholy byly v jiné části partition. Tím jsem chtěl `nauty` donutit, aby při hledání kanonické formy nerozpoznával jako ekvivalentní ty permutace, které fixované vrcholy přesouvají.
-
-Při studiu zdrojového kódu geng jsem dospěl k závěru, že `geng` nepoužívá kanonizaci izolovaně. Canonical generation je součást celé logiky generování a rozhodování, které rozšíření grafu je kanonické. Aby to bylo správně pro více fixovaných vrcholů, je potřeba zasáhnout do celého mechanismu generace, jinak jsem ne vždy dostával správné počty. Podle mě `geng` není v tomto směru snadno modifikovatelná komponenta(pokud je to vůbec možné), takže jsem tuto cestu vzdal.
-
-### Druhý pokus: standardní geng + dodatečná deduplikace podle fixovaných vrcholů
-
-Pak jsem se pustil do jiného nápadu. Tady už se nedá počítat s nějakým velkým výkonem. Nechal jsem `geng` pracovat standardním způsobem, tedy generovat běžné neoznačené grafy po jednom reprezentantu na obyčejnou izomorfní třídu. Nad každým takovým grafem pak provedu dodatečné rozvinutí všech relevantních možností umístění fixovaných vrcholů a korektní deduplikaci vzhledem k jejich fixaci.
-
-Myšlenka je následující:
-
-- `geng` vygeneruje jeden neoznačený graf `G`.
-- Vezmu množinu fixovaných pozic, například `{0,1}`.
-- Pro tento graf projdu všechny možné uspořádané `k-tice` různých vrcholů `(v_1, ..., v_k)`, které by mohly hrát roli fixovaných vrcholů.
-- Pro každou takovou `k-tici` spočitam kanonický podpis (hash) grafu vzhledem k tomu, že právě tyto vrcholy jsou fixovane.
-- Pokud takový podpis ještě nebyl viděn, vytvořím reprezentanta, ve kterém jsou vybrané vrcholy přeznačeny na požadované fixované indexy `0,1,...,k-1`, a ten pošlu dál do uživatelského callbacku nebo do výstupu.
-
-Tím dostanu přesně jednu reprezentaci za každou třídu izomorfismu, kde fixované vrcholy musí zůstat na místě.
-
-Do API jsem přidal možnost zadat fixované vrcholy takto:
-
-```cpp
-App::setFixedVertices({0, 1});
+```text
+barva 0: velikost a0
+barva 1: velikost a1
+...
+barva k-1: velikost ak-1
 ```
 
-To znamená, že vrcholy `0` a `1` mají v každém výsledném grafu zvláštní význam a při porovnávání grafů smím připustit jen takové izomorfismy, které `0` nechají na `0` a `1` na `1`.
+Součet velikostí tříd odpovídá počtu vrcholů grafu. Například pro 6 vrcholů může rozklad `{4,2}` znamenat, že 4 vrcholy mají barvu `0` a 2 vrcholy mají barvu `1`.
+
+### Jak probíhá barvení v `geng`
+
+Původní `geng` generuje grafy postupným přidáváním vrcholů. Úprava přidává k tomuto procesu ještě průběžné přiřazování barvy právě přidanému vrcholu.
+
+Zjednodušený pseudokód:
+
+```text
+genextend(graf G na n vrcholech):
+    pro každou možnou množinu sousedů x nového vrcholu:
+        pokud colouring není aktivní:
+            pokračuj původním geng algoritmem
+
+        pokud colouring je aktivní:
+            pro každou barvu c:
+                přiřaď novému vrcholu barvu c
+                zvyš aktuální počet vrcholů barvy c
+
+                pokud barevné počty ještě mohou splnit cílové velikosti tříd:
+                    proveď accept test s partition rozdělenou podle barev
+                    pokud test projde:
+                        pokračuj rekurzivně
+
+                vrať přiřazení barvy zpět
+```
+
+Kontrola realizovatelnosti barev se dělá pomocí cílových velikostí tříd. Pokud například generujeme třídy `{3,1}`, pak žádná větev generování nesmí vytvořit více než 3 vrcholy barvy `0` ani více než 1 vrchol barvy `1`. Na finální úrovni musí počty sedět přesně.
+
+Před voláním `nauty` se počáteční partitios rozděli podle barev. Tím `nauty` dostane informaci, které vrcholy patří do stejné barevné třídy, a canonical generation potom pracuje s barevně zachovávajícími izomorfismy.
+
+### Přístup k barvám v callbackách
+
+Uživatel má v `prune` a `preprune` přístup k aktuálním barvám přes `GraphView`:
+
+```cpp
+App::setPreprune([](const App::GraphView& g) {
+
+    if (!g.has_coloring())
+        return 0;
+
+    int color = g.color(0);
+    return 0;
+});
+```
+
+Dostupné metody:
+
+```cpp
+g.has_coloring()
+g.color_count()
+g.color(v)
+g.vertex_colors()
+```
+
+`g.color(v)` vrací index barvy vrcholu `v`. Pokud obarvení není aktivní nebo je vrchol mimo rozsah, vrací `-1`.
+`g.vertex_colors()` vrací pole velikosti `g.num_vertices()`, kde na indexu `v` je barva vrcholu `v`.
+
+V `setPrune` a `setPreprune` barvy odpovídají aktuálnímu grafu, se kterým callback pracuje. Pokud je ale zapnuté `App::setCanonicalLabeling()`, pak `setOutproc` může dostat už kanonicky přeznačený graf. Pole barev je v aktuální implementaci navázané na původní pořadí vrcholů z generování, takže v `setOutproc` po kanonickém přeznačení nemusí barvy odpovídat číslům vrcholů ve výstupním grafu.
+
+### `App::setColorClassSizes(...)`
+
+Nejzákladnější způsob použití je přímo zadat velikosti jednotlivých barevných tříd.
+
+```cpp
+using App = Generator<geng::Backend>;
+
+int main()
+{
+    App::setVertices(6);
+    App::setColorClassSizes({4, 2});
+    return App::run();
+}
+```
+
+Tento příklad generuje grafy na 6 vrcholech se dvěma barevnými třídami:
+
+```text
+barva 0: 4 vrcholy
+barva 1: 2 vrcholy
+```
+
+Barvy jsou v tomto režimu rozlišené. To znamená, že barva `0` a barva `1` mají konkrétní význam a izomorfismus je nesmí mezi sebou prohodit.
+
+Ukázka použití s filtrováním podle hran mezi barevnými třídami je v [examples/07_color_class_sizes_prune.cpp](./examples/07_color_class_sizes_prune.cpp).
+
+Například `{1,3}` a `{3,1}` jsou pro rozlišené barvy dva různé případy:
+
+```text
+{1,3}: barva 0 má 1 vrchol, barva 1 má 3 vrcholy
+{3,1}: barva 0 má 3 vrcholy, barva 1 má 1 vrchol
+```
+
+### `App::setRootedVertices(k)`
+
+Zakotvené vrcholy jsou implementované jako speciální případ barevných tříd. Pokud chceme zakotvit `k` vrcholů na grafu s `n` vrcholy, interně se vytvoří rozklad:
+
+```text
+{n-k, 1, 1, ..., 1}
+```
+
+Tedy jedna velká třída obyčejných vrcholů a `k` singleton tříd. Každý zakotvený vrchol má vlastní unikátní barvu.
+
+Příklad:
+
+```cpp
+App::setVertices(8);
+App::setRootedVertices(2);
+```
+
+Interně odpovídá:
+
+```cpp
+App::setColorClassSizes({6, 1, 1});
+```
+
+Význam:
+
+```text
+barva 0: 6 obyčejných vrcholů
+barva 1: první zakotvený vrchol
+barva 2: druhý zakotvený vrchol
+```
+
+Tím se realizuje generování grafů, kde `k` vrcholů má speciální roli a izomorfismus je nesmí zaměnit s běžnými vrcholy.
+
+Ukázka použití se dvěma zakotvenými vrcholy a filtrem na jejich vzdálenost je v [examples/08_rooted_vertices_prune.cpp](./examples/08_rooted_vertices_prune.cpp).
+
+### `App::setColors(k)`
+
+Funkce `setColors(k)` slouží pro případ, kdy uživatel chce generovat grafy s přesně `k` rozlišenými barvami, ale nechce ručně zadávat velikosti tříd. Interně se proto uvažují pouze rozklady bez nulových tříd.
+
+Protože `geng` interně pracuje s pevnými velikostmi barevných tříd, `setColors(k)` v jednom běhu postupně zkouší všechny uspořádané rozklady počtu vrcholů `n` do `k` barev.
+
+Příklad:
+
+```cpp
+App::setVertices(4);
+App::setColors(2);
+```
+
+Interně se postupně vygenerují případy:
+
+```text
+{1,3}
+{2,2}
+{3,1}
+```
+
+Pro každý takový rozklad se nastaví cílové velikosti tříd stejně, jako kdyby uživatel ručně zavolal `setColorClassSizes(...)`. 
+
+Ukázka použití `setColors(2)` s filtrem nad velikostí jedné barevné třídy je v [examples/06_colored_geng.cpp](./examples/06_colored_geng.cpp).
 
 
 
-### Nevýhody tohoto řešení
 
-- Dodatečná výpočetní cena. Pro každý graf se musí projít všechny kandidátní `k-tice` fixovaných vrcholů. To je řádově `n * (n-1) * ... * (n-k+1)`, což rychle roste.
-- Opakované volání kanonizace. Pro každou kandidátní `k-tici` se znovu volá `nauty` na výpočet podpisu. To je výrazně dražší než čisté generování standardního `geng`.
-- Pruning se v fixovanem režimu nedá použít stejným způsobem jako při nativní canonical generation, protože deduplikace probíhá až nad hotovými grafy (lze použít pouze Prune, Preprune použít nelze).
+### Poznámka k výstupu
 
- Ukázkové použití je v souboru [examples/06_fixed_vertices_distance2.cpp](./examples/06_fixed_vertices_distance2.cpp), kde se generují grafy s fixovanými vrcholy a filtruje se podmínka nad jejich vzdáleností.
+Standardní `graph6` výstup() neobsahuje informace o barvách. Proto se může stát, že dvě různé barevné struktury vypíšou stejný řádek v `graph6`.
+
+Pokud uživatel chce, aby se výstupní grafy před vypsáním kanonicky přeznačily, může zavolat:
+
+```cpp
+App::setCanonicalLabeling();
+```
+Toto se týká hlavně jednoho pevného rozkladu barevných tříd, například při použití `setColorClassSizes(...)` nebo `setRootedVertices(...)`. U `setColors(...)` se postupně zkouší více rozkladů barevných tříd, takže stejné neobarvené `graph6` řádky se mohou objevit i po kanonickém přeznačení.
 
 
 
-## Fixed issues: 
-1) Pokud používáme **Plantri backend** a definujeme vlastní callback pro výstup (`setOutproc`),  
-   na konci generování se vždy na `stderr` vypíše diagnostická hláška: `0 triangulations written to stdout;`
-   Uživatel by měl tuto hlášku **ignorovat**.  
-   Snažil jsem se ji odstranit, ale z důvodu interního fungování Plantri se mi to nepodařilo.  
-   **Důvod:** Kvůli "hezkému" API odchytáváme grafy dříve, než projdou nativním I/O systémem Plantri.
+### Aktuální omezení
 
-  
+Tato funkcionalita zatím předpokládá, že se nebudou kombinovat další přepínače, které v `geng` přepnou generování na jinou větev než `genextend()`.
+
+Aktuálně je obarvení napojené na větev používající `genextend()`. Některé přepínače mohou způsobit, že `geng` použije `spaextend()`, která zatím obarvení nepodporuje.

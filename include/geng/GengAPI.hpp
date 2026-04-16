@@ -27,6 +27,7 @@ using PrepruneFn = std::function<int (const GraphView& g)>;
 void setOutproc(OutprocFn);
 void setPrune(PruneFn);
 void setPreprune(PrepruneFn); 
+void setColors(int count);
 void setColorClassSizes(const std::vector<int>& sizes);
 int distance_between(const GraphView& g, int src, int dst);
 
@@ -382,6 +383,11 @@ struct Backend
             sizes.push_back(1);
 
         geng::setColorClassSizes(sizes);
+    }
+
+    static void setColors(int count)
+    {
+        geng::setColors(count);
     }
 
     static void setColorClassSizes(const std::vector<int>& sizes)

@@ -2,6 +2,7 @@
 #include <boost/graph/graph_traits.hpp>
 #include <boost/iterator/counting_iterator.hpp>
 #include <boost/iterator/iterator_facade.hpp>
+#include <vector>
 extern "C" {
 #include "nauty.h"   //  typ graph
 }
@@ -49,6 +50,14 @@ struct GraphView
         if (!colors_ || v < 0 || v >= n_) 
             return -1;
         return colors_[v];
+    }
+
+    std::vector<int> vertex_colors() const
+    {
+        if (!colors_)
+            return std::vector<int>(static_cast<std::size_t>(n_), -1);
+
+        return std::vector<int>(colors_, colors_ + n_);
     }
 
     using vertex_descriptor = int;
@@ -228,7 +237,7 @@ struct GraphView
 
             for(;u<n;++u)
             {
-                if(v<u)
+                if(v<=u)
                     v=u+1; // protoze musi platit v > u
 
                 const set* row = GRAPHROW(g->data(), u, g->m());
@@ -244,7 +253,7 @@ struct GraphView
                 v = u + 1;
         
             }
-            //konec (end iterator)
+            v = 0; // normalizace na stejny stav jako end iterator
         }
 
     };

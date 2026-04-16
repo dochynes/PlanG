@@ -11,6 +11,7 @@ void geng_set_preprune(int(*)(void*,int,int));
 void geng_set_color_count(int count);
 void geng_clear_color_target_counts(void);
 void geng_set_color_target_count(int color, int count);
+void geng_set_labelled_color_count(int count);
 const int* geng_get_current_vertex_colors(void);
 int  geng_get_current_color_count(void);
 int  geng_run(int argc, char** argv);
@@ -103,6 +104,17 @@ void setColorCount(int count)
 {
     ::geng_set_color_count(std::max(0, count));
     ::geng_clear_color_target_counts();
+    ::geng_set_labelled_color_count(0);
+    refresh_outproc_registration();
+}
+
+void setColors(int count)
+{
+    const int color_count = std::max(0, count);
+
+    ::geng_set_color_count(color_count);
+    ::geng_clear_color_target_counts();
+    ::geng_set_labelled_color_count(color_count);
     refresh_outproc_registration();
 }
 

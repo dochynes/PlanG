@@ -12,6 +12,7 @@ extern int sparse6, graph6, quiet, nooutput, nautyformat, canonise;
 extern int geng_vertex_color_count;
 extern int geng_vertex_color_target[MAXN];
 extern int geng_current_vertex_color[MAXN];
+extern int geng_labelled_color_count;
 
 
 void bridge_outproc(FILE* f, graph* g, int n) 
@@ -78,6 +79,10 @@ void geng_set_color_target_count(int color, int count)
 {
     if (color >= 0 && color < MAXN)
         geng_vertex_color_target[color] = count;
+}
+void geng_set_labelled_color_count(int count)
+{
+    geng_labelled_color_count = count;
 }
 const int* geng_get_current_vertex_colors(void)
 {
