@@ -558,7 +558,7 @@ barva 1: 2 vrcholy
 
 Barvy jsou v tomto režimu rozlišené. To znamená, že barva `0` a barva `1` mají konkrétní význam a izomorfismus je nesmí mezi sebou prohodit.
 
-Ukázka použití s filtrováním podle hran mezi barevnými třídami je v [examples/07_color_class_sizes_prune.cpp](./examples/07_color_class_sizes_prune.cpp).
+[examples/07_color_class_sizes_prune.cpp](./examples/07_color_class_sizes_prune.cpp).
 
 Například `{1,3}` a `{3,1}` jsou pro rozlišené barvy dva různé případy:
 
@@ -600,7 +600,7 @@ barva 2: druhý zakotvený vrchol
 
 Tím se realizuje generování grafů, kde `k` vrcholů má speciální roli a izomorfismus je nesmí zaměnit s běžnými vrcholy.
 
-Ukázka použití se dvěma zakotvenými vrcholy a filtrem na jejich vzdálenost je v [examples/08_rooted_vertices_prune.cpp](./examples/08_rooted_vertices_prune.cpp).
+Ukázka použití se dvěma zakotvenými vrcholy a filtrem na jejich vzdálenost : [examples/08_rooted_vertices_prune.cpp](./examples/08_rooted_vertices_prune.cpp).
 
 ### `App::setColors(k)`
 
