@@ -461,9 +461,9 @@ static TLS_ATTR int mindeg,maxdeg,maxn,mine,maxe,mod,res;
 static TLS_ATTR int min_splitlevel,odometer,splitlevel,multiplicity;
 static TLS_ATTR graph gcan[MAXN];
 int TLS_ATTR geng_vertex_color_count = 0;
-int TLS_ATTR geng_vertex_color_target[MAXN];
+int TLS_ATTR geng_vertex_color_lower[MAXN];
+int TLS_ATTR geng_vertex_color_upper[MAXN];
 int TLS_ATTR geng_current_vertex_color[MAXN];
-int TLS_ATTR geng_labelled_color_count = 0;
 static TLS_ATTR int geng_current_color_size[MAXN];
 
 #define XBIT(i) ((xword)1 << (i))
@@ -551,25 +551,47 @@ static boolean colouring_active(void)
 {
     return geng_vertex_color_count > 0;
 }
-//zadna barva neni preplnena, pocet chybejicich vrcholu musi sedet
+
+static int colour_upper_limit(int colour)
+{
+    int upper = geng_vertex_color_upper[colour];
+
+    if (upper < 0 || upper > maxn) return maxn;
+    return upper;
+}
+
+// zadna barva nesmi presahnout horni mez a ze zbyvajicich vrcholu
+// musi byt mozne splnit vsechny dolni i horni meze
 static boolean colour_assignment_feasible(int n)
 {
-    int c,need;
+    int c,remaining,lower,upper;
+    int need_min; // min pocet vrcholu, ktere jeste musime nekam rozdat
+    int need_max; // max  ... , ktere jeste vubec muzeme rozdat
 
     if (!colouring_active()) 
         return TRUE;
 
-    need = 0;
+    remaining = maxn - n;
+    need_min = 0;
+    need_max = 0;
 
     for (c = 0; c < geng_vertex_color_count; ++c)
     {
-        if (geng_current_color_size[c] > geng_vertex_color_target[c])
+        lower = geng_vertex_color_lower[c];
+        upper = geng_vertex_color_upper[c];
+
+        if (geng_current_color_size[c] > upper)
             return FALSE;
 
-        need += geng_vertex_color_target[c] - geng_current_color_size[c];
+        if (geng_current_color_size[c] < lower)
+            need_min += lower - geng_current_color_size[c];
+
+        need_max += upper - geng_current_color_size[c];
     }
 
-    if (need != maxn - n)
+    if (need_min > remaining) 
+        return FALSE;
+    if (remaining > need_max) 
         return FALSE;
 
     return TRUE;
@@ -2471,7 +2493,7 @@ genextend(graph *g, int n, int *deg, int ne, boolean rigid, int xlb, int xub)
     {
         for (j = 0; j < geng_vertex_color_count; ++j)
         {
-            if (geng_vertex_color_target[j] == 0) 
+            if (colour_upper_limit(j) == 0)
                 continue;
             geng_current_vertex_color[0] = j;
             ++geng_current_color_size[j];
@@ -2523,7 +2545,7 @@ genextend(graph *g, int n, int *deg, int ne, boolean rigid, int xlb, int xub)
             {
                 for (j = 0; j < geng_vertex_color_count; ++j)
                 {
-                    if (geng_vertex_color_target[j] == 0) 
+                    if (colour_upper_limit(j) == 0)
                         continue;
                     geng_current_vertex_color[n] = j;
                     ++geng_current_color_size[j];
@@ -2622,7 +2644,7 @@ genextend(graph *g, int n, int *deg, int ne, boolean rigid, int xlb, int xub)
             {
                 for (j = 0; j < geng_vertex_color_count; ++j)
                 {
-                    if (geng_vertex_color_target[j] == 0) 
+                    if (colour_upper_limit(j) == 0)
                         continue;
                     geng_current_vertex_color[n] = j;
                     ++geng_current_color_size[j];
@@ -2663,50 +2685,6 @@ static void reset_current_colouring(void)
         geng_current_vertex_color[i] = -1;
         geng_current_color_size[i] = 0;
     }
-}
-
-static void generate_for_current_colour_targets(graph *g, int *deg)
-{
-    reset_current_colouring();
-    g[0] = 0;
-    deg[0] = 0;
-    genextend(g,1,deg,0,TRUE,data[1].xlb,data[1].xub);
-}
-
-static void generate_labelled_colour_compositions_rec( int remaining, int parts_left, int colour, int *parts, graph *g, int *deg)
-{
-    int size;
-
-    if (parts_left == 0)
-    {
-        if (remaining != 0) return;
-
-        for (size = 0; size < geng_labelled_color_count; ++size)
-            geng_vertex_color_target[size] = parts[size];
-        generate_for_current_colour_targets(g,deg);
-        return;
-    }
-
-    for (size = 1; size <= remaining - (parts_left - 1); ++size)
-    {
-        parts[colour] = size;
-        generate_labelled_colour_compositions_rec(
-            remaining-size,parts_left-1,colour+1,parts,g,deg);
-    }
-}
-
-static void generate_for_labelled_colours(graph *g, int *deg)
-{
-    int parts[MAXN];
-
-    if (geng_labelled_color_count <= 0)
-    {
-        genextend(g,1,deg,0,TRUE,data[1].xlb,data[1].xub);
-        return;
-    }
-
-    generate_labelled_colour_compositions_rec(
-        maxn,geng_labelled_color_count,0,parts,g,deg);
 }
 
 /**************************************************************************/
@@ -2751,8 +2729,11 @@ main(int argc, char *argv[])
     {
         geng_current_vertex_color[i] = -1;
         geng_current_color_size[i] = 0;
-        if (geng_vertex_color_count <= 0) 
-            geng_vertex_color_target[i] = -1;
+        if (geng_vertex_color_count <= 0)
+        {
+            geng_vertex_color_lower[i] = 0;
+            geng_vertex_color_upper[i] = -1;
+        }
     }
     
     gotX = gotx = gotd = gotD = gote = gotmr = gotf = FALSE;
@@ -3134,7 +3115,10 @@ PLUGIN_INIT
                 spaextend(g,1,deg,0,TRUE,
                                     data[1].xlb,data[1].xub,make0graph);
             else
-                generate_for_labelled_colours(g,deg);
+            {
+                reset_current_colouring();
+                genextend(g,1,deg,0,TRUE,data[1].xlb,data[1].xub);
+            }
         }
     }
     t2 = CPUTIME;

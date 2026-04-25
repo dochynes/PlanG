@@ -558,7 +558,7 @@ barva 1: 2 vrcholy
 
 Barvy jsou v tomto režimu rozlišené. To znamená, že barva `0` a barva `1` mají konkrétní význam a izomorfismus je nesmí mezi sebou prohodit.
 
-[examples/07_color_class_sizes_prune.cpp](./examples/07_color_class_sizes_prune.cpp).
+Ukázka použití s filtrováním podle hran mezi barevnými třídami je v [examples/07_color_class_sizes_prune.cpp](./examples/07_color_class_sizes_prune.cpp).
 
 Například `{1,3}` a `{3,1}` jsou pro rozlišené barvy dva různé případy:
 
@@ -566,6 +566,34 @@ Například `{1,3}` a `{3,1}` jsou pro rozlišené barvy dva různé případy:
 {1,3}: barva 0 má 1 vrchol, barva 1 má 3 vrcholy
 {3,1}: barva 0 má 3 vrcholy, barva 1 má 1 vrchol
 ```
+
+### `App::setColorClassBounds(...)`
+
+Obecnější varianta dovoluje pro každou barevnou třídu zadat dolní a horní mez její velikosti.
+
+```cpp
+App::setVertices(6);
+App::setColorClassBounds({
+    {2, 4},
+    {1, 3}
+});
+```
+
+To znamená:
+
+```text
+barva 0: 2 až 4 vrcholy
+barva 1: 1 až 3 vrcholy
+```
+
+Generátor pak připouští všechny přesné rozklady, které tyto meze splňují a jejichž součet je `n`. Pro `n = 6` tedy například:
+
+```text
+{3,3}
+{4,2}
+```
+
+Funkce `setColorClassSizes(...)` je speciální případ této obecnější varianty, kde pro každou třídu platí dolní mez = horní mez.
 
 ### `App::setRootedVertices(k)`
 
@@ -604,9 +632,18 @@ Ukázka použití se dvěma zakotvenými vrcholy a filtrem na jejich vzdálenost
 
 ### `App::setColors(k)`
 
-Funkce `setColors(k)` slouží pro případ, kdy uživatel chce generovat grafy s přesně `k` rozlišenými barvami, ale nechce ručně zadávat velikosti tříd. Interně se proto uvažují pouze rozklady bez nulových tříd.
+Funkce `setColors(k)` slouží pro případ, kdy uživatel chce generovat grafy s přesně `k` rozlišenými barvami, ale nechce ručně zadávat velikosti tříd.
 
-Protože `geng` interně pracuje s pevnými velikostmi barevných tříd, `setColors(k)` v jednom běhu postupně zkouší všechny uspořádané rozklady počtu vrcholů `n` do `k` barev.
+V aktuální implementaci se `setColors(k)` interně převádí na intervalové omezení:
+
+```text
+barva 0: 1 až n vrcholů
+barva 1: 1 až n vrcholů
+...
+barva k-1: 1 až n vrcholů
+```
+
+Tím se v jednom běhu připustí právě všechny rozklady počtu vrcholů `n` do `k` nenulových uspořádaných tříd.
 
 Příklad:
 
@@ -623,7 +660,6 @@ Interně se postupně vygenerují případy:
 {3,1}
 ```
 
-Pro každý takový rozklad se nastaví cílové velikosti tříd stejně, jako kdyby uživatel ručně zavolal `setColorClassSizes(...)`. 
 
 Ukázka použití `setColors(2)` s filtrem nad velikostí jedné barevné třídy je v [examples/06_colored_geng.cpp](./examples/06_colored_geng.cpp).
 

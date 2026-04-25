@@ -6,6 +6,7 @@
 #include "geng/GraphView.hpp"
 #include <vector>
 #include <string>
+#include <utility>
 namespace geng {
 
 
@@ -29,6 +30,7 @@ void setPrune(PruneFn);
 void setPreprune(PrepruneFn); 
 void setColors(int count);
 void setColorClassSizes(const std::vector<int>& sizes);
+void setColorClassBounds(const std::vector<std::pair<int,int>>& bounds);
 int distance_between(const GraphView& g, int src, int dst);
 
 
@@ -393,6 +395,11 @@ struct Backend
     static void setColorClassSizes(const std::vector<int>& sizes)
     {
         geng::setColorClassSizes(sizes);
+    }
+
+    static void setColorClassBounds(const std::vector<std::pair<int,int>>& bounds)
+    {
+        geng::setColorClassBounds(bounds);
     }
 
     static int distance_between(const GraphView& g, int src, int dst)

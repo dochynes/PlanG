@@ -10,9 +10,9 @@ static prune_cb_t g_preprune = NULL;
 
 extern int sparse6, graph6, quiet, nooutput, nautyformat, canonise;
 extern int geng_vertex_color_count;
-extern int geng_vertex_color_target[MAXN];
+extern int geng_vertex_color_lower[MAXN];
+extern int geng_vertex_color_upper[MAXN];
 extern int geng_current_vertex_color[MAXN];
-extern int geng_labelled_color_count;
 
 
 void bridge_outproc(FILE* f, graph* g, int n) 
@@ -69,20 +69,22 @@ void geng_set_color_count(int count)
 {
     geng_vertex_color_count = count;
 }
-void geng_clear_color_target_counts(void)
+void geng_clear_color_bounds(void)
 {
     int i;
-    for (i = 0; i < MAXN; ++i) 
-        geng_vertex_color_target[i] = -1;
+    for (i = 0; i < MAXN; ++i)
+    {
+        geng_vertex_color_lower[i] = 0;
+        geng_vertex_color_upper[i] = -1;
+    }
 }
-void geng_set_color_target_count(int color, int count)
+void geng_set_color_bounds(int color, int lower, int upper)
 {
     if (color >= 0 && color < MAXN)
-        geng_vertex_color_target[color] = count;
-}
-void geng_set_labelled_color_count(int count)
-{
-    geng_labelled_color_count = count;
+    {
+        geng_vertex_color_lower[color] = lower;
+        geng_vertex_color_upper[color] = upper;
+    }
 }
 const int* geng_get_current_vertex_colors(void)
 {

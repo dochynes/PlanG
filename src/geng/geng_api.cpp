@@ -9,9 +9,8 @@ void geng_set_outproc(void(*)(FILE*,void*,int));
 void geng_set_prune(int(*)(void*,int,int));
 void geng_set_preprune(int(*)(void*,int,int));
 void geng_set_color_count(int count);
-void geng_clear_color_target_counts(void);
-void geng_set_color_target_count(int color, int count);
-void geng_set_labelled_color_count(int count);
+void geng_clear_color_bounds(void);
+void geng_set_color_bounds(int color, int lower, int upper);
 const int* geng_get_current_vertex_colors(void);
 int  geng_get_current_color_count(void);
 int  geng_run(int argc, char** argv);
@@ -103,18 +102,17 @@ namespace geng {
 void setColorCount(int count)
 {
     ::geng_set_color_count(std::max(0, count));
-    ::geng_clear_color_target_counts();
-    ::geng_set_labelled_color_count(0);
+    ::geng_clear_color_bounds();
     refresh_outproc_registration();
 }
 
 void setColors(int count)
 {
-    const int color_count = std::max(0, count);
+    int color_count = std::max(0, count);
 
-    ::geng_set_color_count(color_count);
-    ::geng_clear_color_target_counts();
-    ::geng_set_labelled_color_count(color_count);
+    setColorCount(color_count);
+    for (int color = 0; color < color_count; ++color)
+        ::geng_set_color_bounds(color, 1, MAXN);
     refresh_outproc_registration();
 }
 
@@ -122,7 +120,30 @@ void setColorClassSizes(const std::vector<int>& sizes)
 {
     setColorCount(static_cast<int>(sizes.size()));
     for (std::size_t i = 0; i < sizes.size(); ++i)
-        ::geng_set_color_target_count(static_cast<int>(i), std::max(0, sizes[i]));
+    {
+        int size = std::max(0, sizes[i]);
+        ::geng_set_color_bounds(static_cast<int>(i), size, size);
+    }
+}
+
+void setColorClassBounds(const std::vector<std::pair<int,int>>& bounds)
+{
+    setColorCount(static_cast<int>(bounds.size()));
+    for (std::size_t i = 0; i < bounds.size(); ++i)
+    {
+        int lower = std::max(0, bounds[i].first);
+
+        int upper;
+        if(bounds[i].second < 0)
+        {
+            upper = -1;
+        }
+        else
+        {
+            upper = std::max(lower, bounds[i].second);
+        }
+        ::geng_set_color_bounds(static_cast<int>(i), lower, upper);
+    }
 }
 
 void setOutproc(OutprocFn f)
