@@ -60,6 +60,20 @@ struct GraphView
         return std::vector<int>(colors_, colors_ + n_);
     }
 
+    std::vector<int> vertices_of_color(int color) const
+    {
+        std::vector<int> vertices;
+
+        if (!colors_ || color < 0)
+            return vertices;
+
+        for (int v = 0; v < n_; ++v)
+            if (colors_[v] == color)
+                vertices.push_back(v);
+
+        return vertices;
+    }
+
     using vertex_descriptor = int;
     using edge_descriptor = std::pair<int,int>;
     using directed_category = boost::undirected_tag;  // nebo directed_tag

@@ -527,10 +527,12 @@ g.has_coloring()
 g.color_count()
 g.color(v)
 g.vertex_colors()
+g.vertices_of_color(color)
 ```
 
 `g.color(v)` vrací index barvy vrcholu `v`. Pokud obarvení není aktivní nebo je vrchol mimo rozsah, vrací `-1`.
 `g.vertex_colors()` vrací pole velikosti `g.num_vertices()`, kde na indexu `v` je barva vrcholu `v`.
+`g.vertices_of_color(color)` vrací seznam vrcholů, které mají zadanou barvu.
 
 V `setPrune` a `setPreprune` barvy odpovídají aktuálnímu grafu, se kterým callback pracuje. Pokud je ale zapnuté `App::setCanonicalLabeling()`, pak `setOutproc` může dostat už kanonicky přeznačený graf. Pole barev je v aktuální implementaci navázané na původní pořadí vrcholů z generování, takže v `setOutproc` po kanonickém přeznačení nemusí barvy odpovídat číslům vrcholů ve výstupním grafu.
 
