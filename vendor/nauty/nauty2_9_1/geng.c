@@ -464,6 +464,8 @@ int TLS_ATTR geng_vertex_color_count = 0;
 int TLS_ATTR geng_vertex_color_lower[MAXN];
 int TLS_ATTR geng_vertex_color_upper[MAXN];
 int TLS_ATTR geng_current_vertex_color[MAXN];
+int TLS_ATTR geng_canonical_vertex_color[MAXN];
+boolean TLS_ATTR geng_canonical_vertex_color_active = FALSE;
 static TLS_ATTR int geng_current_color_size[MAXN];
 
 #define XBIT(i) ((xword)1 << (i))
@@ -1582,6 +1584,7 @@ makecanon(graph *g, graph *gcan, int n)
 /* gcan := canonise(g) */
 {
     int lab[MAXN],ptn[MAXN],orbits[MAXN];
+    
     int numcells;
     set active[MAXM];
     static TLS_ATTR DEFAULTOPTIONS_GRAPH(options);
@@ -1608,10 +1611,18 @@ makecanon(graph *g, graph *gcan, int n)
 
         nauty(g,lab,ptn,active,orbits,&options,&nauty_stats,
               workspace,50,1,n,gcan);
+
+        int i;
+        for (i = 0; i < n; ++i)
+            geng_canonical_vertex_color[i] = geng_current_vertex_color[lab[i]];
+        geng_canonical_vertex_color_active = TRUE;
     }
     else
+    {
         nauty(g,lab,ptn,NULL,orbits,&options,&nauty_stats,
               workspace,50,1,n,gcan);
+        geng_canonical_vertex_color_active = FALSE;
+    }
 }
 
 /**************************************************************************/

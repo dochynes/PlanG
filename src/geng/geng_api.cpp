@@ -12,6 +12,7 @@ void geng_set_color_count(int count);
 void geng_clear_color_bounds(void);
 void geng_set_color_bounds(int color, int lower, int upper);
 const int* geng_get_current_vertex_colors(void);
+const int* geng_get_output_vertex_colors(void);
 int  geng_get_current_color_count(void);
 int  geng_run(int argc, char** argv);
 
@@ -59,7 +60,7 @@ static void c_outproc(FILE* f, void* gg, int n)
         static_cast<const graph*>(gg),
         n,
         n,
-        ::geng_get_current_vertex_colors(),
+        ::geng_get_output_vertex_colors(),
         ::geng_get_current_color_count()
     };
     s_outproc(out, view);

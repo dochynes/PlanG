@@ -1,4 +1,5 @@
 #include "gtools.h"
+#include <string.h>
 
 
 typedef void (*outproc_cb_t)(FILE* f, void* g, int n);
@@ -13,6 +14,38 @@ extern int geng_vertex_color_count;
 extern int geng_vertex_color_lower[MAXN];
 extern int geng_vertex_color_upper[MAXN];
 extern int geng_current_vertex_color[MAXN];
+extern int geng_canonical_vertex_color[MAXN];
+extern int geng_canonical_vertex_color_active;
+
+static const int* output_vertex_colours(void)
+{
+    if (canonise && geng_canonical_vertex_color_active)
+        return geng_canonical_vertex_color;
+
+    return geng_current_vertex_color;
+}
+
+static void write_vertex_colours(FILE* f, int n, const int* colours)
+{
+    int i;
+
+    fputs(" colors:", f);
+    for (i = 0; i < n; ++i)
+    {
+        fprintf(f, " %d", colours[i]);
+    }
+    fputc('\n', f);
+}
+
+static void write_graph_code_without_newline(FILE* f, const char* code)
+{
+    size_t len = strlen(code);
+
+    if (len > 0 && code[len - 1] == '\n')
+        --len;
+
+    fwrite(code, 1, len, f);
+}
 
 
 void bridge_outproc(FILE* f, graph* g, int n) 
@@ -33,11 +66,27 @@ void bridge_outproc(FILE* f, graph* g, int n)
     }
     else if (sparse6)
     { 
-        writes6(f, g, 1, n); 
+        if (geng_vertex_color_count > 0)
+        {
+            write_graph_code_without_newline(f, ntos6(g, 1, n));
+            write_vertex_colours(f, n, output_vertex_colours());
+        }
+        else
+        {
+            writes6(f, g, 1, n);
+        }
     }
     else 
     { 
-        writeg6(f, g, 1, n); 
+        if (geng_vertex_color_count > 0)
+        {
+            write_graph_code_without_newline(f, ntog6(g, 1, n));
+            write_vertex_colours(f, n, output_vertex_colours());
+        }
+        else
+        {
+            writeg6(f, g, 1, n);
+        }
     }
 }
 
@@ -89,6 +138,10 @@ void geng_set_color_bounds(int color, int lower, int upper)
 const int* geng_get_current_vertex_colors(void)
 {
     return geng_current_vertex_color;
+}
+const int* geng_get_output_vertex_colors(void)
+{
+    return output_vertex_colours();
 }
 int geng_get_current_color_count(void)
 {
