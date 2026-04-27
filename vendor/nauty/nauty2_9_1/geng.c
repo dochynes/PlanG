@@ -2360,7 +2360,7 @@ spaextend(graph *g, int n, int *deg, int ne, boolean rigid,
 {
     xword x,d,dlow;
     xword xlim,*xorb;
-    int xc,nx,i,j,dmax,dcrit,xlbx,xubx;
+    int xc,nx,i,j,k,dmax,dcrit,xlbx,xubx;
     graph gx[MAXN];
     xword *xx,ixx;
     int degx[MAXN];
@@ -2373,6 +2373,22 @@ spaextend(graph *g, int n, int *deg, int ne, boolean rigid,
     if (rigid) ++rigidnodes[n];
 #endif
     ++nodes[n];
+
+    if (colouring_active() && n == 1 && geng_current_vertex_color[0] < 0)
+    {
+        for (j = 0; j < geng_vertex_color_count; ++j)
+        {
+            if (colour_upper_limit(j) == 0)
+                continue;
+            geng_current_vertex_color[0] = j;
+            ++geng_current_color_size[j];
+            if (colour_assignment_feasible(1))
+                spaextend(g,1,deg,ne,rigid,xlb,xub,makeh);
+            --geng_current_color_size[j];
+            geng_current_vertex_color[0] = -1;
+        }
+        return;
+    }
 
     nx = n + 1;
     dmax = deg[n-1];
@@ -2411,7 +2427,56 @@ spaextend(graph *g, int n, int *deg, int ne, boolean rigid,
                 && (xc > dmax || (xc == dmax && (x & d) == 0))
                 && (dlow & ~x) == 0)
             {
-                if (accept2(g,n,x,gx,deg,
+                if (colouring_active())
+                {
+                    for (j = 0; j < geng_vertex_color_count; ++j)
+                    {
+                        if (colour_upper_limit(j) == 0)
+                            continue;
+                        geng_current_vertex_color[n] = j;
+                        ++geng_current_color_size[j];
+                        if (colour_assignment_feasible(nx)
+                            && accept2(g,n,x,gx,deg,
+                                xc > dmax+1 || (xc == dmax+1 && (x & d) == 0))
+                            && (!connec ||
+                                  (connec==1 && isconnected(gx,nx)) ||
+                                  (connec>1 && isbiconnected(gx,nx))))
+                        {
+                            if (splitgraph && notsplit(gx,nx,maxn))
+                            {
+                                --geng_current_color_size[j];
+                                geng_current_vertex_color[n] = -1;
+                                continue;
+                            }
+		            if (chordal && ((bipartite && notchordal5(gx,nx,maxn))
+			        || (!bipartite && notchordal(gx,nx,maxn))))
+                            {
+                                --geng_current_color_size[j];
+                                geng_current_vertex_color[n] = -1;
+                                continue;
+                            }
+                            if (perfect && notperfect(gx,nx,maxn))
+                            {
+                                --geng_current_color_size[j];
+                                geng_current_vertex_color[n] = -1;
+                                continue;
+                            }
+#ifdef PRUNE
+                            if (!PRUNE(gx,nx,maxn))
+#endif
+                            {
+#ifdef INSTRUMENT
+                                haschild = TRUE;
+#endif
+                                ++ecount[ne+xc];
+                                (*outproc)(outfile,canonise ? gcan : gx,nx);
+                            }
+                        }
+                        --geng_current_color_size[j];
+                        geng_current_vertex_color[n] = -1;
+                    }
+                }
+                else if (accept2(g,n,x,gx,deg,
                     xc > dmax+1 || (xc == dmax+1 && (x & d) == 0))
                     && (!connec ||
                           (connec==1 && isconnected(gx,nx)) ||
@@ -2457,13 +2522,37 @@ spaextend(graph *g, int n, int *deg, int ne, boolean rigid,
 
                 xlbx = data[nx].xlb;
                 xubx = data[nx].xub;
-                if (xlbx <= xubx
+                if (xlbx <= xubx && !colouring_active()
                     && accept1b(g,n,x,gx,degx,&rigidx,makeh))
                 {
 #ifdef INSTRUMENT
                     haschild = TRUE;
 #endif
                     spaextend(gx,nx,degx,ne+xc,rigidx,xlbx,xubx,makeh);
+                }
+                else if (xlbx <= xubx && colouring_active())
+                {
+                    for (j = 0; j < geng_vertex_color_count; ++j)
+                    {
+                        if (colour_upper_limit(j) == 0)
+                            continue;
+                        geng_current_vertex_color[n] = j;
+                        ++geng_current_color_size[j];
+
+                        for (k = 0; k < n; ++k)
+                            degx[k] = deg[k];
+
+                        if (colour_assignment_feasible(nx)
+                            && accept1b(g,n,x,gx,degx,&rigidx,makeh))
+                        {
+#ifdef INSTRUMENT
+                            haschild = TRUE;
+#endif
+                            spaextend(gx,nx,degx,ne+xc,rigidx,xlbx,xubx,makeh);
+                        }
+                        --geng_current_color_size[j];
+                        geng_current_vertex_color[n] = -1;
+                    }
                 }
             }
         }
