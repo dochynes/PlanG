@@ -465,16 +465,16 @@ protože mnoho operací musí kontrolovat přítomnost `missing_vertex`, což p�
 
 Aktuální implementace rozšiřuje `geng` o generování grafů vzhledem k barevným třídám vrcholů. Základní myšlenka je, že izomorfismus už nesmí libovolně permutovat všechny vrcholy, ale musí respektovat barvy. Vrcholy stejné barvy se mezi sebou mohou zaměňovat, ale vrcholy různých barev ne.
 
-Interně jsou barvy reprezentovány pomocí barevných tříd:
+Interně se obarvení sleduje pomocí barevných tříd. Každý vrchol má přiřazený index barvy a generátor průběžně hlídá, kolik vrcholů už v jednotlivých barvách vzniklo.
 
 ```text
-barva 0: velikost a0
-barva 1: velikost a1
+barva 0: aktuální počet vrcholů v barvě 0
+barva 1: aktuální počet vrcholů v barvě 1
 ...
-barva k-1: velikost ak-1
+barva k-1: aktuální počet vrcholů v barvě k-1
 ```
 
-Součet velikostí tříd odpovídá počtu vrcholů grafu. Například pro 6 vrcholů může rozklad `{4,2}` znamenat, že 4 vrcholy mají barvu `0` a 2 vrcholy mají barvu `1`.
+Omezení na velikosti tříd lze zadat přesně, například `{4,2}`, nebo intervalově, například `barva 0: 2..4`, `barva 1: 1..3`. Pro každý finální graf musí součet skutečných velikostí tříd odpovídat počtu vrcholů grafu.
 
 ### Jak probíhá barvení v `geng`
 
@@ -483,7 +483,7 @@ Původní `geng` generuje grafy postupným přidáváním vrcholů. Úprava při
 Zjednodušený pseudokód:
 
 ```text
-genextend(graf G na n vrcholech):
+extend(graf G na n vrcholech):
     pro každou možnou množinu sousedů x nového vrcholu:
         pokud colouring není aktivní:
             pokračuj původním geng algoritmem
@@ -493,7 +493,7 @@ genextend(graf G na n vrcholech):
                 přiřaď novému vrcholu barvu c
                 zvyš aktuální počet vrcholů barvy c
 
-                pokud barevné počty ještě mohou splnit cílové velikosti tříd:
+                pokud barevné počty ještě mohou splnit zadané meze tříd:
                     proveď accept test s partition rozdělenou podle barev
                     pokud test projde:
                         pokračuj rekurzivně
@@ -501,9 +501,10 @@ genextend(graf G na n vrcholech):
                 vrať přiřazení barvy zpět
 ```
 
-Kontrola realizovatelnosti barev se dělá pomocí cílových velikostí tříd. Pokud například generujeme třídy `{3,1}`, pak žádná větev generování nesmí vytvořit více než 3 vrcholy barvy `0` ani více než 1 vrchol barvy `1`. Na finální úrovni musí počty sedět přesně.
 
-Před voláním `nauty` se počáteční partitios rozděli podle barev. Tím `nauty` dostane informaci, které vrcholy patří do stejné barevné třídy, a canonical generation potom pracuje s barevně zachovávajícími izomorfismy.
+Kontrola realizovatelnosti barev se dělá pomocí dolních a horních mezí tříd. Pokud například generujeme přesné třídy `{3,1}`, interně se to chápe jako intervaly `3..3` a `1..1`. Žádná větev generování nesmí překročit horní mez a zároveň se průběžně kontroluje, že ze zbývajících vrcholů ještě lze splnit všechny dolní meze.
+
+Před voláním `nauty` se počáteční partition rozdělí podle barev. Tím `nauty` dostane informaci, které vrcholy patří do stejné barevné třídy, a canonical generation potom pracuje s barevně zachovávajícími izomorfismy.
 
 ### Přístup k barvám v callbackách
 
@@ -534,7 +535,7 @@ g.vertices_of_color(color)
 `g.vertex_colors()` vrací pole velikosti `g.num_vertices()`, kde na indexu `v` je barva vrcholu `v`.
 `g.vertices_of_color(color)` vrací seznam vrcholů, které mají zadanou barvu.
 
-V `setPrune` a `setPreprune` barvy odpovídají aktuálnímu grafu, se kterým callback pracuje. Pokud je ale zapnuté `App::setCanonicalLabeling()`, pak `setOutproc` může dostat už kanonicky přeznačený graf. Pole barev je v aktuální implementaci navázané na původní pořadí vrcholů z generování, takže v `setOutproc` po kanonickém přeznačení nemusí barvy odpovídat číslům vrcholů ve výstupním grafu.
+V `setPrune` a `setPreprune` barvy odpovídají aktuálnímu grafu, se kterým callback pracuje. V `setOutproc` barvy odpovídají grafu, který se právě vypisuje. Pokud je zapnuté `App::setCanonicalLabeling()`, graf se před výstupem kanonicky přeznačí a barvy se přeuspořádají stejným způsobem.
 
 ### `App::setColorClassSizes(...)`
 
@@ -562,7 +563,7 @@ Barvy jsou v tomto režimu rozlišené. To znamená, že barva `0` a barva `1` m
 
 Ukázka použití s filtrováním podle hran mezi barevnými třídami je v [examples/07_color_class_sizes_prune.cpp](./examples/07_color_class_sizes_prune.cpp).
 
-Například `{1,3}` a `{3,1}` jsou pro rozlišené barvy dva různé případy:
+`{1,3}` a `{3,1}` jsou pro rozlišené barvy dva různé případy:
 
 ```text
 {1,3}: barva 0 má 1 vrchol, barva 1 má 3 vrcholy
@@ -654,7 +655,7 @@ App::setVertices(4);
 App::setColors(2);
 ```
 
-Interně se postupně vygenerují případy:
+Interně se připustí například tyto konkrétní velikosti tříd:
 
 ```text
 {1,3}
@@ -670,19 +671,24 @@ Ukázka použití `setColors(2)` s filtrem nad velikostí jedné barevné tříd
 
 ### Poznámka k výstupu
 
-Standardní `graph6` výstup() neobsahuje informace o barvách. Proto se může stát, že dvě různé barevné struktury vypíšou stejný řádek v `graph6`.
+Standardní `graph6` ani `sparse6` formát sám o sobě neobsahuje informace o barvách. Pokud je ale v této knihovně aktivní obarvení a uživatel nenastaví vlastní `setOutproc`, výchozí výstup za graf dopíše i barvy vrcholů:
+
+```text
+C? colors: 0 1 1
+```
+
+Pokud uživatel nastaví vlastní `setOutproc`, je formát výstupu plně v jeho režii.
 
 Pokud uživatel chce, aby se výstupní grafy před vypsáním kanonicky přeznačily, může zavolat:
 
 ```cpp
 App::setCanonicalLabeling();
 ```
-Toto se týká hlavně jednoho pevného rozkladu barevných tříd, například při použití `setColorClassSizes(...)` nebo `setRootedVertices(...)`. U `setColors(...)` se postupně zkouší více rozkladů barevných tříd, takže stejné neobarvené `graph6` řádky se mohou objevit i po kanonickém přeznačení.
+Při kanonickém přeznačení se současně přeuspořádají i barvy vrcholů, takže výchozí barevný výstup i `GraphView` v `setOutproc` odpovídají výstupnímu pořadí vrcholů.
 
 
 
-### Aktuální omezení
 
-Tato funkcionalita zatím předpokládá, že se nebudou kombinovat další přepínače, které v `geng` přepnou generování na jinou větev než `genextend()`.
+Obarvení je napojené i na omezenou větev `spaextend()`. Barvy jsou tedy dostupné také při použití přepínačů, které `geng` interně vedou přes `spaextend()`, například `-m`, `-t` nebo `-f`.
 
-Aktuálně je obarvení napojené na větev používající `genextend()`. Některé přepínače mohou způsobit, že `geng` použije `spaextend()`, která zatím obarvení nepodporuje.
+Ukázka kombinace `setTriangleFree()`, `setRootedVertices(1)`  je v [examples/09_spaextend_coloring.cpp](./examples/09_spaextend_coloring.cpp).
