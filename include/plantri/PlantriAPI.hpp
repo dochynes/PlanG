@@ -88,7 +88,7 @@ struct Backend
     {
         PlanarCode, // default
         Graph6, // -g
-        Sprase6, //-s
+        Sparse6, //-s
         Ascii, // -a
         EdgeCode, //-E
         DoubleCode, //-T
@@ -278,7 +278,7 @@ struct Backend
             case OutputFormat::Graph6:
                 args.push_back("-g");
                 break;
-            case OutputFormat::Sprase6:
+            case OutputFormat::Sparse6:
                 args.push_back("-s");
                 break;
             case OutputFormat::Ascii:

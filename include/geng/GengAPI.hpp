@@ -60,7 +60,7 @@ struct Backend
     enum class OutputFormat
     {
         Graph6, //default nebo -g
-        Sprase6, //-s
+        Sparse6, //-s
         NoOutput, //-u
         NautyBinary // -n 
     };
@@ -281,7 +281,7 @@ struct Backend
         // -y chybi
         switch(out_format)
         {
-            case OutputFormat::Sprase6:
+            case OutputFormat::Sparse6:
                 args.push_back("-s");
                 break;
             case OutputFormat::NoOutput:
