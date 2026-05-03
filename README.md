@@ -10,10 +10,11 @@ Knihovna slouží jako "bridge" (most), který umožňuje vývojářům využív
 - **Sjednocené API**: Stejná syntaxe pro generování obecných grafů (Geng) i rovinných triangulací (Plantri).
 - **Boost.Graph Kompatibilita**: Vygenerované grafy splňují koncepty AdjacencyGraph, VertexListGraph a další, což umožňuje přímé použití algoritmů z `boost::graph` (např. barvení, hledání komponent).
 - **Bezpečnost**: Zapouzdření surových C pointerů (zejména u Plantri) do bezpečných iterátorů a navigačních funkcí.
+- **Rozšíření Geng**: Podpora barevných tříd a zakotvených vrcholů přímo v generačním procesu.
 
 ## 1. Architektura
 
-Knihovna není přepsáním generátorů do C++. Místo toho využívá techniku statického linkování s vloženým "shim" vrstvou.
+Knihovna není přepsáním generátorů do C++. Místo toho využívá techniku statického linkování s vloženou vrstvou "shim".
 
 ### Jak to funguje pod kapotou
 
@@ -24,7 +25,7 @@ Knihovna není přepsáním generátorů do C++. Místo toho využívá techniku
 
 ### Proč Zero-Copy?
 
-Generátory jako geng mohou produkovat miliony grafů za sekundu. Jakákoliv konverze do objektů typu `std::vector<std::vector<int>>` nebo `boost::adjacency_list` by byla fatální brzdou. Naše řešení umožňuje číst data přímo z interní reprezentace (bitsety pro Geng, pointery pro Plantri) s nulovou režií.
+Generátory jako geng mohou produkovat miliony grafů za sekundu. Jakákoliv konverze do objektů typu `std::vector<std::vector<int>>` nebo `boost::adjacency_list` by byla fatální brzdou. Toto řešení umožňuje číst data přímo z interní reprezentace (bitsety pro Geng, pointery pro Plantri) s nulovou režií.
 
 ## 2. Kompilace a Struktura projektu
 
@@ -35,7 +36,7 @@ Generátory jako geng mohou produkovat miliony grafů za sekundu. Jakákoliv kon
 - Standardní nástroje: `make`, `ar`.
 
 ### Struktura adresářů
-- `include/` – Veškeré hlavičkové soubory C++ API  
+- `include/` – Veškeré hlavičkové soubory C++ API
   (`MyGraphLib.hpp` je hlavní vstupní bod)
 
 - `src/` – Implementace wrapperů a C shimů
@@ -50,8 +51,12 @@ Generátory jako geng mohou produkovat miliony grafů za sekundu. Jakákoliv kon
 
 ### Sestavení
 
-Projekt používá **Makefile**.  
-Pro sestavení knihoven a aplikace spusťte: **make**
+Projekt používá **Makefile**.
+Pro sestavení knihoven a aplikace spusťte:
+
+```bash
+make
+```
 
 Tím se vytvoří statické knihovny:
 
@@ -69,14 +74,13 @@ sudo apt-get install libboost-all-dev
 
 ## 3. Použití a API
 
-Celá knihovna je navržena okolo **tří hlavních callbacků**, které uživatel definuje.
+Základní použití spočívá ve výběru backendu, nastavení parametrů generátoru a případné registraci callbacků.
 
 ### Inicializace
 
 V souboru `main.cpp` stačí vybrat backend:
 
 ```cpp
-
 #include "MyGraphLib.hpp"
 
 // Pro obecné grafy:
@@ -91,7 +95,7 @@ int main(int argc, char** argv) {
 }
 ```
 
-Celá knihovna je navržena okolo tří hlavních callbacků, které uživatel definuje:
+API je navrženo okolo tří hlavních callbacků:
 
 1. **`setPreprune` (Heuristika)**  
    Volá se během konstrukce grafu. Umožňuje oříznout větev výpočtu dříve, než je graf hotový.
@@ -120,7 +124,7 @@ Celá knihovna je navržena okolo tří hlavních callbacků, které uživatel d
    - **Vstup:** `Output&` (wrapper nad `FILE*`) a graf  
    - **Použití:** Výpis grafu do souboru nebo na `stdout`, pokud chce uživatel sám řídit proces výpisu
 
-Priklad použiti: [1](./examples/04_test_geng_planarity_filter.cpp), [2](./examples/02_example_boost.cpp)
+Příklad použití: [1](./examples/04_test_geng_planarity_filter.cpp), [2](./examples/02_example_boost.cpp)
 
 ## Strategie výstupu
 
@@ -129,7 +133,7 @@ Knihovna flexibilně volí způsob výpisu grafů podle toho, jakou míru kontro
 ---
 ### 1. Nativní výstup (bez `setOutproc`)
 
-Pokud uživatel nenastaví vlastní callback, výpis zajišťuje přímo generátor pomocí svých interních, optimalizovaných C rutin.  
+Pokud uživatel nenastaví vlastní callback, výpis zajišťuje přímo generátor pomocí svých interních, optimalizovaných C rutin.
 Výstup je směrován na `stdout`, případně do souboru nastaveného pomocí:
 
 ```cpp
@@ -149,7 +153,7 @@ Jakmile je nastaven callback `setOutproc`, nativní výpis generátoru se zcela 
 
 Callback dostává objekt `Output&`, což je bezpečný C++ wrapper nad nízkoúrovňovým C `FILE*`.
 
-Pokud nebyl přes API(`setOutputFile(string)`) nastaven výstupní soubor, output == `stdout`.
+Pokud nebyl přes API (`setOutputFile(string)`) nastaven výstupní soubor, výstupem je `stdout`.
 
 Pokud uživatel chce v callbacku vypsat samotný graf, může použít:
 
@@ -169,12 +173,12 @@ U backendu **Geng** `out << g` vypisuje `graph6`.
 Přiklad:
 ```cpp
 App::setOutproc([](Output& out, const App::GraphView& g) {
-    // V tomto bloku máte absolutní kontrolu nad tím, co se zapíše.
-    // Můžete vypisovat vlastní texty, statistiky, nebo výsledky algoritmů.
-    
+    // V tomto bloku máme absolutní kontrolu nad tím, co se zapíše.
+    // Můžeme vypisovat vlastní texty, statistiky, nebo výsledky algoritmů.
+
     out << "Nalezen graf splňující podmínky: ";
-    
-    // Použije operátor << pro výpis grafu.
+
+    // operátor << pro výpis grafu.
     out << g;
 });
 ```
@@ -183,8 +187,8 @@ App::setOutproc([](Output& out, const App::GraphView& g) {
 
 ## Konfigurace generátoru Geng
 
-API poskytuje přímé mapování na parametry původního nástroje.  
-Pomocí následujících metod generator nastavime přímo z C++.
+API poskytuje přímé mapování na parametry původního nástroje.
+Pomocí následujících metod generátor nastavíme přímo z C++.
 
 ---
 
@@ -275,7 +279,7 @@ Pomocí následujících metod generator nastavime přímo z C++.
 - `setSplitLevel(int)`
 
 ---
-[Priklad použiti](./examples/05_api_usage.cpp)
+[Příklad použití](./examples/05_api_usage.cpp)
 
 
 
@@ -283,7 +287,7 @@ Pomocí následujících metod generator nastavime přímo z C++.
 ## 4. Boost.Graph integrace
 
 
-## Implementované koncepty
+### Implementované koncepty
 
 `GraphView` splňuje následující koncepty knihovny **Boost.Graph**.
 U každého konceptu jsou uvedeny funkce, které jsou dostupné.
@@ -324,7 +328,7 @@ Poskytované funkce:
 
 ### `IncidenceGraph`
 
-Umožňuje iteraci přes vycházející hrany daného vrcholu a jeho stupen.
+Umožňuje iteraci přes vycházející hrany daného vrcholu a jeho stupeň.
 
 Poskytované funkce:
 
@@ -350,7 +354,7 @@ U backendu **Geng** je `vertex_index` přímo identita, protože vrcholy jsou č
 U běžných Plantri grafů, kde `missing_vertex < 0`, jsou vrcholy také číslované souvisle `0 ... num_vertices(g)-1`.
 V takovém případě lze raw `vertex_descriptor` bezpečně používat přímo jako index do `std::vector`.
 
-U backendu **Plantri** může při polygon/disk triangulacích existovat interní `missing_vertex`.
+[U backendu **Plantri** může při polygon/disk triangulacích existovat interní `missing_vertex`.](#poznamky-a-omezeni)
 V takovém případě může být raw číslování například:
 
 ```text
@@ -367,7 +371,7 @@ vertex_index: 0 1 2 3 4 5 6
 
 To je důležité pro Boost algoritmy, které používají pole nebo `std::vector` velikosti `num_vertices(g)`.
 
-Pokud chce uživatel indexovat vlastní pole bezpečně i pro disk/polygon triangulace, může použít property mapu stejně jako v
+Pokud chcemd indexovat vlastní pole bezpečně i pro disk/polygon triangulace, můžeme použít property mapu stejně jako v
 [examples/11_plantri_vertex_index_map.cpp](./examples/11_plantri_vertex_index_map.cpp)
 
 
@@ -414,8 +418,7 @@ pro oba typy grafů**.
 
 Backend Geng pracuje s obecnými neorientovanými grafy reprezentovanými
 maticí sousednosti.
-
-- `distance_between`
+ `distance_between` - počítá vzdálenost dvou vrcholů pomocí BFS nad Boost.Graph rozhraním
 
 
 
@@ -434,33 +437,36 @@ k dispozici u Gengu, například:
 - `next_edge(e)`
 - `prev_edge(e)`
 - `opposite_edge(e)`
-TODO: dalši
+
+Tyto funkce umožňují procházet cyklické pořadí hran okolo vrcholu a přecházet
+mezi opačnými orientacemi jedné hrany.
 
 
 
-## 6. Case Study: Výkon a replikace pluginů
+## 6. výkon a reimplementace pluginu
 
 Jedním z hlavních cílů bylo ověřit, že C++ API **výrazně nezpomaluje generování grafů**.
 
-V adresáři: [examples/03_plantri_plugin.cpp](./examples/03_plantri_plugin.cpp) se nachází moje **reimplementace nativního C pluginu `plantri_maxd`** 
-(do mého C++ API).Při implementaci jsem se snažil **použít identickou heuristiku Preprune**, jako
-v původním C pluginu, a **zachovat logiku filtru maximálního stupně**.
+V souboru [examples/03_plantri_plugin.cpp](./examples/03_plantri_plugin.cpp) se nachází
+**C++ reimplementace nativního C pluginu `plantri_maxd`** nad tímto API.
+Implementace používá stejnou heuristiku `Preprune` a zachovává logiku filtru
+maximálního stupně.
 
-Podle několika testovacích pokusů **vypadá implementace správně a výsledky odpovídají originálu**.
+Kontrolní běhy ukázaly, že výsledky odpovídají původnímu C pluginu.
 
 
 ---
 
-### Příklady
+## Příklady
 Další ukázky použití knihovny lze nalézt ve složce [examples](./examples/)
 
 ---
 
 
-## > [!IMPORTANT] Poznámky a omezení
+## Poznámky a omezení
 
 
-1) **missing_vertex**
+### `missing_vertex`
 Interně Plantri obsahuje statickou proměnnou `missing_vertex`, která se používá pouze při generování **polygon triangulací**:
 ```c
 static int missing_vertex = -1;
