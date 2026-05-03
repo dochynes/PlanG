@@ -20,9 +20,9 @@ inline Traits::vertex_descriptor target(Traits::edge_descriptor e, const GraphVi
 
 
 //incidence graph
-inline auto out_edges(Traits::vertex_descriptor u, const GraphView& g)
+inline std::pair<Traits::out_edge_iterator, Traits::out_edge_iterator> out_edges(Traits::vertex_descriptor u, const GraphView& g)
 {
-    if(u < 0 || u>=g.nv || u==g.missing_vertex)
+    if(!g.is_valid_vertex(u))
     {
         return std::make_pair(Traits::out_edge_iterator(&g,u,nullptr,0),Traits::out_edge_iterator(&g,u,nullptr,0));
     }
@@ -42,25 +42,25 @@ inline auto out_edges(Traits::vertex_descriptor u, const GraphView& g)
 
 inline Traits::degree_size_type out_degree(Traits::vertex_descriptor u,const GraphView& g)
 {
-    if (u < 0 || u >= g.nv || u == g.missing_vertex) 
+    if (!g.is_valid_vertex(u))
         return 0;
     return g.degree[u];
 }
 
 
-inline auto vertices(const GraphView& g)
+inline std::pair<Traits::vertex_iterator, Traits::vertex_iterator> vertices(const GraphView& g)
 {
-    return std::make_pair(Traits::vertex_iterator(&g,0),Traits::vertex_iterator(&g,g.nv));
+    return std::make_pair(Traits::vertex_iterator(&g,0),Traits::vertex_iterator(&g,g.vertex_limit()));
 }
 
 inline auto num_vertices(const GraphView& g)
 {
-    return g.nv - (g.missing_vertex >= 0 ? 1 : 0);
+    return g.num_vertices();
 }
 
-inline auto edges(const GraphView& g)
+inline std::pair<Traits::edge_iterator, Traits::edge_iterator> edges(const GraphView& g)
 {
-    return std::make_pair(Traits::edge_iterator(&g,0),Traits::edge_iterator(&g,g.nv));
+    return std::make_pair(Traits::edge_iterator(&g,0),Traits::edge_iterator(&g,g.vertex_limit()));
 }
 
 inline auto num_edges(const GraphView& g)
@@ -71,7 +71,7 @@ inline auto num_edges(const GraphView& g)
 inline std::pair<Traits::adjacency_iterator, Traits::adjacency_iterator> adjacent_vertices(Traits::vertex_descriptor u, const GraphView& g)
 {
 
-    if(u <0 || u>=g.nv || u == g.missing_vertex)
+    if(!g.is_valid_vertex(u))
     {
         return std::make_pair(Traits::adjacency_iterator(&g, u, nullptr, 0), Traits::adjacency_iterator(&g, u, nullptr, 0));
 
@@ -113,9 +113,9 @@ inline int maxnv(const GraphView& g)
     return g.maxnv;
 }
 
-inline boost::identity_property_map get(boost::vertex_index_t,const GraphView&)
+inline vertex_index_map get(boost::vertex_index_t,const GraphView& g)
 {
-    return boost::identity_property_map();
+    return vertex_index_map{g.missing_vertex};
 }
 
 

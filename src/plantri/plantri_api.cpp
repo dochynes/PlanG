@@ -9,6 +9,7 @@ extern "C" {
 void  pt_set_prefilter(int (*f)(void));
 void  pt_set_filter(int (*f)(int,int,int));
 int   pt_run(int argc, char** argv);
+void  pt_write_current_graph(FILE* f, int doflip);
 
 int   pt_nv(void);
 int   pt_ne_oriented(void);
@@ -32,6 +33,7 @@ namespace {
     plantri::PrefilterFn g_cpp_prefilter;
     plantri::FilterFn g_cpp_filter;
     plantri::OutprocFn g_cpp_outproc;
+    int g_current_doflip = 0;
     inline plantri::GraphView make_view()
     {
         plantri::GraphView v{
@@ -75,9 +77,7 @@ namespace {
 
         (void)nbtot;
         (void)nbop;
-        (void)doflip;
-
-          try
+        try
         {
             auto view = make_view();
             int should_prune = 0; //  1
@@ -99,7 +99,9 @@ namespace {
                 
                 FILE* f = ::pt_outfile();
                 Output out(f);
+                g_current_doflip = doflip;
                 g_cpp_outproc(out, view);
+                g_current_doflip = 0;
                 
                
                 return 1;
@@ -110,11 +112,17 @@ namespace {
         }
         catch(...) 
         {
+            g_current_doflip = 0;
             return 1; 
         }
 
 
         
+    }
+
+    void write_current_graph(FILE* f)
+    {
+        ::pt_write_current_graph(f, g_current_doflip);
     }
 }
 
@@ -139,6 +147,20 @@ void setOutproc(OutprocFn f)
     ::pt_set_filter(&c_filter_trampoline);
 
     ::disable_summary();
+}
+
+Output& operator<<(Output& out, const GraphView& g)
+{
+    (void)g;
+
+    if (!out.raw())
+    {
+        return out;
+    }
+
+    write_current_graph(out.raw());
+
+    return out;
 }
 
 int pt_run(int argc, char** argv) 
@@ -173,4 +195,4 @@ int pt_maxnv()
     return ::pt_maxnv(); 
 }
 
-} 
+}

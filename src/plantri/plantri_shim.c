@@ -86,3 +86,10 @@ void pt_write_planar_code(FILE* f, int header)
     write_planar_code(f, header);
 }
 
+void pt_write_current_graph(FILE* f, int doflip)
+{
+    if (dswitch)
+        (*write_dual_graph)(f, doflip);
+    else
+        (*write_graph)(f, doflip);
+}

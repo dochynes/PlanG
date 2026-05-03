@@ -1,8 +1,12 @@
 #pragma once
 //#include "plantri/BridgeAPI.hpp"
 #include <boost/graph/graph_traits.hpp>
+#include <boost/graph/properties.hpp>
 #include <boost/iterator/iterator_facade.hpp>
+#include <boost/property_map/property_map.hpp>
 #include <boost/range/iterator_range.hpp>
+#include <cstddef>
+#include <utility>
 namespace plantri
 {
 
@@ -93,9 +97,11 @@ namespace plantri
                 return;
             }
 
-            if(u >= g->nv)
+            const int limit = g->vertex_limit();
+
+            if(u >= limit)
             {
-                u=g->nv;
+                u=limit;
                 e=nullptr;
                 remaining=0;
                 return;
@@ -106,9 +112,9 @@ namespace plantri
             if(g->missing_vertex>=0 &&  u==g->missing_vertex)
             {
                 u++;
-                if(u>=g->nv)
+                if(u>=limit)
                 {
-                    u=g->nv;
+                    u=limit;
                     e=nullptr;
                     remaining = 0;
                     return;
@@ -116,7 +122,7 @@ namespace plantri
             }
 
 
-            while(u < g->nv)
+            while(u < limit)
             {
                 if(g->missing_vertex>=0 &&  u==g->missing_vertex)
                 {
@@ -140,7 +146,7 @@ namespace plantri
             }
 
             //konec
-            u=g->nv; 
+            u=limit;
             e = nullptr;
             remaining = 0;
         }
@@ -154,7 +160,7 @@ namespace plantri
         {
             if(g)
             {
-                while(u< g->nv && e)
+                while(u< g->vertex_limit() && e)
                 {
                     if(is_canonical(e))
                     {
@@ -169,9 +175,11 @@ namespace plantri
 
         void move_next_internal()
         {
-            if(u >= g->nv || !e || remaining <=0)  
+            const int limit = g ? g->vertex_limit() : 0;
+
+            if(u >= limit || !e || remaining <=0)
             {
-                u=g->nv;
+                u=limit;
                 e = nullptr;
                 remaining = 0;
                 return;
@@ -232,17 +240,19 @@ namespace plantri
                 return;
 
 
-            if (v >= g->nv) 
+            const int limit = g->vertex_limit();
+
+            if (v >= limit)
             {
-                v = g->nv;
+                v = limit;
                 return;
             }
 
             if(g->missing_vertex >=0 && v == g->missing_vertex)
             {
                 v++;
-                if(v>=g->nv)
-                    v=g->nv;
+                if(v>=limit)
+                    v=limit;
             }
         }
 
@@ -393,5 +403,42 @@ namespace plantri
     };
 
     using out_edge_iterator = out_edge_iterator;
+
+    friend std::pair<out_edge_iterator, out_edge_iterator> out_edges(vertex_descriptor u, const GraphView& g);
+    friend degree_size_type out_degree(vertex_descriptor u, const GraphView& g);
+    friend std::pair<vertex_iterator, vertex_iterator> vertices(const GraphView& g);
+    friend std::pair<edge_iterator, edge_iterator> edges(const GraphView& g);
+    friend std::pair<adjacency_iterator, adjacency_iterator> adjacent_vertices(vertex_descriptor u, const GraphView& g);
+
+private:
+    int vertex_limit() const
+    {
+        return nv + (missing_vertex >= 0 ? 1 : 0);
+    }
+
+    bool is_valid_vertex(int v) const
+    {
+        return v >= 0 && v < vertex_limit() && v != missing_vertex;
+    }
+
+    std::size_t vertex_index(int v) const
+    {
+        return static_cast<std::size_t>((missing_vertex >= 0 && v > missing_vertex) ? v - 1 : v);
+    }
     };
+
+    struct vertex_index_map
+    {
+        using key_type = GraphView::vertex_descriptor;
+        using value_type = std::size_t;
+        using reference = std::size_t;
+        using category = boost::readable_property_map_tag;
+
+        int missing_vertex = -1;
+    };
+
+    inline std::size_t get(vertex_index_map map, GraphView::vertex_descriptor v)
+    {
+        return static_cast<std::size_t>((map.missing_vertex >= 0 && v > map.missing_vertex) ? v - 1 : v);
+    }
 }

@@ -2,6 +2,7 @@
 #include "PlantriAPI.hpp"
 #include "plantri/GraphView.hpp"
 #include <boost/graph/graph_traits.hpp>
+#include <boost/graph/properties.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/range/iterator_range.hpp>
 
@@ -367,15 +368,14 @@ struct graph_traits<plantri::GraphView>
 
     };
     */
-   template<>
-   struct property_map<plantri::GraphView,vertex_index_t>
-   {
-        typedef identity_property_map type;
-        typedef identity_property_map const_type;
-   };
+    template<>
+    struct property_map<plantri::GraphView,vertex_index_t>
+    {
+        typedef plantri::vertex_index_map type;
+        typedef plantri::vertex_index_map const_type;
+    };
 
 
 
 
 };
-

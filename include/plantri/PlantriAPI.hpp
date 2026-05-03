@@ -61,8 +61,8 @@ int pt_ne_oriented();  // pocet orientovanych hran (2xpocet hran)
 int* pt_degree_array();  // ukazatel na interni pole stupnu vrcholu 
 int pt_missing_vertex();
 
-// firstedge[v] -> EDGE*
-EDGE** pt_firstedge_array();  // //ukazatel na pole na pole firstedge[0 ... nv-1]
+// firstedge[v] -> EDGE*. pokud missing_vertex >= 0 platne jsou 0..nv krome missing_vertex
+EDGE** pt_firstedge_array();
 int pt_maxnv();
 
 
@@ -279,7 +279,7 @@ struct Backend
                 args.push_back("-g");
                 break;
             case OutputFormat::Sprase6:
-                args.push_back("-g");
+                args.push_back("-s");
                 break;
             case OutputFormat::Ascii:
                 args.push_back("-a");
@@ -367,16 +367,6 @@ struct Backend
 };
 
 
-inline Output& operator<<(Output& out, const GraphView& g)
-{
-    if (!out.raw()) 
-    {
-        return out; 
-    }
-
-    ::pt_write_planar_code(out.raw(),0);
-
-    return out;
-}
+Output& operator<<(Output& out, const GraphView& g);
 
 }

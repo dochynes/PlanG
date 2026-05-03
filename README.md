@@ -151,6 +151,21 @@ Callback dostává objekt `Output&`, což je bezpečný C++ wrapper nad nízkoú
 
 Pokud nebyl přes API(`setOutputFile(string)`) nastaven výstupní soubor, output == `stdout`.
 
+Pokud uživatel chce v callbacku vypsat samotný graf, může použít:
+
+```cpp
+out << g;
+```
+
+U backendu **Plantri** tento výpis respektuje aktuální formát nastavený přes:
+
+```cpp
+App::setFormat(App::OutputFormat::...);
+```
+
+Například `App::OutputFormat::Graph6` vypíše graf ve formátu `graph6`, `Ascii` v textovém formátu Plantri atd.
+U backendu **Geng** `out << g` vypisuje `graph6`.
+
 Přiklad:
 ```cpp
 App::setOutproc([](Output& out, const App::GraphView& g) {
@@ -159,15 +174,10 @@ App::setOutproc([](Output& out, const App::GraphView& g) {
     
     out << "Nalezen graf splňující podmínky: ";
     
-    // Použije operátor << pro formátovaný výpis (zatím jen planar_code / graph6)
+    // Použije operátor << pro výpis grafu.
     out << g;
 });
 ```
-
-> [!NOTE] **Omezení aktuální implementace**
-
-Přetížený operátor výpisu (`out << g`) uvnitř tohoto wrapperu zatím podporuje pouze základní formáty (`planar_code` pro Plantri a `graph6` pro Geng). 
-TODO: v budoucich verzich rozšířit implementaci tak, aby `out << g` respektovalo nastavení z `App::setOutput(App::OutputFormat::...)`;
 
 
 
@@ -336,18 +346,29 @@ get(boost::vertex_index, g)
 Tato funkce vrací property mapu, která každému vrcholu přiřazuje jeho index v rozsahu `0 ... num_vertices(g) - 1`.
 Díky tomu lze používat algoritmy, které vyžadují externí úložiště vlastností.
 
-Vlastnosti nejsou uloženy přímo v grafu, protože by to zpomalilo generování grafů kvůli kopírování dat.
-Proto optimálni přistup je využit **externí property mapy** z Boost.Graph:
+U backendu **Geng** je `vertex_index` přímo identita, protože vrcholy jsou číslované souvisle `0 ... n-1`.
+U běžných Plantri grafů, kde `missing_vertex < 0`, jsou vrcholy také číslované souvisle `0 ... num_vertices(g)-1`.
+V takovém případě lze raw `vertex_descriptor` bezpečně používat přímo jako index do `std::vector`.
 
-```cpp
-std::vector<int> colors(num_vertices(g)); // Boost dokáže přijmout obyčejný vektor. 
-//Nebo bezpečnější: boost::make_property_map ...
-.
-.
-.
-boost::sequential_vertex_coloring(g,colors.data());
+U backendu **Plantri** může při polygon/disk triangulacích existovat interní `missing_vertex`.
+V takovém případě může být raw číslování například:
 
+```text
+raw vrcholy: 0 1 3 4 5 6 7
+missing_vertex: 2
 ```
+
+Plantri `vertex_index` proto vrací kompaktní indexy bez díry:
+
+```text
+raw vrchol: 0 1 3 4 5 6 7
+vertex_index: 0 1 2 3 4 5 6
+```
+
+To je důležité pro Boost algoritmy, které používají pole nebo `std::vector` velikosti `num_vertices(g)`.
+
+Pokud chce uživatel indexovat vlastní pole bezpečně i pro disk/polygon triangulace, může použít property mapu stejně jako v
+[examples/11_plantri_vertex_index_map.cpp](./examples/11_plantri_vertex_index_map.cpp)
 
 
 Podrobné definice jednotlivých konceptů viz oficiální dokumentace
@@ -433,9 +454,6 @@ Podle několika testovacích pokusů **vypadá implementace správně a výsledk
 ### Příklady
 Další ukázky použití knihovny lze nalézt ve složce [examples](./examples/)
 
-
-
-
 ---
 
 
@@ -450,15 +468,6 @@ static int missing_vertex = -1;
    0..missing_vertex-1, missing_vertex..nv otherwise.
    This is only used in the code for polygon triangulations. */
 ```
-
-Ve všech funkcích (kromě `get_property_map`) počítám s tím, že může existovat "chybějící" vrchol,
-a všude je ošetřen podmínkou if (missing_vertex ...).
-
-**Poznámka:** Přemýšlím, zda toto větvení může zpomalovat jiné algoritmy pro běžné typy grafů,  
-protože mnoho operací musí kontrolovat přítomnost `missing_vertex`, což představuje dodatečné větvení.
-
-
-
 
 
 ## Obarvené grafy v `geng`
