@@ -1,6 +1,7 @@
 #pragma once
 
 #include "plantri/GraphViewBoost.hpp"
+#include <utility>
 
 namespace plantri
 {

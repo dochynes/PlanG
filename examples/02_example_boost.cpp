@@ -1,4 +1,5 @@
 #include "MyGraphLib.hpp"
+#include <boost/graph/sequential_vertex_coloring.hpp>
 #include <iostream>
 #include <vector>
 
@@ -42,4 +43,6 @@ int main(int argc, char** argv)
     });
 
     return App::run();
+
+    
 }

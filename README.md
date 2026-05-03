@@ -44,7 +44,7 @@ Generátory jako geng mohou produkovat miliony grafů za sekundu. Jakákoliv kon
 
 - `src/plantri/` – Backend pro Plantri
 
-- `vendor/` – Původní zdrojové kódy Nauty a Plantri (beze změn). **Pozor: Velikost cca 110 MB.**
+- `vendor/` – Původní zdrojové kódy Nauty a Plantri (u Nauty upraven `geng.c` pro rozšíření funkcionality). **Pozor: Velikost cca 110 MB.**
 
 - `examples/` – Ukázkové programy (viz níže)
 
