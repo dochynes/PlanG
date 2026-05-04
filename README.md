@@ -354,7 +354,7 @@ U backendu **Geng** je `vertex_index` přímo identita, protože vrcholy jsou č
 U běžných Plantri grafů, kde `missing_vertex < 0`, jsou vrcholy také číslované souvisle `0 ... num_vertices(g)-1`.
 V takovém případě lze raw `vertex_descriptor` bezpečně používat přímo jako index do `std::vector`.
 
-[U backendu **Plantri** může při polygon/disk triangulacích existovat interní `missing_vertex`.](#poznamky-a-omezeni)
+[U backendu **Plantri** může při polygon/disk triangulacích existovat interní `missing_vertex`.](#poznámky-a-omezení)
 V takovém případě může být raw číslování například:
 
 ```text
