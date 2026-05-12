@@ -10,10 +10,17 @@ INC_DIRS := -I$(NAUTY_DIR) -I$(INCLUDE_DIR) -I$(BOOST_DIR)
 CC ?= gcc
 CXX ?= g++
 
-AR ?= gcc-ar 
 RM ?= rm -f
 
-OPT_FLAGS := -O3 -flto -march=native -DNDEBUG -DMAXN=WORDSIZE
+UNAME_S := $(shell uname -s)
+
+ifeq ($(UNAME_S),Darwin)
+AR = ar
+OPT_FLAGS ?= -O3 -DNDEBUG -DMAXN=WORDSIZE
+else
+AR = gcc-ar
+OPT_FLAGS ?= -O3 -flto -march=native -DNDEBUG -DMAXN=WORDSIZE
+endif
 
 CFLAGS ?= $(OPT_FLAGS) -std=c11 -Wall -Wextra -Wpedantic $(INC_DIRS)
 CXXFLAGS ?= $(OPT_FLAGS) -std=c++20 -Wall -Wextra -Wpedantic $(INC_DIRS)

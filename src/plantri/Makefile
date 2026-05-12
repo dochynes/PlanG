@@ -5,17 +5,25 @@ BOOST_DIR := $(ROOT_DIR)/vendor
 
 CC ?= gcc
 CXX ?= g++
-AR ?= ar
 RM ?= rm -f
 
 INC_DIRS  := -I$(PLANTRI_DIR) -I$(INCLUDE_DIR) -I$(BOOST_DIR)
 
+UNAME_S := $(shell uname -s)
 
-CFLAGS ?= -O2 -std=c11   -Wall -Wextra -Wpedantic $(INC_DIRS) \
+ifeq ($(UNAME_S),Darwin)
+AR = ar
+OPT_FLAGS ?= -O3 -DNDEBUG
+else
+AR = gcc-ar
+OPT_FLAGS ?= -O3 -flto -march=native -DNDEBUG
+endif
+
+CFLAGS ?= $(OPT_FLAGS) -std=c11 -Wall -Wextra -Wpedantic $(INC_DIRS) \
         	-Wno-unused-parameter -Wno-sign-compare -Wno-maybe-uninitialized \
             -Wno-implicit-fallthrough -Wno-missing-field-initializers
 
-CXXFLAGS ?= -O2 -std=c++20 -Wall -Wextra -Wpedantic $(INC_DIRS)
+CXXFLAGS ?= $(OPT_FLAGS) -std=c++20 -Wall -Wextra -Wpedantic $(INC_DIRS)
 
 
 PLANTRI_C := $(PLANTRI_DIR)/plantri.c
