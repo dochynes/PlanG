@@ -4,13 +4,15 @@ using App = Generator<geng::Backend>;
 
 int main(int argc, char** argv)
 {
+    App app;
+
     // Graphs on 4 vertices with exactly 2 labelled colors.
     // Internally this runs class sizes {1,3}, {2,2}, {3,1}.
-    App::setVertices(4);
-    App::setColors(2);
-    App::setCanonicalLabeling();
+    app.setVertices(4);
+    app.setColors(2);
+    app.setCanonicalLabeling();
 
-    App::setPrune([](const App::GraphView& g) {
+    app.setPrune([](const App::GraphView& g) {
         if (g.num_vertices() != g.maxn())
             return KEEP;
 
@@ -28,5 +30,5 @@ int main(int argc, char** argv)
         return PRUNE;
     });
 
-    return App::run();
+    return app.run();
 }

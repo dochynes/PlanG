@@ -8,11 +8,12 @@ using App = Generator<plantri::Backend>;
 
 int main(int argc, char** argv) 
 {
+    App app;
 
-    App::setVertices(13);
+    app.setVertices(13);
 
     // Search for graphs that require at least 4 colors
-    App::setPrune([=](const auto& g){
+    app.setPrune([=](const auto& g){
         
         // 1. Prepare Boost structures. boost can use the std::vector directly as a property map.
         std::vector<int> colors(num_vertices(g));
@@ -36,13 +37,13 @@ int main(int argc, char** argv)
         return PRUNE; 
     });
 
-    App::setOutproc([](auto& out, const auto& g) 
+    app.setOutproc([](auto& out, const auto& g) 
     {
         out << "Found graph with chrom. number >= 4:";
         out << g;
     });
 
-    return App::run();
+    return app.run();
 
     
 }

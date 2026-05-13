@@ -15,19 +15,6 @@ const int* geng_get_current_vertex_colors(void);
 const int* geng_get_output_vertex_colors(void);
 int  geng_get_current_color_count(void);
 int  geng_run(int argc, char** argv);
-
-int  geng_get_mindeg(void);
-int  geng_get_maxdeg(void);
-int  geng_get_mine(void);
-int  geng_get_maxe(void);
-int  geng_get_connec(void);
-
-int  geng_flag_sparse6(void);
-int  geng_flag_graph6(void);
-int  geng_flag_quiet(void);
-int  geng_flag_nooutput(void);
-int  geng_flag_nautyformat(void);
-int  geng_flag_canonise(void);
 }
 
 namespace
@@ -156,64 +143,25 @@ void setOutproc(OutprocFn f)
 void setPrune(PruneFn f)
 {
     s_prune = std::move(f);
-    ::geng_set_prune(&c_prune);
+    if (s_prune)
+        ::geng_set_prune(&c_prune);
+    else
+        ::geng_set_prune(nullptr);
 }
 
 void setPreprune(PrepruneFn f)
 {
     s_preprune = std::move(f);
-    ::geng_set_preprune(&c_preprune);
+    if (s_preprune)
+        ::geng_set_preprune(&c_preprune);
+    else
+        ::geng_set_preprune(nullptr);
 }
+
 
 int run(int argc, char** argv)
 {
     return ::geng_run(argc, argv);
-}
-
-int mindeg()
-{
-    return ::geng_get_mindeg();
-}
-int maxdeg()
-{
-    return ::geng_get_maxdeg();
-}
-int mine()
-{
-    return ::geng_get_mine();
-}
-int maxe()
-{
-    return ::geng_get_maxe();
-}
-int connec()
-{
-    return ::geng_get_connec();
-}
-
-bool flagSparse6()
-{
-    return ::geng_flag_sparse6() != 0;
-}
-bool flagGraph6()
-{
-    return ::geng_flag_graph6() != 0;
-}
-bool flagQuiet()
-{
-    return ::geng_flag_quiet() != 0;
-}
-bool flagNoOutput()
-{
-    return ::geng_flag_nooutput() != 0;
-}
-bool flagNautyFormat()
-{
-    return ::geng_flag_nautyformat() != 0;
-}
-bool flagCanonise()
-{
-    return ::geng_flag_canonise() != 0;
 }
 
 }

@@ -4,15 +4,17 @@ using App = Generator<plantri::Backend>;
 
 int main()
 {
-    App::setVertices(7);
+    App app;
+
+    app.setVertices(7);
 
     // disk triangulations can contain a missing raw vertex slot.
     // vertex_index maps the remaining raw descriptors to compact indices
     // usable for arrays/vectors of size num_vertices(g)
-    App::setDiskSize(3);
-    App::setHeader();
+    app.setDiskSize(3);
+    app.setHeader();
 
-    App::setOutproc([](Output& out, const App::GraphView& g) {
+    app.setOutproc([](Output& out, const App::GraphView& g) {
         static bool printed = false;
         if (printed)
             return;
@@ -30,5 +32,5 @@ int main()
         out << "\n";
     });
 
-    return App::run();
+    return app.run();
 }

@@ -23,6 +23,7 @@ int pt_maxnv(void);
 FILE* pt_outfile(void);
 
 void disable_summary(void);
+void enable_summary(void);
 
 
 }
@@ -124,6 +125,14 @@ namespace {
     {
         ::pt_write_current_graph(f, g_current_doflip);
     }
+
+    void refresh_filter_registration()
+    {
+        if (g_cpp_filter || g_cpp_outproc)
+            ::pt_set_filter(&c_filter_trampoline);
+        else
+            ::pt_set_filter(nullptr);
+    }
 }
 
 
@@ -132,21 +141,27 @@ namespace plantri {
 void setPrefilter(PrefilterFn f) 
 {
     g_cpp_prefilter = std::move(f);
-    ::pt_set_prefilter(&c_prefilter_trampoline);
+    if (g_cpp_prefilter)
+        ::pt_set_prefilter(&c_prefilter_trampoline);
+    else
+        ::pt_set_prefilter(nullptr);
 }
 
 void setFilter(FilterFn f) 
 {
     g_cpp_filter = std::move(f);
-    ::pt_set_filter(&c_filter_trampoline);
+    refresh_filter_registration();
 }
 
 void setOutproc(OutprocFn f)
 {
     g_cpp_outproc = std::move(f);
-    ::pt_set_filter(&c_filter_trampoline);
+    refresh_filter_registration();
 
-    ::disable_summary();
+    if (g_cpp_outproc)
+        ::disable_summary();
+    else
+        ::enable_summary();
 }
 
 Output& operator<<(Output& out, const GraphView& g)

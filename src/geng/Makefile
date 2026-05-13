@@ -60,7 +60,7 @@ $(BUILD_DIR)/geng.o: $(GENG_SRC) $(SHIM_SRC)
 	  -DOUTPROC=bridge_outproc \
 	  -DPRUNE=bridge_prune \
 	  -DPREPRUNE=bridge_preprune \
-	  -Dmain=GENG_MAIN \
+	  -DGENG_MAIN=geng_main \
 	  -include $(SHIM_SRC) \
 	  -Wno-unused-parameter \
 	  -Wno-sign-compare \

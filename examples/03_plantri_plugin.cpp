@@ -35,10 +35,11 @@ bool commonedge(int a, int b, const auto& g)
 
 int main(int argc, char** argv)
 {
+    App app;
 
-    App::setVertices(14);
+    app.setVertices(14);
     // 1. PRE-PRUNE (Heuristic from maxdeg_prune)
-    App::setPreprune([=](const auto g) {
+    app.setPreprune([=](const auto g) {
 
         int target_nv = maxnv(g);
         int current_nv = num_vertices(g);
@@ -83,7 +84,7 @@ int main(int argc, char** argv)
 
 
     // 2. PRUNE (Final filter)
-    App::setPrune([=](const App::GraphView& g) {
+    app.setPrune([=](const App::GraphView& g) {
         
         int nv = num_vertices(g);
         for (int i = 0; i < nv; ++i) {
@@ -95,7 +96,7 @@ int main(int argc, char** argv)
         return KEEP;
     });
 
-    return App::run();
+    return app.run();
 }
 
 

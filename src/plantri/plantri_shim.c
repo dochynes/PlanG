@@ -62,6 +62,11 @@ void disable_summary(void)
     dosummary = -1;
 }
 
+void enable_summary(void)
+{
+    dosummary = 0;
+}
+
 
 
 int pt_nv(void) { return nv; }

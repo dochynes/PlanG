@@ -4,6 +4,7 @@
 #include "gtools.h"
 #include "common/Output.hpp"
 #include "geng/GraphView.hpp"
+#include <algorithm>
 #include <vector>
 #include <string>
 #include <utility>
@@ -29,27 +30,13 @@ void setOutproc(OutprocFn);
 void setPrune(PruneFn);
 void setPreprune(PrepruneFn); 
 void setColors(int count);
+void setColorCount(int count);
 void setColorClassSizes(const std::vector<int>& sizes);
 void setColorClassBounds(const std::vector<std::pair<int,int>>& bounds);
 int distance_between(const GraphView& g, int src, int dst);
 
 
 int run(int argc, char** argv);
-
-// globaly/flagy
-int mindeg();
-int maxdeg();
-int mine();
-int maxe();
-int connec();
-
-bool flagSparse6();
-bool flagGraph6();
-bool flagQuiet();
-bool flagNoOutput();
-bool flagNautyFormat();
-bool flagCanonise();
-
 
 struct Backend
 {
@@ -65,180 +52,197 @@ struct Backend
         NautyBinary // -n 
     };
 
-    inline static int n = 1;
-    inline static int mine = -1; //min edges
-    inline static int maxe = -1; //max edges
+    enum class ColorMode
+    {
+        None,
+        Count,
+        Sizes,
+        Bounds
+    };
 
-    inline static int param_res = -1;
-    inline static int param_mod = -1;
+    int n = 1;
+    int mine = -1; //min edges
+    int maxe = -1; //max edges
+
+    int param_res = -1;
+    int param_mod = -1;
 
     // [-cCmtfkbd#D#]
-    inline static bool param_connected = false; //-c
-    inline static bool param_biconnected = false; //-C
-    inline static bool param_save_mem = false; // -m
-    inline static bool param_triangle_free=false; //-t
-    inline static bool param_square_free = false; //-f
-    inline static bool param_regular = false; // -k
-    inline static bool param_bipartite = false; //-b
+    bool param_connected = false; //-c
+    bool param_biconnected = false; //-C
+    bool param_save_mem = false; // -m
+    bool param_triangle_free=false; //-t
+    bool param_square_free = false; //-f
+    bool param_regular = false; // -k
+    bool param_bipartite = false; //-b
 
-    inline static int param_min_deg = -1;  // -d
-    inline static int param_max_deg = -1;  // -D
+    int param_min_deg = -1;  // -d
+    int param_max_deg = -1;  // -D
 
     //[-kTSPF]
-    inline static bool param_chordal = false; // -T
-    inline static bool param_split = false; // -S
-    inline static bool param_perfect = false; // -P
-    inline static bool param_claw_free = false; //-F
+    bool param_chordal = false; // -T
+    bool param_split = false; // -S
+    bool param_perfect = false; // -P
+    bool param_claw_free = false; //-F
 
 
 
     //[-uygsnh]
-    inline static OutputFormat out_format = OutputFormat::Graph6;
-    inline static bool param_header = false; // -h
+    OutputFormat out_format = OutputFormat::Graph6;
+    bool param_header = false; // -h
 
     //[-lvq]
-    inline static bool param_label = false; // -l
-    inline static bool param_verbose = false; //-v
-    inline static bool param_quiet = false; //-q
+    bool param_label = false; // -l
+    bool param_verbose = false; //-v
+    bool param_quiet = false; //-q
     
     //[-x#X#]
-    inline static int param_adv_split = -1; // -x
-    inline static int param_adv_start = -1; // -X
+    int param_adv_split = -1; // -x
+    int param_adv_start = -1; // -X
 
-    inline static std::string param_out_file = "";
+    std::string param_out_file = "";
+
+    ColorMode color_mode = ColorMode::None;
+    int color_count = 0;
+    std::vector<int> color_sizes;
+    std::vector<std::pair<int,int>> color_bounds;
+
+    PruneFn prune;
+    PrepruneFn preprune;
+    OutprocFn outproc;
 
 
-    static void setVertices(int nn)
+    void setVertices(int nn)
     {
         n=nn;
     }
 
-    static void setEdgeRange(int min_edges, int max_edges = -1)
+    void setEdgeRange(int min_edges, int max_edges = -1)
     {
         mine = min_edges;
         maxe = max_edges;
     }
 
-    static void setConnected(bool c = true)
+    void setConnected(bool c = true)
     {
         param_connected = c;
     }
-    static void setBiconnected(bool b = true)
+    void setBiconnected(bool b = true)
     {
         param_biconnected = b;
     }
 
-    static void setTriangleFree(bool t = true)
+    void setTriangleFree(bool t = true)
     {
         param_triangle_free = t;
     }
 
-    static void setSquareFree(bool s = true)
+    void setSquareFree(bool s = true)
     {
         param_square_free = s;
     }
 
-    static void setBipartite(bool b = true)
+    void setBipartite(bool b = true)
     {
         param_bipartite = b;
 
     }
 
-    static void setMinDegree(int d)
+    void setMinDegree(int d)
     {
         param_min_deg = d;
     }
 
-    static void setMaxDegree(int D)
+    void setMaxDegree(int D)
     {
         param_max_deg = D;
     }
 
-    static void setFormat(OutputFormat f)
+    void setFormat(OutputFormat f)
     {
         out_format = f;
     }
 
-    static void setNoOutput()
+    void setNoOutput()
     {
         out_format = OutputFormat::NoOutput;
     }
 
-    static void setCanonicalLabeling(bool l = true)
+    void setCanonicalLabeling(bool l = true)
     {
         param_label = l;
     }
 
-    static void setHeader (bool h=true)
+    void setHeader (bool h=true)
     {
         param_header = h;
     }
 
-    static void setQuiet(bool q=true)
+    void setQuiet(bool q=true)
     {
         param_quiet=q;
     }
 
-    static void setVerbose( bool v =true)
+    void setVerbose( bool v =true)
     {
         param_verbose = v;
     }
 
-    static void setSaveMemory (bool m = true)
+    void setSaveMemory (bool m = true)
     {
         param_save_mem = m;
     }
 
-    static void setDistribution(int res, int mod)
+    void setDistribution(int res, int mod)
     {
         param_res = res;
         param_mod = mod;
     }
 
-    static void setAdvancedSplit(int x)
+    void setAdvancedSplit(int x)
     {
         param_adv_split = x;
     }
 
-    static void setAdvancedStartLevel(int X)
+    void setAdvancedStartLevel(int X)
     {
         param_adv_start = X;
     }
 
-    static void setRegular(bool r = true)
+    void setRegular(bool r = true)
     {
         param_regular = r;
     }
 
-    static void setChordal(bool enable = true) 
+    void setChordal(bool enable = true) 
     {
         param_chordal = enable;
     }
 
     
-    static void setSplit(bool enable = true) 
+    void setSplit(bool enable = true) 
     {
         param_split = enable;
     }
 
     
-    static void setPerfect(bool enable = true) 
+    void setPerfect(bool enable = true) 
     {
         param_perfect = enable;
     }
 
     
-    static void setClawFree(bool enable = true) 
+    void setClawFree(bool enable = true) 
     {
         param_claw_free = enable;
     }
 
-    static void setOutputFile(const std::string& filename)
+    void setOutputFile(const std::string& filename)
     {
         param_out_file = filename;
     }
 
-    static std::vector<std::string> prepare_args()
+    std::vector<std::string> prepare_args() const
     {
         std::vector<std::string> args;
 
@@ -354,19 +358,19 @@ struct Backend
 
 
     
-    static void setPrune(std::function<int(const GraphView)> f )
+    void setPrune(PruneFn f)
     {
-        geng::setPrune(f);
+        prune = std::move(f);
     }
 
-    static void setPreprune(std::function<int(const GraphView&)> f)
+    void setPreprune(PrepruneFn f)
     {
-        geng::setPreprune(f);
+        preprune = std::move(f);
     }
 
-    static void setOutproc(std::function<void(Output&,const GraphView&)> f)
+    void setOutproc(OutprocFn f)
     {
-        geng::setOutproc(f);
+        outproc = std::move(f);
     }
 
     static int run(int argc, char** argv)
@@ -374,7 +378,7 @@ struct Backend
         return geng::run(argc, argv); 
     }
 
-    static void setRootedVertices(int count)
+    void setRootedVertices(int count)
     {
         std::vector<int> sizes;
         const int rooted_count = std::max(0, count);
@@ -384,22 +388,54 @@ struct Backend
         for (int i = 0; i < rooted_count; ++i)
             sizes.push_back(1);
 
-        geng::setColorClassSizes(sizes);
+        setColorClassSizes(sizes);
     }
 
-    static void setColors(int count)
+    void setColors(int count)
     {
-        geng::setColors(count);
+        color_mode = ColorMode::Count;
+        color_count = count;
+        color_sizes.clear();
+        color_bounds.clear();
     }
 
-    static void setColorClassSizes(const std::vector<int>& sizes)
+    void setColorClassSizes(const std::vector<int>& sizes)
     {
-        geng::setColorClassSizes(sizes);
+        color_mode = ColorMode::Sizes;
+        color_sizes = sizes;
+        color_bounds.clear();
+        color_count = 0;
     }
 
-    static void setColorClassBounds(const std::vector<std::pair<int,int>>& bounds)
+    void setColorClassBounds(const std::vector<std::pair<int,int>>& bounds)
     {
-        geng::setColorClassBounds(bounds);
+        color_mode = ColorMode::Bounds;
+        color_bounds = bounds;
+        color_sizes.clear();
+        color_count = 0;
+    }
+
+    void apply_runtime_state() const
+    {
+        switch(color_mode)
+        {
+            case ColorMode::Count:
+                geng::setColors(color_count);
+                break;
+            case ColorMode::Sizes:
+                geng::setColorClassSizes(color_sizes);
+                break;
+            case ColorMode::Bounds:
+                geng::setColorClassBounds(color_bounds);
+                break;
+            case ColorMode::None:
+                geng::setColorCount(0);
+                break;
+        }
+
+        geng::setPrune(prune);
+        geng::setPreprune(preprune);
+        geng::setOutproc(outproc);
     }
 
     static int distance_between(const GraphView& g, int src, int dst)

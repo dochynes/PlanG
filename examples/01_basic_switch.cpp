@@ -12,16 +12,18 @@ using App = Generator<geng::Backend>;
 
 int main(int argc, char** argv) 
 {
+    App app;
+
     std::cout << "API Example";
     // STEP 2: Configure generator parameters
-    App::setVertices(11);
-    App::setTriangleFree();
+    app.setVertices(11);
+    app.setTriangleFree();
 
     // (optional): Define the output
     // Here we use 'operator<<', which is implemented for both backends
-    App::setOutproc([](Output& out, const App::GraphView& g) {   // We can use 'auto' here thanks to type deduction.
+    app.setOutproc([](Output& out, const App::GraphView& g) {   // We can use 'auto' here thanks to type deduction.
         out << g; 
     });
 
-    return App::run();
+    return app.run();
 }

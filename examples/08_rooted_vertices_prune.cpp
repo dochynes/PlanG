@@ -4,13 +4,15 @@ using App = Generator<geng::Backend>;
 
 int main(int argc, char** argv)
 {
+    App app;
+
     // Generate graphs on 7 vertices with two rooted vertices and list 
     //only those where these two special vertices are not neighbors, but have a common neighbor
-    App::setVertices(7);
-    App::setRootedVertices(2);
-    App::setCanonicalLabeling();
+    app.setVertices(7);
+    app.setRootedVertices(2);
+    app.setCanonicalLabeling();
 
-    App::setPrune([](const App::GraphView& g) {
+    app.setPrune([](const App::GraphView& g) {
         if (g.num_vertices() != g.maxn())
             return KEEP;
 
@@ -41,6 +43,5 @@ int main(int argc, char** argv)
 
 
 
-    return App::run();
+    return app.run();
 }
-

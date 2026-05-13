@@ -4,16 +4,18 @@ using App = Generator<plantri::Backend>;
 
 int main()
 {
-    App::setVertices(7);
+    App app;
+
+    app.setVertices(7);
 
     // disk triangulations are one of the Plantri modes where missing_vertex
     // can appear. This example checks that the API skips that raw slot and
     // still iterates over every valid vertex descriptor correctly.
-    App::setDiskSize(3);
-    App::setFormat(App::OutputFormat::Graph6);
-    App::setHeader();
+    app.setDiskSize(3);
+    app.setFormat(App::OutputFormat::Graph6);
+    app.setHeader();
 
-    App::setOutproc([](Output& out, const App::GraphView& g) {
+    app.setOutproc([](Output& out, const App::GraphView& g) {
         static bool printed = false;
         if (printed)
             return;
@@ -29,5 +31,5 @@ int main()
         out << "\n" << g;
     });
 
-    return App::run();
+    return app.run();
 }

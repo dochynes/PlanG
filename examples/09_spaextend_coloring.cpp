@@ -4,12 +4,14 @@ using App = Generator<geng::Backend>;
 
 int main(int argc, char** argv)
 {
+    App app;
+
     // Triangle-free generation uses the spaextend branch inside geng.
-    App::setVertices(4);
-    App::setTriangleFree();
-    App::setRootedVertices(1);
-    //App::setCanonicalLabeling();
+    app.setVertices(4);
+    app.setTriangleFree();
+    app.setRootedVertices(1);
+    //app.setCanonicalLabeling();
 
 
-    return App::run();
+    return app.run();
 }

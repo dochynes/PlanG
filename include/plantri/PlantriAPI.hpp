@@ -1,6 +1,9 @@
 #pragma once
 #include <functional>
 #include <cstdio>
+#include <string>
+#include <utility>
+#include <vector>
 #include "common/Output.hpp"
 
 
@@ -100,122 +103,126 @@ struct Backend
     using GraphView = plantri::GraphView;
 
 
-    inline static int n = 0;
-    inline static bool dual = false;
+    int n = 0;
+    bool dual = false;
 
-    inline static GraphClass graph_class = GraphClass::Trinagulation;
+    GraphClass graph_class = GraphClass::Trinagulation;
 
-    inline static int param_min_deg = -1; // -m#
-    inline static int param_conn = -1; // -c#
-    inline static bool param_exact_conn = false; // -x
-    inline static int param_disk_outer = -1;   // -P#   velikost vnejsi steny
-    inline static int param_max_face = -1;  //-f#
+    int param_min_deg = -1; // -m#
+    int param_conn = -1; // -c#
+    bool param_exact_conn = false; // -x
+    int param_disk_outer = -1;   // -P#   velikost vnejsi steny
+    int param_max_face = -1;  //-f#
 
-    inline static OutputFormat param_format = OutputFormat::PlanarCode;
-    inline static bool param_header = false;   // -h
-    inline static bool param_output_dual = false; // -d prepinac
-    inline static bool param_one_iso_class= false; // -o  one member of each isomorphism class is written
-    inline static bool param_group = false;       // -G  ensures that the full automorphism group is computed for each output graph, for PRUNE!!!
-    inline static bool param_nontriv_group = false;  // -V   Only output graphs with non-trivial group
+    OutputFormat param_format = OutputFormat::PlanarCode;
+    bool param_header = false;   // -h
+    bool param_output_dual = false; // -d prepinac
+    bool param_one_iso_class= false; // -o  one member of each isomorphism class is written
+    bool param_group = false;       // -G  ensures that the full automorphism group is computed for each output graph, for PRUNE!!!
+    bool param_nontriv_group = false;  // -V   Only output graphs with non-trivial group
 
 
-    inline static int param_res = -1;
-    inline static int param_mod = -1;
-    inline static int param_split_level = 0;  // -X , -XX...
+    int param_res = -1;
+    int param_mod = -1;
+    int param_split_level = 0;  // -X , -XX...
 
-    inline static std::string param_out_file = "";
+    std::string param_out_file = "";
 
-    static void setOutputFile(std::string outFile)
+    PrefilterFn prefilter;
+    FilterFn filter;
+    OutprocFn outproc;
+
+    void setOutputFile(std::string outFile)
     {
         param_out_file = outFile;
     }
 
-    static void setVertices(int nn) 
+    void setVertices(int nn) 
     {
         n = nn; 
     }
 
-    static void setDualCountMode(bool enabled = true)
+    void setDualCountMode(bool enabled = true)
     {
         dual = enabled;
     }
 
-    static void setClass(GraphClass c)
+    void setClass(GraphClass c)
     {
         graph_class =c;
     }
 
-    static void setDiskSize(int outer_size)
+    void setDiskSize(int outer_size)
     {
         graph_class=GraphClass::Disk;
         param_disk_outer = outer_size;
     }
 
-    static void setMinDegree(int m)
+    void setMinDegree(int m)
     {
         param_min_deg = m;
     }
     
-    static void setConnectivity(int c, bool exact = false)
+    void setConnectivity(int c, bool exact = false)
     {
         param_conn = c;
         param_exact_conn = exact;
     }
 
-    static void setMaxFaceSize(int f)
+    void setMaxFaceSize(int f)
     {
         param_max_face=f;
     }
 
-    static void setFormat(OutputFormat f)
+    void setFormat(OutputFormat f)
     {
         param_format = f;
     }
 
-    static void setNoOutput()
+    void setNoOutput()
     {
         param_format = OutputFormat::NoOutput;
     }
 
-    static void setOutputDual(bool output_dual = true)
+    void setOutputDual(bool output_dual = true)
     {
         param_output_dual = output_dual;
     }
 
-    static void setHeader(bool h = true)
+    void setHeader(bool h = true)
     {
         param_header=h;
     }
 
-    static void setOrientationPreserving(bool o = true)
+    void setOrientationPreserving(bool o = true)
     {
         param_one_iso_class = o;
     }
 
-    static void setFullGroup(bool g = true)
+    void setFullGroup(bool g = true)
     {
         param_group = g;
     }
 
-    static void setNonTrivialGroup(bool v = true)
+    void setNonTrivialGroup(bool v = true)
     {
         param_nontriv_group = v;
     }
 
-    static void setDistribution(int res, int mod)
+    void setDistribution(int res, int mod)
     {
         param_res = res;
         param_mod = mod;
     }
 
-    static void setSplitLevel(int level)
+    void setSplitLevel(int level)
     {
         param_split_level = level;
     }
 
 
     //TODO add params processor
-    static std::vector<std::string> prepare_args()
+    std::vector<std::string> prepare_args() const
     {
         std::vector<std::string> args;
         args.push_back("plantri");
@@ -342,25 +349,32 @@ struct Backend
 
 
 
-    static void setPrune(std::function<int(const GraphView&)> f)
+    void setPrune(FilterFn f)
     {
-        plantri::setFilter(f);
+        filter = std::move(f);
     }
 
-    static void setPreprune(std::function<int(const GraphView&)> f)
+    void setPreprune(PrefilterFn f)
     {
-        plantri::setPrefilter(f);
+        prefilter = std::move(f);
     }
 
-    static void setOutproc(std::function<void(Output&, const GraphView&)> f) 
+    void setOutproc(OutprocFn f) 
     { 
-        plantri::setOutproc(f); 
+        outproc = std::move(f); 
     }
 
     static int run(int argc, char** argv) 
     { 
 
         return plantri::pt_run(argc, argv); 
+    }
+
+    void apply_runtime_state() const
+    {
+        plantri::setPrefilter(prefilter);
+        plantri::setFilter(filter);
+        plantri::setOutproc(outproc);
     }
 
 

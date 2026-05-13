@@ -4,14 +4,16 @@ using App = Generator<geng::Backend>;
 
 int main(int argc, char** argv)
 {
+    App app;
+
     // Explicit color class on 5 vertices:
     // color 0 has size 3, color 1 has size 2.
-    App::setVertices(5);
-    App::setColorClassSizes({3, 2});
-    App::setCanonicalLabeling();
+    app.setVertices(5);
+    app.setColorClassSizes({3, 2});
+    app.setCanonicalLabeling();
 
     
-    App::setPrune([](const App::GraphView& g){
+    app.setPrune([](const App::GraphView& g){
         if (g.num_vertices() != g.maxn())
             return KEEP;
 
@@ -28,6 +30,5 @@ int main(int argc, char** argv)
     });  
     // the filter will only leave graphs where there are at least two edges between these two groups
 
-    return App::run();
+    return app.run();
 }
-

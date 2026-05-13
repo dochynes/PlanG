@@ -9,7 +9,7 @@ static outproc_cb_t g_outproc = NULL;
 static prune_cb_t g_prune = NULL;
 static prune_cb_t g_preprune = NULL;
 
-extern int sparse6, graph6, quiet, nooutput, nautyformat, canonise;
+extern int sparse6, nooutput, nautyformat, canonise;
 extern int geng_vertex_color_count;
 extern int geng_vertex_color_lower[MAXN];
 extern int geng_vertex_color_upper[MAXN];
@@ -148,56 +148,7 @@ int geng_get_current_color_count(void)
     return geng_vertex_color_count;
 }
 
-
-extern int geng_mindeg, geng_maxdeg, geng_mine, geng_maxe, geng_connec;
-
-int geng_get_mindeg(void) 
-{
-    return geng_mindeg; 
-}
-int geng_get_maxdeg(void)
-{
-    return geng_maxdeg;
-}
-int geng_get_mine(void)
-{
-    return geng_mine;
-}
-int geng_get_maxe(void)
-{
-    return geng_maxe;
-}
-int geng_get_connec(void)
-{
-    return geng_connec;
-}
-
-int geng_flag_sparse6(void)
-{
-    return sparse6;
-}
-int geng_flag_graph6(void)
-{
-    return graph6;
-}
-int geng_flag_quiet(void)
-{
-    return quiet;
-}
-int geng_flag_nooutput(void)
-{ 
-    return nooutput; 
-}
-int geng_flag_nautyformat(void)
-{ 
-    return nautyformat;
-}
-int geng_flag_canonise(void)
-{ 
-    return canonise; 
-}
-
-int GENG_MAIN(int argc, char* argv[]); // vznikne pres -Dmain=GENG_MAIN
+int GENG_MAIN(int argc, char* argv[]); // vznikne pres -DGENG_MAIN=geng_main
 int geng_run(int argc, char** argv)
 { 
     return GENG_MAIN(argc, argv); 

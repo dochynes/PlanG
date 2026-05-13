@@ -1,6 +1,7 @@
 #pragma once
 #include "Output.hpp"
 #include <string>
+#include <utility>
 #include <vector>
 
 
@@ -11,9 +12,11 @@ struct Generator : public Backend
 {
     using GraphView = typename Backend::GraphView;
 
-    static int run()
+    int run()
     {
-        std::vector<std::string> args = Backend::prepare_args();
+        this->apply_runtime_state();
+
+        std::vector<std::string> args = this->prepare_args();
 
         std::vector<char*> c_args;
 
@@ -29,21 +32,21 @@ struct Generator : public Backend
     }
 
     template <typename Func>
-    static void setPrune(Func&& f) 
+    void setPrune(Func&& f) 
     {
-        Backend::setPrune(std::forward<Func>(f));
+        this->Backend::setPrune(std::forward<Func>(f));
     }
 
     template <typename Func>
-    static void setPreprune(Func&& f) 
+    void setPreprune(Func&& f) 
     {
-        Backend::setPreprune(std::forward<Func>(f));
+        this->Backend::setPreprune(std::forward<Func>(f));
     }
 
     template <typename Func>
-    static void setOutproc(Func&& f) 
+    void setOutproc(Func&& f) 
     {
-        Backend::setOutproc(std::forward<Func>(f));
+        this->Backend::setOutproc(std::forward<Func>(f));
     }
 
 

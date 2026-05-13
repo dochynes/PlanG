@@ -18,14 +18,14 @@ prune_nonplanar (const App::GraphView& g)
 
 int main(int argc, char** argv)
 {
+    App app;
 
-    App::setVertices(9);
+    app.setVertices(9);
 
-    App::setPreprune (prune_nonplanar);
+    app.setPreprune (prune_nonplanar);
 
  
-    return App::run();
+    return app.run();
 }
-
 
 
