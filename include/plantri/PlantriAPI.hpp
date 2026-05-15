@@ -1,6 +1,7 @@
 #pragma once
 #include <functional>
 #include <cstdio>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -132,6 +133,8 @@ struct Backend
     FilterFn filter;
     OutprocFn outproc;
 
+    static constexpr int max_vertices = 64;
+
     void setOutputFile(std::string outFile)
     {
         param_out_file = outFile;
@@ -139,6 +142,8 @@ struct Backend
 
     void setVertices(int nn) 
     {
+        if(nn < 1 || nn > max_vertices)
+            throw std::invalid_argument("plantri::Backend::setVertices expects n in range 1.." + std::to_string(max_vertices));
         n = nn; 
     }
 
@@ -154,23 +159,31 @@ struct Backend
 
     void setDiskSize(int outer_size)
     {
+        if(outer_size < 3)
+            throw std::invalid_argument("plantri::Backend::setDiskSize expects outer_size >= 3");
         graph_class=GraphClass::Disk;
         param_disk_outer = outer_size;
     }
 
     void setMinDegree(int m)
     {
+        if(m < 1 || m > 5)
+            throw std::invalid_argument("plantri::Backend::setMinDegree expects m in range 1..5");
         param_min_deg = m;
     }
     
     void setConnectivity(int c, bool exact = false)
     {
+        if(c < 1 || c > 5)
+            throw std::invalid_argument("plantri::Backend::setConnectivity expects c in range 1..5");
         param_conn = c;
         param_exact_conn = exact;
     }
 
     void setMaxFaceSize(int f)
     {
+        if(f < 3)
+            throw std::invalid_argument("plantri::Backend::setMaxFaceSize expects f >= 3");
         param_max_face=f;
     }
 
@@ -211,12 +224,19 @@ struct Backend
 
     void setDistribution(int res, int mod)
     {
+        if(mod <= 0)
+            throw std::invalid_argument("plantri::Backend::setDistribution expects mod > 0");
+        if(res < 0 || res >= mod)
+            throw std::invalid_argument("plantri::Backend::setDistribution expects 0 <= res < mod");
+
         param_res = res;
         param_mod = mod;
     }
 
     void setSplitLevel(int level)
     {
+        if(level < 0)
+            throw std::invalid_argument("plantri::Backend::setSplitLevel expects level >= 0");
         param_split_level = level;
     }
 
@@ -224,6 +244,8 @@ struct Backend
     //TODO add params processor
     std::vector<std::string> prepare_args() const
     {
+        validate();
+
         std::vector<std::string> args;
         args.push_back("plantri");
 
@@ -375,6 +397,31 @@ struct Backend
         plantri::setPrefilter(prefilter);
         plantri::setFilter(filter);
         plantri::setOutproc(outproc);
+    }
+
+    void validate() const
+    {
+        if(n < 1 || n > max_vertices)
+        {
+            throw std::logic_error("plantri configuration has invalid vertex count");
+        }
+
+        if(param_min_deg != -1 && (param_min_deg < 1 || param_min_deg > 5))
+        {
+            throw std::logic_error("plantri configuration has invalid minimum degree");
+        }
+        if(param_conn != -1 && (param_conn < 1 || param_conn > 5))
+        {
+            throw std::logic_error("plantri configuration has invalid connectivity");
+        }
+        if(param_max_face != -1 && param_max_face < 3)
+        {
+            throw std::logic_error("plantri configuration has invalid maximum face size");
+        }
+        if(param_res >= 0 && (param_mod <= 0 || param_res >= param_mod))
+        {
+            throw std::logic_error("plantri configuration has invalid res/mod distribution");
+        }
     }
 
 

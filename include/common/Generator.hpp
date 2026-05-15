@@ -14,9 +14,8 @@ struct Generator : public Backend
 
     int run()
     {
-        this->apply_runtime_state();
-
         std::vector<std::string> args = this->prepare_args();
+        this->apply_runtime_state();
 
         std::vector<char*> c_args;
 

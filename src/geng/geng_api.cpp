@@ -1,6 +1,7 @@
 #include "geng/GengAPI.hpp"
 #include "geng/GraphView.hpp"
 #include <algorithm>
+#include <exception>
 #include <utility>
 
 extern "C"
@@ -27,6 +28,7 @@ using geng::PrepruneFn;
 static OutprocFn s_outproc;
 static PruneFn s_prune;
 static PrepruneFn s_preprune;
+static std::exception_ptr callback_exception;
 static void c_outproc(FILE* f, void* gg, int n);
 
 static void refresh_outproc_registration()
@@ -39,48 +41,78 @@ static void refresh_outproc_registration()
 
 static void c_outproc(FILE* f, void* gg, int n)
 {
-    if (!s_outproc)
+    if (!s_outproc || callback_exception)
         return;
 
-    Output out(f);
-    GraphView view{
-        static_cast<const graph*>(gg),
-        n,
-        n,
-        ::geng_get_output_vertex_colors(),
-        ::geng_get_current_color_count()
-    };
-    s_outproc(out, view);
+    try
+    {
+        Output out(f);
+        GraphView view{
+            static_cast<const graph*>(gg),
+            n,
+            n,
+            ::geng_get_output_vertex_colors(),
+            ::geng_get_current_color_count()
+        };
+        s_outproc(out, view);
+    }
+    catch(...)
+    {
+        if (!callback_exception)
+            callback_exception = std::current_exception();
+    }
 }
 
 static int c_preprune(void* gg, int n, int maxn)
 {
     if (!s_preprune)
         return 0;
+    if (callback_exception)
+        return 1;
 
-    GraphView view{
-        static_cast<const graph*>(gg),
-        n,
-        maxn,
-        ::geng_get_current_vertex_colors(),
-        ::geng_get_current_color_count()
-    };
-    return s_preprune(view);
+    try
+    {
+        GraphView view{
+            static_cast<const graph*>(gg),
+            n,
+            maxn,
+            ::geng_get_current_vertex_colors(),
+            ::geng_get_current_color_count()
+        };
+        return s_preprune(view);
+    }
+    catch(...)
+    {
+        if (!callback_exception)
+            callback_exception = std::current_exception();
+        return 1;
+    }
 }
 
 static int c_prune(void* gg, int n, int maxn)
 {
     if (!s_prune)
         return 0;
+    if (callback_exception)
+        return 1;
 
-    GraphView view{
-        static_cast<const graph*>(gg),
-        n,
-        maxn,
-        ::geng_get_current_vertex_colors(),
-        ::geng_get_current_color_count()
-    };
-    return s_prune(view);
+    try
+    {
+        GraphView view{
+            static_cast<const graph*>(gg),
+            n,
+            maxn,
+            ::geng_get_current_vertex_colors(),
+            ::geng_get_current_color_count()
+        };
+        return s_prune(view);
+    }
+    catch(...)
+    {
+        if(!callback_exception)
+            callback_exception = std::current_exception();
+        return 1;
+    }
 }
 
 }
@@ -89,47 +121,59 @@ namespace geng {
 
 void setColorCount(int count)
 {
-    ::geng_set_color_count(std::max(0, count));
+    if (count < 0)
+        throw std::invalid_argument("geng::setColorCount expects count >= 0");
+
+    ::geng_set_color_count(count);
     ::geng_clear_color_bounds();
     refresh_outproc_registration();
 }
 
 void setColors(int count)
 {
-    int color_count = std::max(0, count);
+    if (count < 0)
+        throw std::invalid_argument("geng::setColors expects count >= 0");
 
-    setColorCount(color_count);
-    for (int color = 0; color < color_count; ++color)
+    setColorCount(count);
+    for (int color = 0; color < count; ++color)
         ::geng_set_color_bounds(color, 1, MAXN);
     refresh_outproc_registration();
 }
 
 void setColorClassSizes(const std::vector<int>& sizes)
 {
+    if(sizes.empty())
+        throw std::invalid_argument("geng::setColorClassSizes expects at least one color class");
+
+    for (int size : sizes)  
+    {
+        if (size <= 0)
+            throw std::invalid_argument("geng::setColorClassSizes expects positive class sizes");
+    }
+
     setColorCount(static_cast<int>(sizes.size()));
     for (std::size_t i = 0; i < sizes.size(); ++i)
     {
-        int size = std::max(0, sizes[i]);
-        ::geng_set_color_bounds(static_cast<int>(i), size, size);
+        ::geng_set_color_bounds(static_cast<int>(i), sizes[i], sizes[i]);
     }
 }
 
 void setColorClassBounds(const std::vector<std::pair<int,int>>& bounds)
 {
+    if(bounds.empty())
+        throw std::invalid_argument("geng::setColorClassBounds expects at least one color class");
+
     setColorCount(static_cast<int>(bounds.size()));
     for (std::size_t i = 0; i < bounds.size(); ++i)
     {
-        int lower = std::max(0, bounds[i].first);
+        int lower = bounds[i].first;
+        int upper = bounds[i].second;
 
-        int upper;
-        if(bounds[i].second < 0)
-        {
-            upper = -1;
-        }
-        else
-        {
-            upper = std::max(lower, bounds[i].second);
-        }
+        if(lower < 0)
+            throw std::invalid_argument("geng::setColorClassBounds expects lower bounds >= 0");
+        if(upper < lower)
+            throw std::invalid_argument("geng::setColorClassBounds expects upper >= lower");
+
         ::geng_set_color_bounds(static_cast<int>(i), lower, upper);
     }
 }
@@ -161,7 +205,11 @@ void setPreprune(PrepruneFn f)
 
 int run(int argc, char** argv)
 {
-    return ::geng_run(argc, argv);
+    callback_exception = nullptr;
+    int result = ::geng_run(argc, argv);
+    if (callback_exception)
+        std::rethrow_exception(callback_exception);
+    return result;
 }
 
 }
