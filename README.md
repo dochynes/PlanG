@@ -1,709 +1,258 @@
-# C++ Graph Generator API (Wrapper pro Nauty/Geng a Plantri)
+# PlanG
 
-Tato knihovna poskytuje moderní, sjednocené a typově bezpečné C++20 rozhraní pro dva z nejrychlejších generátorů grafů na světě: Nauty (geng) a Plantri.
+PlanG je konzolová aplikace a C++ knihovna pro generování grafů. Umožňuje používat generátory `geng` a `plantri` přes jednotné C++ rozhraní a výsledné grafy dále filtrovat nebo zpracovávat vlastním kódem.
 
-Knihovna slouží jako "bridge" (most), který umožňuje vývojářům využívat nízkoúrovňový výkon jazyka C, zatímco píší vysokoúrovňový C++ kód kompatibilní s knihovnou Boost.Graph.
+Program je určen hlavně pro experimenty v teorii grafů, testování algoritmů a generování množin grafů s danými vlastnostmi.
 
-## Klíčové vlastnosti
+## Co program umí
 
-- **Zero-Copy Overhead**: GraphView je pouze lehká obálka (pohled) nad interní pamětí generátoru. Nedochází k žádnému kopírování dat grafu při předávání do callbacků.
-- **Sjednocené API**: Stejná syntaxe pro generování obecných grafů (Geng) i rovinných triangulací (Plantri).
-- **Boost.Graph Kompatibilita**: Vygenerované grafy splňují koncepty AdjacencyGraph, VertexListGraph a další, což umožňuje přímé použití algoritmů z `boost::graph` (např. barvení, hledání komponent).
-- **Bezpečnost**: Zapouzdření surových C pointerů (zejména u Plantri) do bezpečných iterátorů a navigačních funkcí.
-- **Rozšíření Geng**: Podpora barevných tříd a zakotvených vrcholů přímo v generačním procesu.
+PlanG zpřístupňuje dva specializované generátory grafů v jednom prostředí. Uživatel si v C++ kódu zvolí, zda chce pracovat s obecnými grafy generovanými pomocí `geng`, nebo s rovinnými grafy generovanými pomocí `plantri`.
 
-## 1. Architektura
+Program umožňuje nastavit základní vlastnosti generovaných grafů, například počet vrcholů, počet hran, stupňová omezení nebo vybrané strukturální podmínky. Vygenerované grafy lze dále filtrovat vlastním C++ kódem a výsledky ukládat ve standardních formátech( například `graph6` nebo `sparse6`).
 
-Knihovna není přepsáním generátorů do C++. Místo toho využívá techniku statického linkování s vloženou vrstvou "shim".
+Součástí projektu jsou také ukázkové programy ve složce `examples/`, které předvádějí typické způsoby použití knihovny.
 
-### Jak to funguje pod kapotou
+## Požadavky
 
-1. **Backend (C)**: Zdrojové kódy geng a plantri jsou zkompilovány jako statické knihovny.
-2. **Shim (C/C++ Bridge)**: Malá vrstva (shim), která zpřístupňuje interní, často skryté struktury generátorů (např. bitová pole v Nauty nebo half-edge pointery v Plantri).
-3. **Frontend (C++ API)**: Šablonová třída `Generator<Backend>`, která registruje C++ lambda funkce jako callbacky pro C generátor.
-4. **GraphView**: Abstraktní pohled na graf. Uživatel v callbacku dostává `const GraphView&`. Tato třída neobsahuje data grafu, ale pouze pointery na data v paměti C generátoru.
+### Hardware
 
-### Proč Zero-Copy?
+Pro sestavení projektu a spouštění běžných experimentálních příkladů stačí běžný 64bitový počítač, alespoň 4 GB RAM, alespoň 500 MB volného místa na disku:
 
-Generátory jako geng mohou produkovat miliony grafů za sekundu. Jakákoliv konverze do objektů typu `std::vector<std::vector<int>>` nebo `boost::adjacency_list` by byla fatální brzdou. Toto řešení umožňuje číst data přímo z interní reprezentace (bitsety pro Geng, pointery pro Plantri) s nulovou režií.
 
-## 2. Kompilace a Struktura projektu
+### Software
 
-### Závislosti
+Projekt lze sestavit na Linuxu a macOS. Na Windows je doporučené použít WSL.
+Na Linuxu se ve výchozím nastavení používá optimalizované sestavení přes GCC. Na macOS instalační skript automaticky použije `clang` a `clang++`, aby bylo sestavení kompatibilní se standardními vývojářskými nástroji od Applu.
 
-- Překladač s podporou C++20 (GCC 10+, Clang 11+).
-- Boost Graph Libraries.
-- Standardní nástroje: `make`, `ar`.
+Je potřeba:
 
-### Struktura adresářů
-- `include/` – Veškeré hlavičkové soubory C++ API
-  (`MyGraphLib.hpp` je hlavní vstupní bod)
+- překladač s podporou C++20, například GCC 10+ nebo Clang 11+,
+- `make`,
+- `ar`,
+- knihovna Boost, především Boost.Graph; instalační skript ji umí doinstalovat automaticky,
 
-- `src/` – Implementace wrapperů a C shimů
+Na macOS je před spuštěním instalačního skriptu potřeba mít nainstalované vývojářské nástroje a Homebrew.
+Na Debianu, Ubuntu nebo WSL se skript pokusí potřebné build nástroje doinstalovat přes `apt-get`.
 
-- `src/geng/` – Backend pro Nauty/Geng
+## Instalace
 
-- `src/plantri/` – Backend pro Plantri
-
-- `vendor/` – Původní zdrojové kódy Nauty a Plantri (u Nauty upraven `geng.c` pro rozšíření funkcionality). **Pozor: Velikost cca 110 MB.**
-
-- `examples/` – Ukázkové programy (viz níže)
-
-### Sestavení
-
-Projekt používá **Makefile**.
-Pro sestavení knihoven a aplikace spusťte:
 
 ```bash
-make
+./install.sh
 ```
 
-Tím se vytvoří statické knihovny:
+Skript zkontroluje základní nástroje, v případě potřeby doinstaluje Boost a spustí sestavení projektu. Na Debianu, Ubuntu nebo WSL používá `apt-get`, na macOS používá Homebrew.
 
-- `libgeng_wrapper.a`
-- `libplantri_wrapper.a`
-
-a také vzorová aplikace.
-
-Pro kompilaci je vyžadována knihovna **Boost** (primárně hlavičkové soubory).
-Na systémech Debian/Ubuntu ji nainstalujete příkazem:
+Po úspěšném dokončení vznikne spustitelný soubor:
 
 ```bash
-sudo apt-get install libboost-all-dev
+./plang
 ```
 
-## 3. Použití a API
 
-Základní použití spočívá ve výběru backendu, nastavení parametrů generátoru a případné registraci callbacků.
+### Chybí Boost
 
-### Inicializace
+Instalační skript se pokusí Boost automaticky doinstalovat. Na Linuxu k tomu používá `apt-get`, na macOS Homebrew.
 
-V souboru `main.cpp` stačí vybrat backend:
+Pokud automatická instalace není možná nebo je Boost v nestandardním umístění, spusťte instalaci s proměnnou `BOOST_DIR`:
+
+```bash
+BOOST_DIR=/cesta/k/adresari/obsahujicimu/boost ./install.sh
+
+
+## Spuštění
+
+Po sestavení spusťte program:
+
+```bash
+./plang
+```
+
+Konkrétní chování programu je určeno zdrojovým souborem `main.cpp`. V něm se nastavuje, který generátor se použije a jaké grafy se mají generovat.
+
+Například ukázkový program může generovat rovinné grafy na 7 vrcholech:
 
 ```cpp
 #include "MyGraphLib.hpp"
 
-// Pro obecné grafy:
-using App = Generator<geng::Backend>;
+using App = Generator<plantri::Backend>;
 
-// NEBO pro rovinné grafy:
-// using App = Generator<plantri::Backend>;
+int main()
+{
+    App app;
 
-int main(int argc, char** argv) {
-    // ... nastavení callbacků ...
-    return App::run();
+    app.setVertices(7);
+    return app.run();
 }
 ```
 
-API je navrženo okolo tří hlavních callbacků:
+Po změně `main.cpp` je potřeba projekt znovu sestavit:
 
-1. **`setPreprune` (Heuristika)**  
-   Volá se během konstrukce grafu. Umožňuje oříznout větev výpočtu dříve, než je graf hotový.
-
-   - **Vstup:** Částečně vytvořený graf  
-   - **Návratová hodnota:**  
-     -  PRUNE (zahodit větev)  
-     -  KEEP (pokračovat)  
-   - **Použití:** Kontrola stupňů, specifické topologické vlastnosti
-
-2. **`setPrune` (Pruning / filtr)**  
-   V backendu `geng` se volá i pro mezistavy generování, tedy také pro grafy s `g.num_vertices() < g.maxn()`.
-
-   - **Vstup:** Částečně vytvořený nebo finální graf  
-   - **Návratová hodnota:**  
-     -  PRUNE (zahodit)  
-     -  KEEP (ponechat)  
-   - **Použití:** Volání složitějších algoritmů (např. Boost coloring, isomorfismus)
-
-
-   Pokud chce mít uživatel jistotu, že pracuje pouze s finální verzí grafu, měl by graf zpracovat v `setOutproc`.
-
-3. **`setOutproc` (Výstup)**  
-   Volá se pro grafy, které prošly filtrem.
-
-   - **Vstup:** `Output&` (wrapper nad `FILE*`) a graf  
-   - **Použití:** Výpis grafu do souboru nebo na `stdout`, pokud chce uživatel sám řídit proces výpisu
-
-Příklad použití: [1](./examples/04_test_geng_planarity_filter.cpp), [2](./examples/02_example_boost.cpp)
-
-## Strategie výstupu
-
-Knihovna flexibilně volí způsob výpisu grafů podle toho, jakou míru kontroly uživatel požaduje.
-
----
-### 1. Nativní výstup (bez `setOutproc`)
-
-Pokud uživatel nenastaví vlastní callback, výpis zajišťuje přímo generátor pomocí svých interních, optimalizovaných C rutin.
-Výstup je směrován na `stdout`, případně do souboru nastaveného pomocí:
-
-```cpp
-App::setOutputFile(...);
-```
-V tomto režimu jsou dostupné všechny nativní formáty generátoru, které lze zvolit pomocí:
-```cpp
-App::setFormat(App::OutputFormat::...);
-```
-Dostupné formáty: 
-- Plantri: `PlanarCode(default)`,`Graph6`,`Sparse6`,`Ascii`,`EdgeCode`,`DoubleCode`,`NoOutput`
-- Geng: `Graph6(default)`, `Sparse6`, `NautyBinary`, `NoOutput `
-
-### 2. Vlastní výstup (pomocí `setOutproc`)
-
-Jakmile je nastaven callback `setOutproc`, nativní výpis generátoru se zcela potlačí a uživatel přebírá plnou odpovědnost za výpis grafů (případně dalších dat nebo statistik).
-
-Callback dostává objekt `Output&`, což je bezpečný C++ wrapper nad nízkoúrovňovým C `FILE*`.
-
-Pokud nebyl přes API (`setOutputFile(string)`) nastaven výstupní soubor, výstupem je `stdout`.
-
-Pokud uživatel chce v callbacku vypsat samotný graf, může použít:
-
-```cpp
-out << g;
+```bash
+./install.sh
 ```
 
-U backendu **Plantri** tento výpis respektuje aktuální formát nastavený přes:
+## Výběr generátoru
+
+Základní třídou knihovny je šablona `Generator`. Do špičatých závorek se zadává backend, který určuje, jaký původní generátor se použije.
+
+Pro obecné grafy:
 
 ```cpp
-App::setFormat(App::OutputFormat::...);
+Generator<geng::Backend> app;
 ```
 
-Například `App::OutputFormat::Graph6` vypíše graf ve formátu `graph6`, `Ascii` v textovém formátu Plantri atd.
-U backendu **Geng** `out << g` vypisuje `graph6`.
+Pro rovinné grafy:
 
-Přiklad:
 ```cpp
-App::setOutproc([](Output& out, const App::GraphView& g) {
-    // V tomto bloku máme absolutní kontrolu nad tím, co se zapíše.
-    // Můžeme vypisovat vlastní texty, statistiky, nebo výsledky algoritmů.
+Generator<plantri::Backend> app;
+```
 
-    out << "Nalezen graf splňující podmínky: ";
+Pro kratší zápis si můžeme vytvořit typovou zkratku, například:
 
-    // operátor << pro výpis grafu.
+```cpp
+using App = Generator<geng::Backend>;
+App app;
+```
+
+
+## Základní nastavení generování
+
+Počet vrcholů:
+
+```cpp
+app.setVertices(10);
+```
+
+Rozsah počtu hran pro `geng`:
+
+```cpp
+app.setEdgeRange(10, 15);
+```
+
+Požadavek na souvislé grafy:
+
+```cpp
+app.setConnected();
+```
+
+Požadavek na bipartitní grafy:
+
+```cpp
+app.setBipartite();
+```
+
+Zákaz trojúhelníků:
+
+```cpp
+app.setTriangleFree();
+```
+
+Nastavení výstupu do souboru:
+
+```cpp
+app.setOutputFile("output.g6");
+```
+
+## Výstup
+
+Bez vlastního zpracování se vygenerované grafy vypisují na standardní výstup nebo do souboru nastaveného pomocí:
+
+```cpp
+app.setOutputFile("output.g6");
+```
+
+U `geng` je výchozí formát `graph6`. Lze použít například také `sparse6`:
+
+```cpp
+app.setFormat(App::OutputFormat::Sparse6);
+```
+
+Výstup lze vypnout:
+
+```cpp
+app.setNoOutput();
+```
+
+## Vlastní filtrování grafů
+
+Grafy lze filtrovat pomocí callbacku `setPrune`. Callback vrací:
+
+- `KEEP`, pokud má být graf ponechán,
+- `PRUNE`, pokud má být graf zahozen.
+
+Jednoduchý příklad:
+
+```cpp
+app.setPrune([](const App::GraphView& g) {
+    if (condition(g))
+        return KEEP;
+
+    return PRUNE;
+});
+```
+
+Pro předčasné zahazování větví během generování slouží `setPreprune`. To je užitečné hlavně u dražších výpočtů, protože může snížit počet grafů, které generátor musí dokončit.
+
+## Vlastní výpis grafů
+
+Pokud nestačí výchozí výstup, lze nastavit vlastní zpracování přes `setOutproc`:
+
+```cpp
+app.setOutproc([](Output& out, const App::GraphView& g) {
+    out << "Nalezen graf: ";
     out << g;
 });
 ```
 
+V tomto režimu si uživatel řídí výstup sám.
 
+## Obarvené a zakotvené vrcholy v `geng`
 
-## Konfigurace generátoru Geng
+Backend `geng` podporuje také generování grafů s barevnými třídami vrcholů.
 
-API poskytuje přímé mapování na parametry původního nástroje.
-Pomocí následujících metod generátor nastavíme přímo z C++.
-
----
-
-### Velikost generovaného grafu
-
-- `setVertices(int n)` – počet vrcholů
-- `setEdgeRange(int min, int max = -1)` – povolený rozsah počtu hran
-
----
-
-### Strukturální vlastnosti grafu
-
-- `setConnected(bool)`
-- `setBiconnected(bool)`
-- `setTriangleFree(bool)`
-- `setSquareFree(bool)`
-- `setBipartite(bool)`
-- `setChordal(bool)`
-- `setPerfect(bool)`
-- `setClawFree(bool)`
-
-
----
-
-### Omezení stupňů vrcholů
-
-- `setMinDegree(int)`
-- `setMaxDegree(int)`
-- `setRegular(bool)`
-
----
-
-### Nastavení výstupu
-
-- `setFormat(OutputFormat)`
-- `setNoOutput()`
-- `setOutputFile(std::string)`
-
----
-
-### Pokročilé volby generátoru
-
-- `setCanonicalLabeling(bool)`
-- `setHeader(bool)`
-- `setQuiet(bool)`
-- `setVerbose(bool)`
-- `setSaveMemory(bool)`
-- `setDistribution(int res, int mod)`
-- `setAdvancedSplit(int)`
-- `setAdvancedStartLevel(int)`
-- `setSplit(bool)`
-
-
-
-## Konfigurace generátoru Plantri
-
-### Velikost grafu
-
-- `setVertices(int)`
-
-### Třída grafu
-
-- `setClass(GraphClass)`
-- `setDiskSize(int)`
-
-### Strukturální omezení
-
-- `setMinDegree(int)`
-- `setConnectivity(int, bool exact=false)`
-- `setMaxFaceSize(int)`
-
-### Výstup
-
-- `setFormat(OutputFormat)`
-- `setNoOutput()`
-- `setOutputFile(string)`
-- `setOutputDual(bool)`
-
-### Symetrie a izomorfismy
-
-- `setOrientationPreserving(bool)`
-- `setFullGroup(bool)`
-- `setNonTrivialGroup(bool)`
-
-### Paralelizace
-
-- `setDistribution(res, mod)`
-- `setSplitLevel(int)`
-
----
-[Příklad použití](./examples/05_api_usage.cpp)
-
-
-
-
-## 4. Boost.Graph integrace
-
-
-### Implementované koncepty
-
-`GraphView` splňuje následující koncepty knihovny **Boost.Graph**.
-U každého konceptu jsou uvedeny funkce, které jsou dostupné.
-
-### `VertexListGraph`
-
-Umožňuje iteraci přes všechny vrcholy grafu.
-
-Poskytované funkce:
-
-- `vertices(g)`
-- `num_vertices(g)`
-
----
-
-### `EdgeListGraph`
-
-Umožňuje iteraci přes všechny hrany grafu.
-
-Poskytované funkce:
-
-- `edges(g)`
-- `num_edges(g)`
-- `source(e, g)`
-- `target(e, g)`
-
----
-
-### `AdjacencyGraph`
-
-Umožňuje iteraci přes sousedy daného vrcholu.
-
-Poskytované funkce:
-
-- `adjacent_vertices(v, g)`
-
----
-
-### `IncidenceGraph`
-
-Umožňuje iteraci přes vycházející hrany daného vrcholu a jeho stupeň.
-
-Poskytované funkce:
-
-- `out_edges(v, g)`
-- `out_degree(v, g)`
-- `source(e, g)`
-- `target(e, g)`
-
-### Částečná podpora `PropertyGraph`
-
-`GraphView` neposkytuje plnou implementaci konceptu **PropertyGraph**,  
-protože graf je pouze **read-only pohled** do paměti generátoru.
-
-Je však implementována základní vlastnost nutná pro většinu algoritmů Boost: `vertex_index`
+Přesné velikosti barevných tříd:
 
 ```cpp
-get(boost::vertex_index, g)
-```
-Tato funkce vrací property mapu, která každému vrcholu přiřazuje jeho index v rozsahu `0 ... num_vertices(g) - 1`.
-Díky tomu lze používat algoritmy, které vyžadují externí úložiště vlastností.
-
-U backendu **Geng** je `vertex_index` přímo identita, protože vrcholy jsou číslované souvisle `0 ... n-1`.
-U běžných Plantri grafů, kde `missing_vertex < 0`, jsou vrcholy také číslované souvisle `0 ... num_vertices(g)-1`.
-V takovém případě lze raw `vertex_descriptor` bezpečně používat přímo jako index do `std::vector`.
-
-[U backendu **Plantri** může při polygon/disk triangulacích existovat interní `missing_vertex`.](#poznámky-a-omezení)
-V takovém případě může být raw číslování například:
-
-```text
-raw vrcholy: 0 1 3 4 5 6 7
-missing_vertex: 2
+app.setVertices(6);
+app.setColorClassSizes({4, 2});
 ```
 
-Plantri `vertex_index` proto vrací kompaktní indexy bez díry:
-
-```text
-raw vrchol: 0 1 3 4 5 6 7
-vertex_index: 0 1 2 3 4 5 6
-```
-
-To je důležité pro Boost algoritmy, které používají pole nebo `std::vector` velikosti `num_vertices(g)`.
-
-Pokud chcemd indexovat vlastní pole bezpečně i pro disk/polygon triangulace, můžeme použít property mapu stejně jako v
-[examples/11_plantri_vertex_index_map.cpp](./examples/11_plantri_vertex_index_map.cpp)
-
-
-Podrobné definice jednotlivých konceptů viz oficiální dokumentace
-Boost.Graph:
-
- https://www.boost.org/doc/libs/latest/libs/graph/doc/graph_concepts.html
----
-
-
-## 5. Porovnání backendů: Geng vs. Plantri
-
-Ačkoliv API sjednocuje práci s grafy, jednotlivé backendy se pod kapotou
-liší **typem podporovaných grafů**, vnitřní reprezentací i dostupnými
-navigačními operacemi.
-
-### Společné rozhraní
-
-Oba backendy - **Geng (Nauty)** i **Plantri** - poskytují jednotnou množinu
-základních funkcí odpovídajících konceptům knihovny **Boost.Graph**.
-Díky tomu lze nad oběma typy grafů psát algoritmy stejným způsobem.
-
-Mezi společně podporované funkce patří zejména:
-
-- `vertices`, `num_vertices`
-- `edges`, `num_edges`
-- `source`, `target`
-- `adjacent_vertices`
-- `out_edges`
-- `out_degree`
-
-Tyto operace pokrývají obecnou navigaci v grafu a umožňují přímé použití
-algoritmů z knihovny Boost.Graph bez ohledu na zvolený backend.
-
-
----
-
-### Rozdíly mezi backendy
-
-Přestože základní rozhraní je společné, **ne všechny operace dávají smysl
-pro oba typy grafů**.
-
-#### Geng (Nauty)
-
-Backend Geng pracuje s obecnými neorientovanými grafy reprezentovanými
-maticí sousednosti.
- `distance_between` - počítá vzdálenost dvou vrcholů pomocí BFS nad Boost.Graph rozhraním
-
-
-
-
-#### Plantri
-
-Plantri je určen pro rovinné grafy a používá reprezentaci typu
-**half-edge**, která umožňuje detailní topologickou navigaci v grafu,
-včetně práce se stěnami.
-
-Na rozdíl od Gengu Plantri **podporuje i multigrafy (multihrany)**
-
-Proto Plantri poskytuje **dodatečné navigační funkce**, které nejsou
-k dispozici u Gengu, například:
-
-- `next_edge(e)`
-- `prev_edge(e)`
-- `opposite_edge(e)`
-
-Tyto funkce umožňují procházet cyklické pořadí hran okolo vrcholu a přecházet
-mezi opačnými orientacemi jedné hrany.
-
-
-
-## 6. výkon a reimplementace pluginu
-
-Jedním z hlavních cílů bylo ověřit, že C++ API **výrazně nezpomaluje generování grafů**.
-
-V souboru [examples/03_plantri_plugin.cpp](./examples/03_plantri_plugin.cpp) se nachází
-**C++ reimplementace nativního C pluginu `plantri_maxd`** nad tímto API.
-Implementace používá stejnou heuristiku `Preprune` a zachovává logiku filtru
-maximálního stupně.
-
-Kontrolní běhy ukázaly, že výsledky odpovídají původnímu C pluginu.
-
-
----
-
-## Příklady
-Další ukázky použití knihovny lze nalézt ve složce [examples](./examples/)
-
----
-
-
-## Poznámky a omezení
-
-
-### `missing_vertex`
-Interně Plantri obsahuje statickou proměnnou `missing_vertex`, která se používá pouze při generování **polygon triangulací**:
-```c
-static int missing_vertex = -1;
-/* The vertices are numbered 0..nv-1 if missing_vertex<0, and
-   0..missing_vertex-1, missing_vertex..nv otherwise.
-   This is only used in the code for polygon triangulations. */
-```
-
-
-## Obarvené grafy v `geng`
-
-Aktuální implementace rozšiřuje `geng` o generování grafů vzhledem k barevným třídám vrcholů. Základní myšlenka je, že izomorfismus už nesmí libovolně permutovat všechny vrcholy, ale musí respektovat barvy. Vrcholy stejné barvy se mezi sebou mohou zaměňovat, ale vrcholy různých barev ne.
-
-Interně se obarvení sleduje pomocí barevných tříd. Každý vrchol má přiřazený index barvy a generátor průběžně hlídá, kolik vrcholů už v jednotlivých barvách vzniklo.
-
-```text
-barva 0: aktuální počet vrcholů v barvě 0
-barva 1: aktuální počet vrcholů v barvě 1
-...
-barva k-1: aktuální počet vrcholů v barvě k-1
-```
-
-Omezení na velikosti tříd lze zadat přesně, například `{4,2}`, nebo intervalově, například `barva 0: 2..4`, `barva 1: 1..3`. Pro každý finální graf musí součet skutečných velikostí tříd odpovídat počtu vrcholů grafu.
-
-### Jak probíhá barvení v `geng`
-
-Původní `geng` generuje grafy postupným přidáváním vrcholů. Úprava přidává k tomuto procesu ještě průběžné přiřazování barvy právě přidanému vrcholu.
-
-Zjednodušený pseudokód:
-
-```text
-extend(graf G na n vrcholech):
-    pro každou možnou množinu sousedů x nového vrcholu:
-        pokud colouring není aktivní:
-            pokračuj původním geng algoritmem
-
-        pokud colouring je aktivní:
-            pro každou barvu c:
-                přiřaď novému vrcholu barvu c
-                zvyš aktuální počet vrcholů barvy c
-
-                pokud barevné počty ještě mohou splnit zadané meze tříd:
-                    proveď accept test s partition rozdělenou podle barev
-                    pokud test projde:
-                        pokračuj rekurzivně
-
-                vrať přiřazení barvy zpět
-```
-
-
-Kontrola realizovatelnosti barev se dělá pomocí dolních a horních mezí tříd. Pokud například generujeme přesné třídy `{3,1}`, interně se to chápe jako intervaly `3..3` a `1..1`. Žádná větev generování nesmí překročit horní mez a zároveň se průběžně kontroluje, že ze zbývajících vrcholů ještě lze splnit všechny dolní meze.
-
-Před voláním `nauty` se počáteční partition rozdělí podle barev. Tím `nauty` dostane informaci, které vrcholy patří do stejné barevné třídy, a canonical generation potom pracuje s barevně zachovávajícími izomorfismy.
-
-### Přístup k barvám v callbackách
-
-Uživatel má v `prune` a `preprune` přístup k aktuálním barvám přes `GraphView`:
+Intervalové omezení velikostí tříd:
 
 ```cpp
-App::setPreprune([](const App::GraphView& g) {
-
-    if (!g.has_coloring())
-        return 0;
-
-    int color = g.color(0);
-    return 0;
-});
-```
-
-Dostupné metody:
-
-```cpp
-g.has_coloring()
-g.color_count()
-g.color(v)
-g.vertex_colors()
-g.vertices_of_color(color)
-```
-
-`g.color(v)` vrací index barvy vrcholu `v`. Pokud obarvení není aktivní nebo je vrchol mimo rozsah, vrací `-1`.
-`g.vertex_colors()` vrací pole velikosti `g.num_vertices()`, kde na indexu `v` je barva vrcholu `v`.
-`g.vertices_of_color(color)` vrací seznam vrcholů, které mají zadanou barvu.
-
-V `setPrune` a `setPreprune` barvy odpovídají aktuálnímu grafu, se kterým callback pracuje. V `setOutproc` barvy odpovídají grafu, který se právě vypisuje. Pokud je zapnuté `App::setCanonicalLabeling()`, graf se před výstupem kanonicky přeznačí a barvy se přeuspořádají stejným způsobem.
-
-### `App::setColorClassSizes(...)`
-
-Nejzákladnější způsob použití je přímo zadat velikosti jednotlivých barevných tříd.
-
-```cpp
-using App = Generator<geng::Backend>;
-
-int main()
-{
-    App::setVertices(6);
-    App::setColorClassSizes({4, 2});
-    return App::run();
-}
-```
-
-Tento příklad generuje grafy na 6 vrcholech se dvěma barevnými třídami:
-
-```text
-barva 0: 4 vrcholy
-barva 1: 2 vrcholy
-```
-
-Barvy jsou v tomto režimu rozlišené. To znamená, že barva `0` a barva `1` mají konkrétní význam a izomorfismus je nesmí mezi sebou prohodit.
-
-Ukázka použití s filtrováním podle hran mezi barevnými třídami je v [examples/07_color_class_sizes_prune.cpp](./examples/07_color_class_sizes_prune.cpp).
-
-`{1,3}` a `{3,1}` jsou pro rozlišené barvy dva různé případy:
-
-```text
-{1,3}: barva 0 má 1 vrchol, barva 1 má 3 vrcholy
-{3,1}: barva 0 má 3 vrcholy, barva 1 má 1 vrchol
-```
-
-### `App::setColorClassBounds(...)`
-
-Obecnější varianta dovoluje pro každou barevnou třídu zadat dolní a horní mez její velikosti.
-
-```cpp
-App::setVertices(6);
-App::setColorClassBounds({
+app.setVertices(6);
+app.setColorClassBounds({
     {2, 4},
     {1, 3}
 });
 ```
 
-To znamená:
-
-```text
-barva 0: 2 až 4 vrcholy
-barva 1: 1 až 3 vrcholy
-```
-
-Generátor pak připouští všechny přesné rozklady, které tyto meze splňují a jejichž součet je `n`. Pro `n = 6` tedy například:
-
-```text
-{3,3}
-{4,2}
-```
-
-Funkce `setColorClassSizes(...)` je speciální případ této obecnější varianty, kde pro každou třídu platí dolní mez = horní mez.
-
-### `App::setRootedVertices(k)`
-
-Zakotvené vrcholy jsou implementované jako speciální případ barevných tříd. Pokud chceme zakotvit `k` vrcholů na grafu s `n` vrcholy, interně se vytvoří rozklad:
-
-```text
-{n-k, 1, 1, ..., 1}
-```
-
-Tedy jedna velká třída obyčejných vrcholů a `k` singleton tříd. Každý zakotvený vrchol má vlastní unikátní barvu.
-
-Příklad:
+Zakotvené vrcholy:
 
 ```cpp
-App::setVertices(8);
-App::setRootedVertices(2);
+app.setVertices(8);
+app.setRootedVertices(2);
 ```
 
-Interně odpovídá:
+Ukázky použití jsou ve složce `examples/`.
 
-```cpp
-App::setColorClassSizes({6, 1, 1});
-```
 
-Význam:
+## Čištění projektu
 
-```text
-barva 0: 6 obyčejných vrcholů
-barva 1: první zakotvený vrchol
-barva 2: druhý zakotvený vrchol
-```
+Vygenerované knihovny a spustitelný soubor lze odstranit příkazem:
 
-Tím se realizuje generování grafů, kde `k` vrcholů má speciální roli a izomorfismus je nesmí zaměnit s běžnými vrcholy.
-
-Ukázka použití se dvěma zakotvenými vrcholy a filtrem na jejich vzdálenost : [examples/08_rooted_vertices_prune.cpp](./examples/08_rooted_vertices_prune.cpp).
-
-### `App::setColors(k)`
-
-Funkce `setColors(k)` slouží pro případ, kdy uživatel chce generovat grafy s přesně `k` rozlišenými barvami, ale nechce ručně zadávat velikosti tříd.
-
-V aktuální implementaci se `setColors(k)` interně převádí na intervalové omezení:
-
-```text
-barva 0: 1 až n vrcholů
-barva 1: 1 až n vrcholů
-...
-barva k-1: 1 až n vrcholů
-```
-
-Tím se v jednom běhu připustí právě všechny rozklady počtu vrcholů `n` do `k` nenulových uspořádaných tříd.
-
-Příklad:
-
-```cpp
-App::setVertices(4);
-App::setColors(2);
-```
-
-Interně se připustí například tyto konkrétní velikosti tříd:
-
-```text
-{1,3}
-{2,2}
-{3,1}
+```bash
+make clean
 ```
 
 
-Ukázka použití `setColors(2)` s filtrem nad velikostí jedné barevné třídy je v [examples/06_colored_geng.cpp](./examples/06_colored_geng.cpp).
+## Struktura projektu
 
-
-
-
-### Poznámka k výstupu
-
-Standardní `graph6` ani `sparse6` formát sám o sobě neobsahuje informace o barvách. Pokud je ale v této knihovně aktivní obarvení a uživatel nenastaví vlastní `setOutproc`, výchozí výstup za graf dopíše i barvy vrcholů:
-
-```text
-C? colors: 0 1 1
-```
-
-Pokud uživatel nastaví vlastní `setOutproc`, je formát výstupu plně v jeho režii.
-
-Pokud uživatel chce, aby se výstupní grafy před vypsáním kanonicky přeznačily, může zavolat:
-
-```cpp
-App::setCanonicalLabeling();
-```
-Při kanonickém přeznačení se současně přeuspořádají i barvy vrcholů, takže výchozí barevný výstup i `GraphView` v `setOutproc` odpovídají výstupnímu pořadí vrcholů.
-
-
-
-
-Obarvení je napojené i na omezenou větev `spaextend()`. Barvy jsou tedy dostupné také při použití přepínačů, které `geng` interně vedou přes `spaextend()`, například `-m`, `-t` nebo `-f`.
-
-Ukázka kombinace `setTriangleFree()`, `setRootedVertices(1)`  je v [examples/09_spaextend_coloring.cpp](./examples/09_spaextend_coloring.cpp).
+- `main.cpp` - hlavní ukázkový program, který se sestaví do `plang`,
+- `examples/` - ukázky použití,
+- `include/` - veřejné hlavičkové soubory knihovny,
+- `src/` - zdrojové soubory wrapperu,
+- `vendor/` - přiložené zdrojové kódy generátorů `nauty/geng` a `plantri`,
+- `Makefile` - sestavení projektu,
+- `install.sh` - jednoduché sestavení jedním příkazem.
