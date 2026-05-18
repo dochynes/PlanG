@@ -72,9 +72,10 @@ int pt_maxnv();
 
 
 
-struct Backend 
+class Backend
 {
 
+public:
 
     enum class GraphClass
     {
@@ -104,6 +105,7 @@ struct Backend
     using GraphView = plantri::GraphView;
 
 
+private:
     int n = 0;
     bool dual = false;
 
@@ -135,6 +137,7 @@ struct Backend
 
     static constexpr int max_vertices = 64;
 
+public:
     void setOutputFile(std::string outFile)
     {
         param_out_file = outFile;
@@ -242,6 +245,7 @@ struct Backend
 
 
     //TODO add params processor
+protected:
     std::vector<std::string> prepare_args() const
     {
         validate();
@@ -371,6 +375,7 @@ struct Backend
 
 
 
+public:
     void setPrune(FilterFn f)
     {
         filter = std::move(f);
@@ -386,6 +391,7 @@ struct Backend
         outproc = std::move(f); 
     }
 
+protected:
     static int run(int argc, char** argv) 
     { 
 

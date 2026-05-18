@@ -40,8 +40,9 @@ int distance_between(const GraphView& g, int src, int dst);
 
 int run(int argc, char** argv);
 
-struct Backend
+class Backend
 {
+public:
 
     using GraphView = geng::GraphView;
 
@@ -54,6 +55,7 @@ struct Backend
         NautyBinary // -n 
     };
 
+private:
     enum class ColorMode
     {
         None,
@@ -121,6 +123,7 @@ struct Backend
     }
 
 
+public:
     void setVertices(int nn)
     {
         if(nn < 1 || nn > max_vertices)
@@ -273,6 +276,7 @@ struct Backend
         param_out_file = filename;
     }
 
+protected:
     std::vector<std::string> prepare_args() const
     {
         validate();
@@ -390,7 +394,8 @@ struct Backend
 
 
 
-    
+
+public:
     void setPrune(PruneFn f)
     {
         prune = std::move(f);
@@ -406,11 +411,13 @@ struct Backend
         outproc = std::move(f);
     }
 
+protected:
     static int run(int argc, char** argv)
     { 
         return geng::run(argc, argv); 
     }
 
+public:
     void setRootedVertices(int count)
     {
         if(count < 0)
@@ -474,6 +481,7 @@ struct Backend
         color_count = 0;
     }
 
+protected:
     void apply_runtime_state() const
     {
         switch(color_mode)
@@ -553,6 +561,7 @@ struct Backend
         }
     }
 
+public:
     static int distance_between(const GraphView& g, int src, int dst)
     {
         return geng::distance_between(g, src, dst);
