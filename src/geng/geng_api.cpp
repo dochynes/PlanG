@@ -95,6 +95,8 @@ static int c_prune(void* gg, int n, int maxn)
         return 0;
     if (callback_exception)
         return 1;
+    if (n != maxn)
+        return 0;
 
     try
     {
