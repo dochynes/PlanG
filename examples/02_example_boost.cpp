@@ -12,7 +12,7 @@ int main(int argc, char** argv)
 
     app.setVertices(13);
 
-    // Search for graphs that require at least 4 colors
+    // Search for graphs where this greedy vertex-order coloring uses at least 4 colors.
     app.setPrune([=](const auto& g){
         
         // 1. Prepare Boost structures. boost can use the std::vector directly as a property map.
@@ -26,7 +26,8 @@ int main(int argc, char** argv)
         */
 
         // 2. Call standard Boost algorithm
-        // The sequential_vertex_coloring function accepts 'g' thanks to our Traits
+        // The sequential_vertex_coloring function accepts 'g' thanks to our Traits.
+        // It reports colors used by this greedy ordering, not the chromatic number.
         int num_colors = boost::sequential_vertex_coloring(g, colors.data());
 
         // 3. Decision (Prune/Keep)
@@ -39,7 +40,7 @@ int main(int argc, char** argv)
 
     app.setOutproc([](auto& out, const auto& g) 
     {
-        out << "Found graph with chrom. number >= 4:";
+        out << "Found graph where greedy coloring used at least 4 colors:";
         out << g;
     });
 

@@ -1,5 +1,6 @@
 #include "plantri/PlantriAPI.hpp"
 #include "common/Output.hpp"
+#include <exception>
 #include <utility>
 #include <functional>
 #include <iostream>
@@ -67,7 +68,6 @@ namespace {
         { 
             return 0;  
         }
-       
     }
 
 
@@ -116,9 +116,6 @@ namespace {
             g_current_doflip = 0;
             return 1; 
         }
-
-
-        
     }
 
     void write_current_graph(FILE* f)
