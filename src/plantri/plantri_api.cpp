@@ -35,6 +35,7 @@ namespace {
     plantri::PrefilterFn g_cpp_prefilter;
     plantri::FilterFn g_cpp_filter;
     plantri::OutprocFn g_cpp_outproc;
+    std::exception_ptr callback_exception;
     int g_current_doflip = 0;
     inline plantri::GraphView make_view()
     {
@@ -54,10 +55,13 @@ namespace {
 
     int c_prefilter_trampoline() 
     {
+        
+        if (callback_exception)
+            return 1;
 
-
-         try { 
-            if(!g_cpp_prefilter) // --- 
+        try
+        {
+            if(!g_cpp_prefilter)
             {
                 return 1;
             }
@@ -66,7 +70,9 @@ namespace {
         }
         catch(...) 
         { 
-            return 0;  
+            if (!callback_exception)
+                callback_exception = std::current_exception();
+            return 1;
         }
     }
 
@@ -78,6 +84,9 @@ namespace {
 
         (void)nbtot;
         (void)nbop;
+        if (callback_exception)
+            return 1;        //1 == PRUNE
+
         try
         {
             auto view = make_view();
@@ -114,7 +123,9 @@ namespace {
         catch(...) 
         {
             g_current_doflip = 0;
-            return 1; 
+            if (!callback_exception)
+                callback_exception = std::current_exception();
+            return 1;
         }
     }
 
@@ -177,7 +188,11 @@ Output& operator<<(Output& out, const GraphView& g)
 
 int pt_run(int argc, char** argv) 
 {
-    return ::pt_run(argc, argv);
+    callback_exception = nullptr;
+    int result = ::pt_run(argc, argv);
+    if (callback_exception)
+        std::rethrow_exception(callback_exception);
+    return result;
 }
 
 int pt_nv()
