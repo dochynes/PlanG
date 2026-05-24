@@ -428,8 +428,9 @@ public:
         std::vector<int> sizes;
         const int rooted_count = count;
 
-        sizes.reserve(static_cast<std::size_t>(rooted_count) + 1);
-        sizes.push_back(std::max(0, n - rooted_count));
+        sizes.reserve(static_cast<std::size_t>(rooted_count) + (rooted_count < n ? 1 : 0));
+        if (rooted_count < n)
+            sizes.push_back(n - rooted_count);
         for (int i = 0; i < rooted_count; ++i)
             sizes.push_back(1);
 

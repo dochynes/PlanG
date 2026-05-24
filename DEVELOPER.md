@@ -289,7 +289,7 @@ Navratove hodnoty filtru:
 | `KEEP` | graf nebo vetev se ponecha |
 | `PRUNE` | graf nebo vetev se zahodi |
 
-U backendu `geng` jsou vyjimky z uzivatelskych callbacku zachyceny v C++ trampoline funkci. Vyjimka neprojde pres C kod a po navratu z `geng_run()` se znovu vyhodi v C++ vrstve. U backendu `plantri` jsou callbacky take obalene `try/catch`, aby vyjimka neprosla pres C kod.
+U backendu `geng` jsou vyjimky z uzivatelskych callbacku zachyceny v C++ trampoline funkci. Vyjimka neprojde pres C kod a po navratu z `geng_run()` se znovu vyhodi v C++ vrstve. Backend `plantri` pouziva stejne pravidlo: callbacky jsou obalene `try/catch` a zachycena vyjimka se po navratu z `pt_run()` znovu vyhodi v C++ vrstve.
 
 ## Backend `geng`
 
@@ -335,7 +335,7 @@ Verejne C++ API poskytuje nekolik zpusobu zadani barev:
 | `setColorClassSizes({4, 2})` | presne velikosti barevnych trid; interně odpovida intervalum `4..4` a `2..2` |
 | `setColorClassBounds({{2, 4}, {1, 3}})` | dolni a horni meze velikosti kazde tridy |
 | `setColors(k)` | `k` rozlisenych barev, kazda s mezemi `1..n` |
-| `setRootedVertices(k)` | specialni pripad barevnych trid `{n-k, 1, 1, ..., 1}` |
+| `setRootedVertices(k)` | specialni pripad barevnych trid `{n-k, 1, 1, ..., 1}`; pri `k == n` se prazdna prvni trida vynecha |
 
 Barvy jsou rozlisene. Rozklady `{1, 3}` a `{3, 1}` tedy predstavuji ruzna zadani, protoze barva 0 a barva 1 maji vlastni identitu.
 
