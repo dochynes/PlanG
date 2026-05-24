@@ -235,7 +235,6 @@ Dulezite hranice zapouzdreni:
 | `GraphView` | poskytuje read-only view na graf bez vlastnictvi dat |
 | C++ bridge | propojuje C++ API s původními C generátory a skrývá technické detaily callbacků |
 
-Backendy jsou v kodu definovane jako `class`. Konfiguracni atributy jsou private a public API je postavene na setter metodach, ktere provadeji validaci a pripravu konfigurace.
 
 ## Verejne API
 
@@ -276,11 +275,11 @@ Spolecne metody:
 
 Callbacky se predavaji jako `std::function` nebo lambda funkce.
 
-| Callback | Backend | Vychozi vyznam |
-| --- | --- | --- |
-| `setPrune` | `geng`, `plantri` | rozhodne, jestli se graf ponecha |
-| `setPreprune` | `geng`, `plantri` | rozhodne, jestli ma smysl pokracovat v rozpracovane vetvi |
-| `setOutproc` | `geng`, `plantri` | vlastni zpracovani nalezeneho grafu |
+| Callback |  Vychozi vyznam |
+| --- |  --- |
+| `setPrune`  | rozhodne, jestli se graf ponecha |
+| `setPreprune`  | rozhodne, jestli ma smysl pokracovat v rozpracovane vetvi |
+| `setOutproc` |  vlastni zpracovani nalezeneho grafu |
 
 Navratove hodnoty filtru:
 
@@ -289,7 +288,7 @@ Navratove hodnoty filtru:
 | `KEEP` | graf nebo vetev se ponecha |
 | `PRUNE` | graf nebo vetev se zahodi |
 
-U backendu `geng` jsou vyjimky z uzivatelskych callbacku zachyceny v C++ trampoline funkci. Vyjimka neprojde pres C kod a po navratu z `geng_run()` se znovu vyhodi v C++ vrstve. Backend `plantri` pouziva stejne pravidlo: callbacky jsou obalene `try/catch` a zachycena vyjimka se po navratu z `pt_run()` znovu vyhodi v C++ vrstve.
+U backendu `geng` jsou vyjimky z uzivatelskych callbacku zachyceny v C++ trampoline funkci. Vyjimka neprojde pres C kod a po navratu z `geng_run()` se znovu vyhodi v C++ vrstve. U backendu `plantri` jsou callbacky take obalene `try/catch`, aby vyjimka neprosla pres C kod.
 
 ## Backend `geng`
 

@@ -52,9 +52,9 @@ Po úspěšném dokončení vznikne spustitelný soubor:
 
 ### Chybí Boost
 
-Instalační skript se pokusí Boost automaticky doinstalovat. Na Linuxu k tomu používá `apt-get`, na macOS Homebrew.
+Instalační skript se pokusí Boost automaticky doinstalovat.
 
-Pokud automatická instalace není možná nebo je Boost v nestandardním umístění, spusťte instalaci s proměnnou `BOOST_DIR`:
+Pokud Boost je v nestandardním umístění, spusťte instalaci s proměnnou `BOOST_DIR`:
 
 ```bash
 BOOST_DIR=/cesta/k/adresari/obsahujicimu/boost ./install.sh
@@ -433,7 +433,6 @@ triangle_free.run();
 
 Paralelní běhy stejného backendu nejsou podporované, protože původní generátory, používají uvnitř globální stav.
 
-Ukázky použití jsou ve složce `examples/`.
 
 
 ## Čištění projektu
