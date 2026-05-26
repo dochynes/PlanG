@@ -2350,10 +2350,11 @@
     <bcf:citekey order="4">brinkmann2007fast</bcf:citekey>
     <bcf:citekey order="5">brinkmann2007fast</bcf:citekey>
     <bcf:citekey order="6">boostGraphConcepts</bcf:citekey>
-    <bcf:citekey order="7">jooken2025computerassisted</bcf:citekey>
-    <bcf:citekey order="8">mckay2014practical</bcf:citekey>
-    <bcf:citekey order="9">brinkmann2007fast</bcf:citekey>
-    <bcf:citekey order="10">boostGraphConcepts</bcf:citekey>
+    <bcf:citekey order="7">boostGraphConcepts</bcf:citekey>
+    <bcf:citekey order="8">jooken2025computerassisted</bcf:citekey>
+    <bcf:citekey order="9">mckay2014practical</bcf:citekey>
+    <bcf:citekey order="10">brinkmann2007fast</bcf:citekey>
+    <bcf:citekey order="11">boostGraphConcepts</bcf:citekey>
   </bcf:section>
   <!-- SORTING TEMPLATES -->
   <bcf:sortingtemplate name="none">

@@ -600,6 +600,12 @@ INPUT ./ch1.tex
 OUTPUT ch2.aux
 INPUT ./ch2.tex
 INPUT ./ch2.tex
+OUTPUT ch3.aux
+INPUT ./ch3.tex
+INPUT ./ch3.tex
+OUTPUT ch4.aux
+INPUT ./ch4.tex
+INPUT ./ch4.tex
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/cm/cmmi10.tfm
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/cm/cmmi7.tfm
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/cm/cmmi5.tfm
@@ -609,12 +615,7 @@ INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/symbols/msam5.tfm
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/symbols/msbm10.tfm
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/symbols/msbm7.tfm
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/symbols/msbm5.tfm
-OUTPUT ch3.aux
-INPUT ./ch3.tex
-INPUT ./ch3.tex
-OUTPUT ch4.aux
-INPUT ./ch4.tex
-INPUT ./ch4.tex
+INPUT /home/stas/.texlive2021/texmf-var/luatex-cache/generic/fonts/otl/lmmono10-regular.luc
 OUTPUT ch5.aux
 INPUT ./ch5.tex
 INPUT ./ch5.tex
@@ -627,7 +628,6 @@ INPUT ./bibliography.tex
 OUTPUT howto.aux
 INPUT ./howto.tex
 INPUT ./howto.tex
-INPUT /home/stas/.texlive2021/texmf-var/luatex-cache/generic/fonts/otl/lmmono10-regular.luc
 INPUT ./thesis.aux
 INPUT ./title.aux
 INPUT ./title.aux

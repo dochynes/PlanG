@@ -15,7 +15,8 @@ Generátor \texttt{geng} je součástí balíku nauty. Balík nauty je známý p
 algoritmy pro práci s automorfismy grafů a s kanonickým značením~\cite{mckay2014practical}.
 Program \texttt{geng} využívá tyto algoritmy pro generování neizomorfních neorientovaných
 grafů na zadaném počtu vrcholů. Uživatel může omezit například počet hran, souvislost,
-minimální a maximální stupeň vrcholů nebo zakázat vybrané malé podgrafy(například trojúhelníky či čtyřcykly).
+minimální a maximální stupeň vrcholů nebo zakázat vybrané malé podgrafy
+(například trojúhelníky či čtyřcykly).
 
 Takový graf můžeme popsat množinou vrcholů a množinou hran. Při izomorfismu nás
 tedy zajímá pouze zachování sousednosti. Reprezentace grafu v nauty je proto
@@ -34,21 +35,9 @@ Při tomto rozhodování se používají i stupně vrcholů. Zjednodušeně ře�
 generátor nepracuje se všemi pořadími vzniku vrcholů stejně, ale využívá
 vlastnosti posledního vrcholu k tomu, aby omezil počet zkoušených možností.
 
-Při rozšíření generátoru o barvy jsme narazili na následující problém. Barvy
-musí ovlivňovat i test izomorfismu: dva vrcholy lze ztotožnit pouze tehdy,
-pokud mají stejnou barvu. Generátor proto musí barvy znát už ve chvíli, kdy
-rozhoduje, zda je nové rozšíření kanonické.
-
-V původní implementaci existuje rychlá kontrola, která během refinementu \footnote{ Refinement je postup,
-který postupně rozděluje vrcholy do menších skupin podle
-jejich okolí v grafu. Vrcholy, které skončí v různých skupinách, už nemohou být
-při izomorfismu zaměněny.} sleduje
-pozici nově přidaného vrcholu. Pokud refinement ukáže, že tento vrchol nemůže být
-kanonicky poslední, rozšíření se ihned odmítne. Po přidání barev však může nastat
-situace, kdy barvy rozdělí vrcholy tak přesně, že je každý vrchol samostatně
-rozlišen ještě před tím, než se tato kontrola provede. Bylo proto nutné doplnit
-zvláštní případ pro úplné rozdělení vrcholů: pokud nově přidaný vrchol není na
-poslední pozici kanonického pořadí, rozšíření zahodíme.
+Při rozšíření generátoru o barvy je důležité, že barvy musí ovlivňovat také
+testy izomorfismu a kanonické rozhodování během generování. Konkrétní úpravy
+potřebné pro tuto podporu popíšeme v kapitole o implementaci.
 
 
 \section{Generátor \texttt{plantri}}
@@ -98,7 +87,7 @@ rovinného vložení.
 Oba generátory umožňují zasáhnout do generování vlastním kódem, ale dělají to způsobem
 typickým pro C programy. \texttt{geng} nabízí například mechanismy \texttt{OUTPROC},
 \texttt{PRUNE} a \texttt{PREPRUNE}. \texttt{OUTPROC} umožňuje nahradit standardní výpis
-grafu vlastní funkcí.\texttt{PRUNE} a \texttt{PREPRUNE} umožňují odmítat průběžně vytvářené grafy
+grafu vlastní funkcí. \texttt{PRUNE} a \texttt{PREPRUNE} umožňují odmítat průběžně vytvářené grafy
 a tím prořezávat prohledávací strom.
 
 \texttt{plantri} používá podobnou myšlenku přes pluginy a makra jako \texttt{FILTER}
@@ -107,16 +96,14 @@ generování, a rozhodovat, zda má být graf vypsán nebo zda má být větev v
 zahozena. Díky tomu můžeme ušetřit více času než při filtrování hotového 
 výstupu, protože nevhodné části prohledávacího prostoru zahodíme dříve.
 
-Tyto mechanismy jsou výkonné, ale nejsou příliš pohodlné pro běžné použití v C++.
-Uživatel musí znát přesné signatury callbacků, způsob kompilace generátoru s příslušnými
-makry a často také interní reprezentaci aktuálního grafu. V této práci na tyto možnosti
-navazujeme, ale schováváme je za C++ funkční objekty. Uživatel pak může místo
-nízkoúrovňového pluginu zapsat například predikát nad objektem reprezentujícím graf.
+Tyto mechanismy jsou výkonné, ale jejich přímé použití z C++ vyžaduje znalost
+přesných signatur callbacků, způsobu sestavení generátoru s příslušnými makry
+a často také interní reprezentace aktuálního grafu.
 
 \section{Omezení původních rozhraní}
 \label{sec:original-interface-limitations}
 
-Původní rozhraní generatorů \texttt{geng} a \texttt{plantri} je velmi vhodné pro použití
+Původní rozhraní generátorů \texttt{geng} a \texttt{plantri} je velmi vhodné pro použití
 z příkazové řádky. Pokud chceme pouze vygenerovat grafy dané třídy a uložit je do
 souboru, jsou oba nástroje rychlé a praktické. Pro použití jako součást většího C++
 programu však narážíme na několik omezení.
@@ -134,8 +121,5 @@ nad grafem spustit vlastní algoritmus. Převod každého grafu do jiné datové
 rozhraní zjednodušil, ale při velkém počtu generovaných grafů by mohl znamenat
 výraznou ztrátu výkonu.
 
-V následujících kapitolách se budeme snažit zachovat rychlost původních
-generátorů a jejich schopnost prořezávat výpočet během generování, ale zároveň
-nad nimi nabídnout jednotné C++ rozhraní. To umožni uživateli pohodlně
-nastavovat parametry, psát vlastní callbacky a pracovat s grafy bez zbytečného
-kopírování dat.
+Při návrhu rozhraní proto chceme tato omezení skrýt, aniž bychom ztratili
+výhody původních generátorů.

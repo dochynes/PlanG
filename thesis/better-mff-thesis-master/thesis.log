@@ -1,4 +1,4 @@
-This is LuaHBTeX, Version 1.14.0 (TeX Live 2022/dev/Debian)  (format=lualatex 2026.5.4)  24 MAY 2026 19:09
+This is LuaHBTeX, Version 1.14.0 (TeX Live 2022/dev/Debian)  (format=lualatex 2026.5.4)  26 MAY 2026 20:57
  restricted system commands enabled.
 **thesis.tex
 (./thesis.tex
@@ -2324,7 +2324,7 @@ Package hyperref Info: Option `pageanchor' set `false' on input line 4.
 
 warning  (file img/logo-cs.pdf) (pdf inclusion): PDF inclusion: found PDF versio
 n '1.5', but at most version '1.4' allowed
-<img/logo-cs.pdf, id=141, 506.45912pt x 156.49065pt>
+<img/logo-cs.pdf, id=149, 506.45912pt x 156.49065pt>
 File: img/logo-cs.pdf Graphic file (type pdf)
 <use img/logo-cs.pdf>
 Package luatex.def Info: img/logo-cs.pdf  used on input line 39.
@@ -2436,46 +2436,19 @@ LaTeX Font Info:    Font shape `TU/lmtt/bx/n' in size <24.88> not available
 LaTeX Font Info:    Font shape `TU/lmtt/bx/n' in size <17.28> not available
 (Font)              Font shape `TU/lmtt/b/n' tried instead on input line 11.
 [9]
-LaTeX Font Info:    Font shape `TU/LibertinusSerif(0)/m/n' will be
-(Font)              scaled to size 9.6pt on input line 42.
-LaTeX Font Info:    Font shape `TU/LibertinusSerif(0)/m/n' will be
-(Font)              scaled to size 10.0pt on input line 45.
-LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(2)/m/n' will be
-(Font)              scaled to size 10.00107pt on input line 45.
-LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(2)/m/n' will be
-(Font)              scaled to size 7.00075pt on input line 45.
-LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(2)/m/n' will be
-(Font)              scaled to size 5.00053pt on input line 45.
-LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(3)/m/n' will be
-(Font)              scaled to size 9.99893pt on input line 45.
-LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(3)/m/n' will be
-(Font)              scaled to size 6.99925pt on input line 45.
-LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(3)/m/n' will be
-(Font)              scaled to size 4.99947pt on input line 45.
-LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(6)/m/n' will be
-(Font)              scaled to size 10.00107pt on input line 45.
-LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(6)/m/n' will be
-(Font)              scaled to size 7.00075pt on input line 45.
-LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(6)/m/n' will be
-(Font)              scaled to size 5.00053pt on input line 45.
-LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(7)/m/n' will be
-(Font)              scaled to size 9.99893pt on input line 45.
-LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(7)/m/n' will be
-(Font)              scaled to size 6.99925pt on input line 45.
-LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(7)/m/n' will be
-(Font)              scaled to size 4.99947pt on input line 45.
-LaTeX Font Info:    Font shape `TU/LibertinusSerif(0)/m/n' will be
-(Font)              scaled to size 7.0pt on input line 45.
- [10] [11]) [12]
+Underfull \vbox (badness 1521) has occurred while \output is active []
+
+ [10])
+[11]
 \openout2 = ch3.aux
- (./ch3.tex
+ (./ch3.tex [12
+
+
+
+
+]
 Kapitola 3.
-[13
-
-
-
-
-] [14]) [15]
+[13] [14]) [15]
 \openout2 = ch4.aux
  (./ch4.tex [16
 
@@ -2484,23 +2457,61 @@ Kapitola 3.
 
 ]
 Kapitola 4.
-[17]
-Overfull \hbox (11.23903pt too wide) in paragraph at lines 47--55
+
+Underfull \vbox (badness 4403) has occurred while \output is active []
+
+ [17]
+Overfull \hbox (11.23903pt too wide) in paragraph at lines 45--53
 []\TU/LibertinusSerif(0)/m/n/12 Při spuš-tění ge-ne-ro-vání me-toda \TU/l
 mtt/m/n/12 run \TU/LibertinusSerif(0)/m/n/12 za-volá bac-ken-do-vou me-todu \T
 U/lmtt/m/n/12 prepare_args\TU/LibertinusSerif(0)/m/n/12 .|
  []
 
-[18]) [19]
+[18]
+LaTeX Font Info:    Font shape `TU/LibertinusSerif(0)/m/n' will be
+(Font)              scaled to size 14.4pt on input line 128.
+LaTeX Font Info:    Font shape `TU/LibertinusSerif(0)/b/n' will be
+(Font)              scaled to size 14.4pt on input line 128.
+LaTeX Font Info:    Font shape `TU/LibertinusSerif(0)/m/n' will be
+(Font)              scaled to size 9.6pt on input line 133.
+LaTeX Font Info:    Font shape `TU/LibertinusSerif(0)/m/n' will be
+(Font)              scaled to size 10.0pt on input line 133.
+LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(2)/m/n' will be
+(Font)              scaled to size 10.00107pt on input line 133.
+LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(2)/m/n' will be
+(Font)              scaled to size 7.00075pt on input line 133.
+LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(2)/m/n' will be
+(Font)              scaled to size 5.00053pt on input line 133.
+LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(3)/m/n' will be
+(Font)              scaled to size 9.99893pt on input line 133.
+LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(3)/m/n' will be
+(Font)              scaled to size 6.99925pt on input line 133.
+LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(3)/m/n' will be
+(Font)              scaled to size 4.99947pt on input line 133.
+LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(6)/m/n' will be
+(Font)              scaled to size 10.00107pt on input line 133.
+LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(6)/m/n' will be
+(Font)              scaled to size 7.00075pt on input line 133.
+LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(6)/m/n' will be
+(Font)              scaled to size 5.00053pt on input line 133.
+LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(7)/m/n' will be
+(Font)              scaled to size 9.99893pt on input line 133.
+LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(7)/m/n' will be
+(Font)              scaled to size 6.99925pt on input line 133.
+LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(7)/m/n' will be
+(Font)              scaled to size 4.99947pt on input line 133.
+LaTeX Font Info:    Font shape `TU/LibertinusSerif(0)/m/n' will be
+(Font)              scaled to size 7.0pt on input line 133.
+ [19]) [20]
 \openout2 = ch5.aux
- (./ch5.tex [20
+ (./ch5.tex
+Kapitola 5.
+) [21
 
 
 
 
 ]
-Kapitola 5.
-) [21]
 \openout2 = conclusion.aux
  (./conclusion.tex [22
 
@@ -2553,29 +2564,29 @@ See the caption package documentation for explanation.
 (./thesis.aux (./title.aux) (./intro.aux) (./ch1.aux) (./ch2.aux) (./ch3.aux)
 (./ch4.aux) (./ch5.aux) (./conclusion.aux) (./bibliography.aux) (./howto.aux))
 Package rerunfilecheck Info: File `thesis.out' has not changed.
-(rerunfilecheck)             Checksum: AE0F9696B86C76F5FB684E6AD6774656;5986.
+(rerunfilecheck)             Checksum: 766316BB16198AEFC4F48EC68AA82E93;6351.
 Package logreq Info: Writing requests to 'thesis.run.xml'.
 
 \openout1 = thesis.run.xml
 )
 
 Here is how much of LuaTeX's memory you used:
- 48625 strings out of 477805
+ 48634 strings out of 477805
  100000,1977958 words of node,token memory allocated
- 2478 words of node memory still in use:
+ 2490 words of node memory still in use:
    36 hlist, 5 vlist, 2 rule, 1 disc, 3 local_par, 48 glue, 4 kern, 3 penalty, 2
- margin_kern, 24 glyph, 284 attribute, 69 glue_spec, 144 attribute_list, 7 write
-, 2 save_pos, 67 pdf_literal, 3 pdf_action, 2 pdf_colorstack nodes
-   avail lists: 1:3,2:1234,3:236,4:182,5:584,6:91,7:6681,8:81,9:836,10:19,11:702
+ margin_kern, 24 glyph, 286 attribute, 69 glue_spec, 145 attribute_list, 7 write
+, 2 save_pos, 67 pdf_literal, 4 pdf_action, 2 pdf_colorstack nodes
+   avail lists: 1:3,2:1234,3:236,4:182,5:537,6:89,7:6176,8:82,9:836,10:19,11:681
 
- 67465 multiletter control sequences out of 65536+600000
- 130 fonts using 46363447 bytes
+ 67472 multiletter control sequences out of 65536+600000
+ 132 fonts using 47178207 bytes
  116i,9n,140p,1002b,3617s stack positions out of 5000i,500n,10000p,200000b,80000s
-</usr/share/texmf/fonts/opentype/public/lm/lmmono10-regular.otf></usr/share/texl
-ive/texmf-dist/fonts/opentype/public/libertinus-fonts/LibertinusSans-Regular.otf
-></usr/share/texlive/texmf-dist/fonts/opentype/public/libertinus-fonts/Libertinu
-sSans-Bold.otf></usr/share/texlive/texmf-dist/fonts/opentype/public/libertinus-f
-onts/LibertinusSerif-Italic.otf></usr/share/texlive/texmf-dist/fonts/opentype/pu
+</usr/share/texlive/texmf-dist/fonts/opentype/public/libertinus-fonts/Libertinus
+Sans-Regular.otf></usr/share/texlive/texmf-dist/fonts/opentype/public/libertinus
+-fonts/LibertinusSans-Bold.otf></usr/share/texlive/texmf-dist/fonts/opentype/pub
+lic/libertinus-fonts/LibertinusSerif-Italic.otf></usr/share/texmf/fonts/opentype
+/public/lm/lmmono10-regular.otf></usr/share/texlive/texmf-dist/fonts/opentype/pu
 blic/libertinus-fonts/LibertinusMath-Regular.otf></usr/share/texlive/texmf-dist/
 fonts/opentype/public/libertinus-fonts/LibertinusMath-Regular.otf></usr/share/te
 xlive/texmf-dist/fonts/opentype/public/libertinus-fonts/LibertinusMath-Regular.o
@@ -2584,9 +2595,9 @@ exmf/fonts/opentype/public/lm/lmmonolt10-bold.otf></usr/share/texlive/texmf-dist
 /fonts/opentype/public/libertinus-fonts/LibertinusSerif-Regular.otf></usr/share/
 texlive/texmf-dist/fonts/opentype/public/libertinus-fonts/LibertinusSerif-Bold.o
 tf>
-Output written on thesis.pdf (36 pages, 460020 bytes).
+Output written on thesis.pdf (36 pages, 461903 bytes).
 
-PDF statistics: 461 PDF objects out of 1000 (max. 8388607)
- 88 named destinations out of 1000 (max. 131072)
- 295 words of extra memory for PDF output out of 10000 (max. 100000000)
+PDF statistics: 479 PDF objects out of 1000 (max. 8388607)
+ 90 named destinations out of 1000 (max. 131072)
+ 311 words of extra memory for PDF output out of 10000 (max. 100000000)
 
