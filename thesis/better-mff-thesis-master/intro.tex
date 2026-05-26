@@ -1,0 +1,47 @@
+
+\chapwithtoc{Úvod}
+
+
+Generování grafů je důležitým nástrojem v experimentální teorii grafů a při testování grafových algoritmů.
+Umožňuje vytvářet množiny grafů splňujících zadané podmínky a následně na nich ověřovat hypotézy, hledat
+protipříklady nebo porovnávat chování algoritmů.
+
+Pro generování grafů existují specializované nástroje, například \texttt{geng} z balíku nauty
+a \texttt{plantri}. Tyto programy jsou velmi efektivní a používají se pro generování různých tříd grafů.
+Tyto nástroje lze snadno spustit z příkazové řádky, ale jejich rozšiřování vyžaduje psaní nízkoúrovňových pluginů
+a znalost interních datových struktur jednotlivých generátorů.
+ 
+
+Cílem této práce je navrhnout a implementovat jednotné C++ rozhraní pro generátory \texttt{geng} a \texttt{plantri}.
+Rozhraní má umožnit pohodlnou konfiguraci generování, vlastní filtrování grafů, zpracování výstupu a použití vybraných
+algoritmů z knihovny Boost Graph Library. Důraz je kladen na to, aby práce s grafy byla pohodlnější, ale aby nedocházelo
+ke zbytečnému kopírování dat a velké ztrátě efektivity.
+
+Součástí práce je také rozšíření generátoru \texttt{geng} o podporu barevných tříd a zakotvených vrcholů.
+Tyto struktury umožňují generovat bohatší třídy grafů, u nichž izomorfismus musí respektovat dodatečné informace
+přiřazené vrcholům.
+
+Práce je rozdělena následovně. První kapitola shrnuje teoretické pozadí generování grafů a popisuje hlavní problémy,
+které se při něm objevují. Druhá kapitola se věnuje nástrojům \texttt{geng} a \texttt{plantri}. Třetí kapitola popisuje
+návrh knihovny PlanG. Čtvrtá kapitola se zabývá implementací rozhraní a úpravami původních generátorů. Pátá kapitola obsahuje
+testování a vyhodnocení výsledného řešení.
+
+
+%Introduction should answer the following questions, ideally in this order:
+%\begin{enumerate}
+%\item What is the nature of the problem the thesis is addressing?
+%\item What is the common approach for solving that problem now?
+%\item How this thesis approaches the problem?
+%\item What are the results? Did something improve?
+%\item What can the reader expect in the individual chapters of the thesis?
+%\end{enumerate}
+
+%Expected length of the introduction is between 1--4 pages. Longer introductions may require sub-sectioning with
+%appropriate headings --- use \verb|\section*| to avoid numbering (with section names like `Motivation' and
+% `Related work'), but try to avoid lengthy discussion of anything specific. Any ``real science'' (definitions, theorems,
+% methods, data) should go into other chapters.
+%\todo{You may notice that this paragraph briefly shows different ``types'' of `quotes' in TeX, and the usage difference
+% between a hyphen (-), en-dash (--) and em-dash (---).}
+
+%It is very advisable to skim through a book about scientific English writing before starting the thesis.
+% I can recommend `\citetitle{glasman2010science}' by \citet{glasman2010science}.

@@ -1,0 +1,140 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.2 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \datalist[entry]{none/global//global/global}
+    \entry{jooken2025computerassisted}{misc}{}
+      \name{author}{1}{}{%
+        {{hash=f9a8e1c2c13da479994558167b2c2a63}{%
+           family={Jooken},
+           familyi={J\bibinitperiod},
+           given={Jorik},
+           giveni={J\bibinitperiod}}}%
+      }
+      \strng{namehash}{f9a8e1c2c13da479994558167b2c2a63}
+      \strng{fullhash}{f9a8e1c2c13da479994558167b2c2a63}
+      \strng{bibnamehash}{f9a8e1c2c13da479994558167b2c2a63}
+      \strng{authorbibnamehash}{f9a8e1c2c13da479994558167b2c2a63}
+      \strng{authornamehash}{f9a8e1c2c13da479994558167b2c2a63}
+      \strng{authorfullhash}{f9a8e1c2c13da479994558167b2c2a63}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Computer-assisted graph theory: a survey}
+      \field{year}{2025}
+      \verb{urlraw}
+      \verb https://arxiv.org/pdf/2508.20825
+      \endverb
+      \verb{url}
+      \verb https://arxiv.org/pdf/2508.20825
+      \endverb
+    \endentry
+    \entry{mckay2014practical}{online}{}
+      \name{author}{2}{}{%
+        {{hash=f4b53184c02d91105a428c12f3f437cc}{%
+           family={McKay},
+           familyi={M\bibinitperiod},
+           given={Brendan\bibnamedelima D.},
+           giveni={B\bibinitperiod\bibinitdelim D\bibinitperiod}}}%
+        {{hash=939fedd4d01e887a147e9bfc0637b133}{%
+           family={Piperno},
+           familyi={P\bibinitperiod},
+           given={Adolfo},
+           giveni={A\bibinitperiod}}}%
+      }
+      \strng{namehash}{a48467f55e696248489a9b397818b98b}
+      \strng{fullhash}{a48467f55e696248489a9b397818b98b}
+      \strng{bibnamehash}{a48467f55e696248489a9b397818b98b}
+      \strng{authorbibnamehash}{a48467f55e696248489a9b397818b98b}
+      \strng{authornamehash}{a48467f55e696248489a9b397818b98b}
+      \strng{authorfullhash}{a48467f55e696248489a9b397818b98b}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Journal of Symbolic Computation}
+      \field{title}{nauty and Traces}
+      \verb{urlraw}
+      \verb https://pallini.di.uniroma1.it/
+      \endverb
+      \verb{url}
+      \verb https://pallini.di.uniroma1.it/
+      \endverb
+    \endentry
+    \entry{brinkmann2007fast}{article}{}
+      \name{author}{2}{}{%
+        {{hash=64f485fde9c4544429c876a66ec508b2}{%
+           family={Brinkmann},
+           familyi={B\bibinitperiod},
+           given={Gunnar},
+           giveni={G\bibinitperiod}}}%
+        {{hash=f4b53184c02d91105a428c12f3f437cc}{%
+           family={McKay},
+           familyi={M\bibinitperiod},
+           given={Brendan\bibnamedelima D.},
+           giveni={B\bibinitperiod\bibinitdelim D\bibinitperiod}}}%
+      }
+      \strng{namehash}{1d67abb38082501503e657c7b569a0e2}
+      \strng{fullhash}{1d67abb38082501503e657c7b569a0e2}
+      \strng{bibnamehash}{1d67abb38082501503e657c7b569a0e2}
+      \strng{authorbibnamehash}{1d67abb38082501503e657c7b569a0e2}
+      \strng{authornamehash}{1d67abb38082501503e657c7b569a0e2}
+      \strng{authorfullhash}{1d67abb38082501503e657c7b569a0e2}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{MATCH Communications in Mathematical and in Computer Chemistry}
+      \field{number}{2}
+      \field{title}{Fast generation of planar graphs}
+      \field{volume}{58}
+      \field{year}{2007}
+      \field{pages}{323\bibrangedash 357}
+      \range{pages}{35}
+    \endentry
+    \entry{boostGraphConcepts}{misc}{}
+      \name{author}{1}{}{%
+        {{hash=5db0691ef7b2ebf84ff275371b9e6ad1}{%
+           family={{Boost C++ Libraries}},
+           familyi={B\bibinitperiod}}}%
+      }
+      \strng{namehash}{5db0691ef7b2ebf84ff275371b9e6ad1}
+      \strng{fullhash}{5db0691ef7b2ebf84ff275371b9e6ad1}
+      \strng{bibnamehash}{5db0691ef7b2ebf84ff275371b9e6ad1}
+      \strng{authorbibnamehash}{5db0691ef7b2ebf84ff275371b9e6ad1}
+      \strng{authornamehash}{5db0691ef7b2ebf84ff275371b9e6ad1}
+      \strng{authorfullhash}{5db0691ef7b2ebf84ff275371b9e6ad1}
+      \field{sortinit}{6}
+      \field{sortinithash}{b33bc299efb3c36abec520a4c896a66d}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{note}{Accessed 2026-05-22}
+      \field{title}{Boost Graph Library: Graph Concepts}
+      \verb{urlraw}
+      \verb https://www.boost.org/doc/libs/latest/libs/graph/doc/graph_concepts.html
+      \endverb
+      \verb{url}
+      \verb https://www.boost.org/doc/libs/latest/libs/graph/doc/graph_concepts.html
+      \endverb
+    \endentry
+  \enddatalist
+\endrefsection
+\endinput
+

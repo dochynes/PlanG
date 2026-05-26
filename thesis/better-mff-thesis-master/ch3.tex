@@ -1,0 +1,118 @@
+\chapter{Návrh rozhraní}
+\label{chap:design}
+
+V předchozí kapitole jsme viděli, že \texttt{geng} a \texttt{plantri} jsou rychlé 
+generátory, ale každý z nich má vlastní způsob konfigurace, vlastní
+interní reprezentaci grafu a vlastní mechanismus pro callbacky. V této kapitole
+popíšeme návrh knihovny PlanG, která nad těmito nástroji poskytuje jednotné C++
+rozhraní.
+
+\section{Cíle návrhu}
+\label{sec:design-goals}
+
+Cílem návrhu není přepsat původní generátory. Oba nástroje obsahují optimalizované
+algoritmy pro generování grafů a jejich přepsání by znamenalo vysoké riziko ztráty
+výkonu i správnosti. Budeme je proto chápat jako specializované backendy, které chceme
+zapouzdřit do pohodlnějšího rozhraní.
+
+Hlavním cílem je umožnit uživateli pracovat s oběma generátory podobným způsobem.
+Uživatel by měl mít možnost zvolit požadovaný backend, nastavit parametry generování a připojit
+vlastní funkce pro filtrování nebo zpracování grafů. Uživatel by pak nemusel pracovat přímo s argumenty příkazové řádky, globálním
+stavem C programu ani s interními datovými strukturami původních generátorů.
+
+Současně chceme zachovat rychlost původních nástrojů. Proto nechceme každý
+vygenerovaný graf kopírovat do nové datové struktury. Místo toho použijeme
+view na graf, který během zpracování aktuálního grafu zpřístupní přímo data
+původního generátoru.
+
+\section{Jednotné rozhraní pro více generátorů}
+\label{sec:unified-interface}
+
+Základním vstupním bodem knihovny je šablona \texttt{Generator\textless Backend\textgreater}.
+Parametr \texttt{Backend} určuje, který původní generátor se použije. Pro obecné grafy
+tedy pracujeme s typem \texttt{Generator\textless geng::Backend\textgreater}, zatímco
+pro rovinné grafy s typem \texttt{Generator\textless plantri::Backend\textgreater}.
+
+Tento návrh odděluje společnou část rozhraní od specifických částí pro jednotlivé
+generátory. Společná část poskytuje například metodu \texttt{run()} a metody pro
+registraci callbacků. Konkrétní backend potom doplňuje vlastní nastavovací metody pro
+volby specifické pro daný generátor.
+
+Při spuštění generování (\texttt{run}) se konfigurace uložená v C++ objektu převede na argumenty
+původního generátorua zároveň se nastaví runtime stav potřebný pro
+callbacky. Tím můžeme použít původní C programy bez toho, abychom jejich ovládání
+vystavovali přímo uživateli knihovny.
+
+\section{Callbacky pro filtrování a zpracování grafů}
+\label{sec:design-callbacks}
+
+Při generování grafů často nechceme pouze vypsat všechny grafy do
+souboru. Chceme nad každým grafem spustit vlastní test, zahodit grafy, které nás
+nezajímají, nebo průběžně ukládat jen vybrané výsledky. Proto rozhraní obsahuje tři
+základní typy callbacků.
+
+Callback nastavený pomocí \texttt{setOutproc} slouží ke zpracování hotového grafu.
+Můžeme ho použít například pro vlastní výpis, sběr statistik nebo spuštění grafového
+algoritmu nad vygenerovaným grafem. Callback \texttt{setPrune} umožňuje odmítnout graf
+při generování. Callback \texttt{setPreprune} je určen pro testy, které se mohou
+provádět ještě dříve v průběhu konstrukce.
+
+Tato trojice odpovídá možnostem původních generátorů, ale uživatel s nimi pracuje přes
+C++ funkční objekty. Nemusí tedy psát samostatný C plugin ani kompilovat generátor s
+vlastními makry. Z pohledu návrhu je důležité, že callback nedostává kopii grafu, ale
+view na právě generovaný graf.
+
+\section{ \texttt{View} na graf bez kopírování dat}
+\label{sec:graph-view}
+
+Třída \texttt{GraphView} představuje nevlastnící view na graf uložený uvnitř
+původního generátoru. U backendu \texttt{geng} ukazuje na reprezentaci grafu v nauty,
+U backendu \texttt{plantri} ukazuje na pole stupňů a strukturu orientovaných
+hran. V obou případech je cílem zpřístupnit graf přes srozumitelnější operace, aniž
+bychom museli vytvářet jeho úplnou kopii.
+
+Takové view je určeno hlavně pro použití uvnitř callbacku. Uživatel může procházet
+vrcholy, hrany nebo sousedy vrcholu, ale nemá vlastnictví nad daty generátoru. Proto
+\texttt{GraphView} nemá být dlouhodobě ukládán mimo callback, protože po
+pokračování generování se interní data mohou změnit.
+
+Výhodou tohoto návrhu je nízká režie. Uživatel má k dispozici data zpřístupněná
+objektem \texttt{GraphView} a sadu free funkcí pro práci s grafem.
+
+
+\section{Integrace s Boost Graph Library}
+\label{sec:boost-integration}
+
+Boost Graph Library je založena na grafových konceptech, které popisují, jaké typy a
+funkce musí graf poskytovat, aby nad ním šly spouštět obecné algoritmy~\cite{boostGraphConcepts}.
+Důležité je, že graf nemusí být konkrétní třídou z Boostu. Stačí, aby poskytoval
+požadované typy, iterátory a free funkce, například \texttt{vertices},
+\texttt{out\_edges}, \texttt{adjacent\_vertices}, \texttt{source}, \texttt{target} a
+\texttt{num\_vertices}.
+
+To dobře odpovídá našemu cíli. Místo převodu grafu do hotové datové struktury z Boostu
+přizpůsobíme \texttt{GraphView} tak, aby splňoval vybrané koncepty Boost.Graph.
+Pro \texttt{geng} i \texttt{plantri} proto definujeme odpovídající traits pro Boost,
+iterátory přes vrcholy a hrany a mapu indexů vrcholů.
+
+Uživatel pak může nad vygenerovaným grafem použít standardní grafové algoritmy v C++,
+aniž by musel znát interní reprezentaci použitých generátorů.
+Rozhraní tím zůstává blízké běžnému způsobu práce s grafy, ale stále zachovává výhodu
+zpracování bez zbytečného kopírování.
+
+\section{Podpora bohatších struktur}
+\label{sec:richer-structures}
+
+Původní generátor \texttt{geng} pracuje s neobarvenými grafy. V některých úlohách
+však chceme generovat grafy, jejichž vrcholy nesou další informaci, například barvu.
+Tato informace ovlivňuje izomorfismus:
+vrcholy s různou barvou nemůžeme při porovnávání grafů libovolně
+zaměňovat. 
+V této práci proto rozšiřujeme generator \texttt{geng} o podporu barevných tříd.
+Uživatel může nastavit počet barev, přesné velikosti barevných tříd nebo jejich
+dolní a horní meze.
+Jak jsme viděli
+v předchozí kapitole, barvy musí být součástí testů izomorfismu a kanonického značení.
+Návrh knihovny proto počítá s tím, že backend může kromě základní konfigurace generování
+přenášet do původního generátoru také dodatečný stav potřebný pro bohatší struktury.
+

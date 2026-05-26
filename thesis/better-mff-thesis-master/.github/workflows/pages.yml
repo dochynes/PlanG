@@ -1,0 +1,36 @@
+name: Publish thesis PDFs to GitHub Pages
+
+on:
+  workflow_run:
+    workflows:
+      - build and verify PDFs
+    types:
+      - completed
+    branches: [master]
+
+jobs:
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    name: Push thesis PDFs to pages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Download thesis artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Thesis
+          path: public/
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Force-push to gh-pages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd public
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git config --global user.name "$GITHUB_ACTOR"
+          git config --global user.email "$GITHUB_ACTOR@users.noreply.github.com"
+          GIT_WORK_TREE=. git checkout --orphan gh-pages
+          GIT_WORK_TREE=. git add .
+          GIT_WORK_TREE=. git commit -m 'pages'
+          git push --force --set-upstream origin gh-pages

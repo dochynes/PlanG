@@ -1,0 +1,117 @@
+\chapter{Teoretický úvod}
+\label{chap:theory}
+
+\section{Počítačem podporovaná teorie grafů}
+\label{sec:computer-assisted-graph-theory}
+
+Počítače se v teorii grafů nepoužívají pouze k numerickým výpočtům, ale také jako
+nástroj pro objevování a ověřování matematických tvrzení. V počítačem podporované
+teorii grafů můžeme například prohledávat grafy dané velikosti, vybírat z nich
+grafy se zadanými vlastnostmi a testovat na nich navržená tvrzení.
+
+Typickou úlohou je hledání protipříkladů k tvrzením tvaru: každý graf s vlastností
+\(P_1\) má také vlastnost \(P_2\). Pokud takové tvrzení neplatí, chceme najít graf,
+který splňuje \(P_1\), ale nesplňuje \(P_2\). Takový graf pak tvoří konkrétní
+protipříklad k původnímu tvrzení.~\cite[Section~2]{jooken2025computerassisted}.
+
+Takový postup sám o sobě nenahrazuje matematický důkaz obecného tvrzení. Je však
+užitečný ve fázi hledání hypotéz a protipříkladů. Pokud nemůžeme tvrzení vyvrátit na
+malých grafech, může nám počítač pomoci odhadnout jeho správnou formulaci a nasměrovat
+hledání důkazu. Pokud naopak najdeme malý protipříklad, může nám pomoci pochopit, proč
+tvrzení neplatí.
+
+
+\section{Generování grafů}
+\label{sec:graph-generation}
+
+Generováním grafů budeme rozumět postup, při kterém algoritmus vytváří grafy
+z předem určené třídy. V nejjednodušším případě bychom pro pevný počet vrcholů
+mohli projít všechny možné hrany mezi těmito vrcholy. Pro graf na \(n\) vrcholech
+existuje \(\binom{n}{2}\) možných hran, a tedy \(2^{\binom{n}{2}}\) označených
+neorientovaných grafů. Toto číslo roste velmi rychle, takže přímé procházení všech
+možností použijeme jen pro malé hodnoty \(n\).
+
+V mnoha případech nám navíc nezáleží na konkrétních jménech vrcholů. Dva grafy,
+které se liší pouze přejmenováním vrcholů, představují z hlediska mnoha vlastností grafů stejný 
+případ.
+Pokud bychom generovali všechny označené grafy, jeden graf bychom zpracovávali v mnoha
+různých případech.
+Praktické generátory se proto snaží vytvořit pouze jeden
+reprezentant z každé izomorfní třídy.
+
+Generátor obvykle nepoužívá jednoduchý seznam všech možností, ale generuje graf postupně.
+Může například začít prázdným grafem a přidávat vrcholy nebo hrany a průběžně kontrolovat,
+zda částečně vytvořený graf ještě může vést ke grafu požadované třídy.
+Díky takovému inkrementálnímu  postupu můžeme zahazovat celé větve výpočtu dříve, než je dokončíme.
+
+\section{Izomorfismus grafů}
+\label{sec:graph-isomorphism}
+
+Dva grafy \(G\) a \(H\) nazveme izomorfní, pokud existuje bijekce mezi jejich vrcholy,
+která zachovává sousednost. Jinými slovy, grafy mají stejnou strukturu a liší se pouze
+pojmenováním vrcholů. Při generování grafů je izomorfismus zásadní,
+protože nechceme opakovaně zpracovávat různé popisy téhož grafu.
+
+Pokud grafy obsahují další strukturu, například barvy vrcholů nebo vybrané zakotvené
+vrcholy, musí izomorfismus respektovat i tyto informace. U obarvených grafů tedy můžeme
+zaměňovat pouze vrcholy se stejnou barvou. Tato myšlenka je pro nás důležitá, protože v této práci rozšiřujeme generátor
+\texttt{geng} o barevné třídy a zakotvené vrcholy, které musí izomorfismus
+v procesu generování respektovat.
+
+Prakticky narazíme na to, že testování izomorfismu je výpočetně náročná úloha
+a při generování se může objevit velmi často. Efektivní generátory proto používají
+specializované algoritmy a reprezentace, které umožňují rychle rozhodovat, zda jsme daný
+případ již nevygenerovali v jiné podobě.
+
+\section{Kanonické reprezentace}
+\label{sec:canonical-representations}
+
+Jedním ze způsobů, jak pracovat s izomorfismem, je přiřadit každému grafu
+kanonickou reprezentaci. Chceme, aby všechny izomorfní kopie téhož grafu dostaly stejný
+výsledek. Pokud tedy dva grafy mají stejnou kanonickou reprezentaci, můžeme je považovat za navzájem izomorfní.
+
+Kanonické značení se používá například při ukládání výsledků, porovnávání grafů
+nebo odstraňování duplicit. Generátory ho využívají uvnitř samotného algoritmu,
+aby nevytvářely více zástupců jedné izomorfní třídy. Jedním z takových nástrojů pro
+práci s kanonickým značením grafů je knihovna nauty.~\cite{mckay2014practical}.
+
+Kanonické značení se komplikuje ve chvíli, kdy graf nenese pouze informaci o hranách, ale
+také další data. Pokud mají vrcholy barvy, musí kanonické značení zachovat rozdělení vrcholů
+do barevných tříd. Při návrhu rozšíření pro obarvené grafy proto nestačí přidat barvy až do výstupu.
+Musíme je zahrnout už do testů izomorfismu.
+
+\section{Backtracking a prořezávání}
+\label{sec:backtracking-pruning}
+
+Mnoho generátorů grafů je založeno na backtrackingu. Algoritmus postupně vytváří částečný graf
+a z něj zkouší všechny přípustné možnosti rozšíření. Pokud zjistíme, že daný částečný graf nemůže
+vést k žádnému požadovanému výsledku, vrátíme se a pokračujeme jinou větví výpočtu.
+
+Tomuto předčasnému zahazování větví říkáme prořezávání. Prořezávání může být založeno na
+jednoduchých podmínkách, například na počtu hran nebo stupních vrcholů, ale také na složitějších
+algoritmech a heuristikách. Čím dříve dokážeme větev zahodit, tím méně práce musí generátor vykonat.
+
+V kontextu této práce budeme rozlišovat filtrování hotových grafů a prořezávání částečně
+vygenerovaných grafů. Filtrování hotových grafů je jednodušší, protože pracujeme s kompletním
+grafem. Prořezávání během generování může být výrazně efektivnější, ale musíme počítat s tím,
+že pracujeme pouze s částečným grafem a některé vlastnosti ještě nemusí být rozhodnutelné.
+
+\section{Praktické komplikace generování grafů}
+\label{sec:practical-complications}
+
+První praktickou komplikací je kombinatorická exploze. I když generujeme pouze neizomorfní grafy,
+počet výsledných grafů může být velmi vysoký. Generátory proto musí být implementovány s důrazem na efektivitu
+a často používají nízkoúrovňové datové struktury, například bitové reprezentace množin hran.
+
+Druhou komplikací je práce s interní reprezentací grafu. Výkonné generátory jsou často psané
+v jazyce C a jejich vnitřní struktury jsou optimalizované pro rychlost, nikoli pro pohodlné
+použití z aplikačního kódu. Pokud chceme nad generovanými grafy spouštět vlastní algoritmy,
+často musíme psát pluginy nebo pracovat přímo s detaily implementace generátoru.
+
+Třetí komplikací je propojení generování s dalšími algoritmy. V experimentální práci
+běžně chceme každý vygenerovaný graf ihned testovat, obarvovat, porovnávat nebo převádět do jiného 
+formátu. Pokud kvůli tomu musíme graf kopírovat do jiné datové struktury, můžeme ztratit podstatnou
+část výkonu původního generátoru.
+
+Tyto problémy motivují návrh rozhraní, které zachová výkon specializovaných generátorů, ale 
+současně poskytne pohodlnější způsob konfigurace, filtrování a zpracování grafů.

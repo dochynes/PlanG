@@ -1,0 +1,111 @@
+
+
+%%% Choose a language %%%
+
+\newif\ifEN
+%\ENtrue   % uncomment this for english
+\ENfalse   % uncomment this for czech
+
+%%% Configuration of the title page %%%
+
+\def\ThesisTitleStyle{mff} % MFF style
+%\def\ThesisTitleStyle{cuni} % uncomment for old-style with cuni.cz logo
+%\def\ThesisTitleStyle{natur} % uncomment for nature faculty logo
+
+\def\UKFaculty{Faculty of Mathematics and Physics}
+%\def\UKFaculty{Faculty of Science}
+
+\def\UKName{Charles University in Prague} % this is not used in the "mff" style
+
+% Thesis type names, as used in several places in the title
+\def\ThesisTypeTitle{\ifEN BACHELOR THESIS \else BAKALÁŘSKÁ PRÁCE \fi}
+%\def\ThesisTypeTitle{\ifEN MASTER THESIS \else DIPLOMOVÁ PRÁCE \fi}
+%\def\ThesisTypeTitle{\ifEN RIGOROUS THESIS \else RIGORÓZNÍ PRÁCE \fi}
+%\def\ThesisTypeTitle{\ifEN DOCTORAL THESIS \else DISERTAČNÍ PRÁCE \fi}
+\def\ThesisGenitive{\ifEN bachelor \else bakalářské \fi}
+%\def\ThesisGenitive{\ifEN master \else diplomové \fi}
+%\def\ThesisGenitive{\ifEN rigorous \else rigorózní \fi}
+%\def\ThesisGenitive{\ifEN doctoral \else disertační \fi}
+\def\ThesisAccusative{\ifEN bachelor \else bakalářskou \fi}
+%\def\ThesisAccusative{\ifEN master \else diplomovou \fi}
+%\def\ThesisAccusative{\ifEN rigorous \else rigorózní \fi}
+%\def\ThesisAccusative{\ifEN doctoral \else disertační \fi}
+
+
+
+%%% Fill in your details %%%
+
+% (Note: \xxx is a "ToDo label" which makes the unfilled visible. Remove it.)
+\def\ThesisTitle{{Rozhraní pro plantri a geng}}
+\def\ThesisAuthor{{Stanislav Dochynets}}
+\def\YearSubmitted{{2026}}
+
+% department assigned to the thesis
+\def\Department{{Informatický ústav Univerzity Karlovy}}
+% Is it a department (katedra), or an institute (ústav)?
+\def\DeptType{{Ústav}}
+
+\def\Supervisor{{prof. Mgr. Zdeněk Dvořák, Ph.D.}}
+\def\SupervisorsDepartment{{Informatický ústav Univerzity Karlovy}}
+
+% Study programme and specialization
+\def\StudyProgramme{{Informatika}}
+\def\StudyBranch{{Programování a vývoj software}}
+
+\def\Dedication{%
+Dedication. \xxx{It is nice to say thanks to supervisors, friends, family, book authors and food providers.}
+}
+
+\def\AbstractEN{%
+{This thesis presents a C++ interface for two established graph generators, nauty/geng and plantri.
+These tools provide efficient generation of general graphs and planar graphs, but their native C interfaces
+are difficult to combine with modern C++ code and graph algorithms. The thesis designs and implements a unified
+wrapper that exposes both generators through a common, type-safe API. Generated graphs are represented by lightweight
+views of the internal generator data, which avoids copying and allows callback-based filtering, pruning,
+and output processing during generation. The interface is compatible with the Boost Graph Library, so users
+can apply standard graph algorithms directly to generated graphs. The resulting library makes high-performance
+graph generation easier to use in experimental and algorithmic graph theory software.
+}
+% ABSTRACT IS NOT A COPY OF YOUR THESIS ASSIGNMENT!
+}
+
+\def\AbstractCS{%
+{Tato práce představuje rozhraní v jazyce C++ pro dva zavedené generátory grafů,
+geng a plantri. Tyto nástroje umožňují efektivní generování obecných a rovinných grafů,
+jejich nativní rozhraní v jazyce C se však obtížně propojuje s moderním C++ kódem a grafovými
+algoritmy. Práce navrhuje a implementuje sjednocený wrapper, který zpřístupňuje oba generátory
+pomocí společného typově bezpečného API. Vygenerované grafy jsou reprezentovány lehkými
+views na interní data generátorů, což zabraňuje kopírování a umožňuje filtrování,
+prořezávání a zpracování výstupu během generování. Rozhraní je kompatibilní s knihovnou
+Boost Graph Library, takže uživatelé mohou na vygenerované grafy přímo použít běžné
+grafové algoritmy. Knihovna usnadňuje použití výkonného generování grafů 
+v experimentálním softwaru a v algoritmické teorii grafů.
+}
+}
+
+% 3 to 5 keywords (recommended), each enclosed in curly braces.
+% Keywords are useful for indexing and searching for the theses by topic.
+\def\Keywords{%
+{{generování grafů}, {obecné grafy}, {rovinné grafy}, {barvení grafů}, {geng}, {plantri}}
+}
+
+% If your abstracts are long and do not fit in the infopage, you can make the
+% fonts a bit smaller by this setting. (Also, you should try to compress your abstract more.)
+% Alternatively, consider increasing the size of the page by uncommenting the
+% geometry modification in thesis.tex.
+%\def\InfoPageFont{}
+\def\InfoPageFont{\small}  %uncomment to decrease font size
+
+\ifEN\relax\else
+% If you are writing a czech thesis, you additionally need to fill in the
+% english translation of the metadata here!
+\def\ThesisTitleEN{{Interface for plantri and geng}}
+\def\DepartmentEN{{Computer Science Institute of Charles University}}
+\def\DeptTypeEN{{Institute}}
+\def\SupervisorsDepartmentEN{{Computer Science Institute of Charles University}}
+\def\StudyProgrammeEN{{Computer Science}}
+\def\StudyBranchEN{{Programming and software development}}
+\def\KeywordsEN{%
+{{graph generation}, {general graphs}, {planar graphs}, {graph coloring}, {geng}, {plantri}}
+}
+\fi
