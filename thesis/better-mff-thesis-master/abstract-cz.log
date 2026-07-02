@@ -1,4 +1,4 @@
-This is LuaHBTeX, Version 1.14.0 (TeX Live 2022/dev/Debian)  (format=lualatex 2026.5.4)  26 MAY 2026 20:57
+This is LuaHBTeX, Version 1.14.0 (TeX Live 2022/dev/Debian)  (format=lualatex 2026.5.4)  2 JUL 2026 09:48
  restricted system commands enabled.
 **abstract-cz.tex
 (./abstract-cz.tex
@@ -816,19 +816,20 @@ Package rerunfilecheck Info: File `abstract-cz.out' has not changed.
 )
 
 Here is how much of LuaTeX's memory you used:
- 24742 strings out of 477805
+ 24744 strings out of 477805
  100000,794899 words of node,token memory allocated
  468 words of node memory still in use:
    4 hlist, 1 vlist, 1 rule, 5 glue, 3 kern, 1 glyph, 9 attribute, 51 glue_spec,
  6 attribute_list, 2 write nodes
-   avail lists: 2:74,3:26,4:18,5:309,6:3,7:2962,8:6,9:84,10:11,11:366
- 44470 multiletter control sequences out of 65536+600000
- 15 fonts using 723367 bytes
+   avail lists: 2:83,3:29,4:18,5:327,6:3,7:2929,8:6,9:84,10:5,11:357
+ 44472 multiletter control sequences out of 65536+600000
+ 16 fonts using 849519 bytes
  120i,5n,114p,547b,1879s stack positions out of 5000i,500n,10000p,200000b,80000s
-</usr/share/texmf/fonts/opentype/public/lm/lmroman12-regular.otf>
-Output written on abstract-cz.pdf (1 page, 18705 bytes).
+</usr/share/texmf/fonts/opentype/public/lm/lmmono12-regular.otf></usr/share/texm
+f/fonts/opentype/public/lm/lmroman12-regular.otf>
+Output written on abstract-cz.pdf (1 page, 21695 bytes).
 
-PDF statistics: 24 PDF objects out of 1000 (max. 8388607)
+PDF statistics: 31 PDF objects out of 1000 (max. 8388607)
  2 named destinations out of 1000 (max. 131072)
  31 words of extra memory for PDF output out of 10000 (max. 100000000)
 

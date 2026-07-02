@@ -361,5 +361,6 @@ INPUT ./abstract-en.out
 INPUT ./abstract-en.out
 INPUT ./abstract-en.out
 OUTPUT abstract-en.out
+INPUT /home/stas/.texlive2021/texmf-var/luatex-cache/generic/fonts/otl/lmmono12-regular.luc
 INPUT ./abstract-en.aux
 INPUT ./abstract-en.out

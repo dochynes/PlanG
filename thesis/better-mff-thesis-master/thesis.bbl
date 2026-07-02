@@ -65,8 +65,8 @@
       \strng{authorbibnamehash}{a48467f55e696248489a9b397818b98b}
       \strng{authornamehash}{a48467f55e696248489a9b397818b98b}
       \strng{authorfullhash}{a48467f55e696248489a9b397818b98b}
-      \field{sortinit}{2}
-      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{journaltitle}{Journal of Symbolic Computation}
@@ -99,8 +99,8 @@
       \strng{authorbibnamehash}{a5b355dfb52537830bbeed0333bf0a14}
       \strng{authornamehash}{a5b355dfb52537830bbeed0333bf0a14}
       \strng{authorfullhash}{a5b355dfb52537830bbeed0333bf0a14}
-      \field{sortinit}{4}
-      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{title}{Fast generation of planar graphs}
@@ -123,8 +123,8 @@
       \strng{authorbibnamehash}{5db0691ef7b2ebf84ff275371b9e6ad1}
       \strng{authornamehash}{5db0691ef7b2ebf84ff275371b9e6ad1}
       \strng{authorfullhash}{5db0691ef7b2ebf84ff275371b9e6ad1}
-      \field{sortinit}{6}
-      \field{sortinithash}{b33bc299efb3c36abec520a4c896a66d}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{title}{Boost Graph Library: Graph Concepts}

@@ -2345,16 +2345,20 @@
   </bcf:bibdata>
   <bcf:section number="0">
     <bcf:citekey order="1">jooken2025computerassisted</bcf:citekey>
-    <bcf:citekey order="2">mckay2014practical</bcf:citekey>
-    <bcf:citekey order="3">mckay2014practical</bcf:citekey>
-    <bcf:citekey order="4">brinkmann2007fast</bcf:citekey>
-    <bcf:citekey order="5">brinkmann2007fast</bcf:citekey>
-    <bcf:citekey order="6">boostGraphConcepts</bcf:citekey>
-    <bcf:citekey order="7">boostGraphConcepts</bcf:citekey>
+    <bcf:citekey order="2">jooken2025computerassisted</bcf:citekey>
+    <bcf:citekey order="3">jooken2025computerassisted</bcf:citekey>
+    <bcf:citekey order="4">mckay2014practical</bcf:citekey>
+    <bcf:citekey order="5">jooken2025computerassisted</bcf:citekey>
+    <bcf:citekey order="6">jooken2025computerassisted</bcf:citekey>
+    <bcf:citekey order="7">jooken2025computerassisted</bcf:citekey>
     <bcf:citekey order="8">jooken2025computerassisted</bcf:citekey>
     <bcf:citekey order="9">mckay2014practical</bcf:citekey>
     <bcf:citekey order="10">brinkmann2007fast</bcf:citekey>
     <bcf:citekey order="11">boostGraphConcepts</bcf:citekey>
+    <bcf:citekey order="12">jooken2025computerassisted</bcf:citekey>
+    <bcf:citekey order="13">mckay2014practical</bcf:citekey>
+    <bcf:citekey order="14">brinkmann2007fast</bcf:citekey>
+    <bcf:citekey order="15">boostGraphConcepts</bcf:citekey>
   </bcf:section>
   <!-- SORTING TEMPLATES -->
   <bcf:sortingtemplate name="none">

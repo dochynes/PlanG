@@ -371,5 +371,6 @@ INPUT ./abstract-cz.out
 INPUT ./abstract-cz.out
 INPUT ./abstract-cz.out
 OUTPUT abstract-cz.out
+INPUT /home/stas/.texlive2021/texmf-var/luatex-cache/generic/fonts/otl/lmmono12-regular.luc
 INPUT ./abstract-cz.aux
 INPUT ./abstract-cz.out

@@ -572,6 +572,7 @@ INPUT ./title.tex
 INPUT ./img/logo-cs.pdf
 INPUT ./img/logo-cs.pdf
 INPUT ./img/logo-cs.pdf
+INPUT /home/stas/.texlive2021/texmf-var/luatex-cache/generic/fonts/otl/lmmono10-regular.luc
 INPUT ./thesis.toc
 INPUT ./thesis.toc
 INPUT /usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd
@@ -615,7 +616,6 @@ INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/symbols/msam5.tfm
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/symbols/msbm10.tfm
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/symbols/msbm7.tfm
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/symbols/msbm5.tfm
-INPUT /home/stas/.texlive2021/texmf-var/luatex-cache/generic/fonts/otl/lmmono10-regular.luc
 OUTPUT ch5.aux
 INPUT ./ch5.tex
 INPUT ./ch5.tex
