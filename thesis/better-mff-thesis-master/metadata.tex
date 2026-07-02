@@ -53,33 +53,51 @@
 \def\StudyBranch{{Programování a vývoj software}}
 
 \def\Dedication{%
-Dedication. \xxx{It is nice to say thanks to supervisors, friends, family, book authors and food providers.}
+Věnování: Rád bych poděkoval svému vedoucímu práce za odborné vedení, ochotu věnovat
+svůj čas konzultacím a za cenné připomínky a rady, které významně přispěly
+ke vzniku této práce.
+
+Velké poděkování patří také mým rodičům, zejména mé mamince, za jejich trvalou
+podporu, trpělivost a povzbuzení po celou dobu studia.
 }
 
 \def\AbstractEN{%
-{This thesis presents a C++ interface for two established graph generators, nauty/geng and plantri.
-These tools provide efficient generation of general graphs and planar graphs, but their native C interfaces
-are difficult to combine with modern C++ code and graph algorithms. The thesis designs and implements a unified
-wrapper that exposes both generators through a common, type-safe API. Generated graphs are represented by lightweight
-views of the internal generator data, which avoids copying and allows callback-based filtering, pruning,
-and output processing during generation. The interface is compatible with the Boost Graph Library, so users
-can apply standard graph algorithms directly to generated graphs. The resulting library makes high-performance
-graph generation easier to use in experimental and algorithmic graph theory software.
+{
+This thesis presents PlanG, a library that provides access to the non-isomorphic
+graph generators \texttt{geng} and \texttt{plantri} for general and planar
+graphs through a unified C++ interface. It addresses the challenge of
+integrating their low-level C APIs and internal data structures with
+modern C++ code. The library offers type-safe configuration,
+callbacks for pruning, filtering, and result processing, as well as
+views over internal data without unnecessary copying. Both backends
+support selected concepts of the Boost Graph Library. In addition,
+the \texttt{geng} generator has been extended with canonical graph
+generation using vertex color classes and rooted vertices. Performance
+evaluation shows that PlanG achieves performance comparable to the original
+generators during pure graph generation while introducing only a small overhead
+for the callback layer. Library therefore facilitates experimental graph exploration,
+algorithm testing, and the search for counterexamples.
+
+
 }
 % ABSTRACT IS NOT A COPY OF YOUR THESIS ASSIGNMENT!
 }
 
 \def\AbstractCS{%
-{Tato práce představuje rozhraní v jazyce C++ pro dva zavedené generátory grafů,
-geng a plantri. Tyto nástroje umožňují efektivní generování obecných a rovinných grafů,
-jejich nativní rozhraní v jazyce C se však obtížně propojuje s moderním C++ kódem a grafovými
-algoritmy. Práce navrhuje a implementuje sjednocený wrapper, který zpřístupňuje oba generátory
-pomocí společného typově bezpečného API. Vygenerované grafy jsou reprezentovány lehkými
-views na interní data generátorů, což zabraňuje kopírování a umožňuje filtrování,
-prořezávání a zpracování výstupu během generování. Rozhraní je kompatibilní s knihovnou
-Boost Graph Library, takže uživatelé mohou na vygenerované grafy přímo použít běžné
-grafové algoritmy. Knihovna usnadňuje použití výkonného generování grafů 
-v experimentálním softwaru a v algoritmické teorii grafů.
+{
+Tato práce představuje knihovnu PlanG, která zpřístupňuje
+generátory neizomorfních obecných a rovinných grafů \texttt{geng} 
+a \texttt{plantri} prostřednictvím jednotného rozhraní v C++. Řeší 
+tím obtížné propojení jejich nízkoúrovňových C rozhraní a interních 
+datových struktur s moderním C++ kódem. Knihovna poskytuje typově bezpečnou 
+konfiguraci, callbacky pro prořezávání, filtrování a zpracování výsledků a 
+views nad interními daty bez zbytečného kopírování. Oba backendy podporují 
+vybrané koncepty Boost Graph Library. Generátor \texttt{geng} byl navíc 
+rozšířen o kanonické generování grafů s barevnými třídami a zakotvenými 
+vrcholy. Měření ukazují srovnatelný výkon s původními generátory při čistém 
+generování a malou režii callbackové vrstvy. Knihovna tak usnadňuje experimentální 
+zkoumání grafů, testování algoritmů a hledání protipříkladů.
+    
 }
 }
 

@@ -1,100 +1,142 @@
 \chapter{Návrh rozhraní}
 \label{chap:design}
 
-V předchozí kapitole jsme popsali způsoby rozšíření a omezení původních
-generátorů \texttt{geng} a \texttt{plantri}. V této kapitole popíšeme veřejné
-C++ rozhraní knihovny PlanG.
+V předchozí kapitole jsme popsali možnosti a omezení původních rozhraní
+generátorů \texttt{geng} a \texttt{plantri}. V této kapitole představíme návrh
+knihovny PlanG, která oba generátory zpřístupňuje prostřednictvím společného
+rozhraní v jazyce C++.
+
+Zaměříme se na rozdělení společných a specifických částí rozhraní, registraci
+callbacků, zpřístupnění grafů bez jejich kopírování a integraci s Boost Graph
+Library. Technické propojení s původními C programy popíšeme v kapitole
+o implementaci.
 
 \section{Cíle návrhu}
 \label{sec:design-goals}
 
 Původní generátory použijeme jako backendy a nad nimi nabídneme společné C++
-rozhraní. Uživatel si zvolí požadovaný backend, nastaví parametry generování
-a připojí vlastní funkce pro filtrování nebo zpracování grafů.
+rozhraní. Uživatel si zvolí požadovaný backend, nastaví parametry generování pomocí
+typově bezpečných metod a připojí vlastní funkce pro filtrování, prořezávání
+nebo zpracování výsledků. Společné operace mají být pro oba generátory stejné,
+zatímco nastavení závislá na konkrétním generátoru zůstávají součástí jeho
+backendu.
 
-Součástí návrhu je také zpracování grafů bez automatického převodu do nové
-datové struktury. Vygenerovaný graf proto zpřístupníme pomocí view nad daty
-původního generátoru.
+Důležitým požadavkem je zachování výkonu původních programů. Rozhraní proto
+nemá automaticky převádět každý vygenerovaný graf do nové datové struktury.
+Místo toho graf zpřístupní pomocí view nad interními daty generátoru. Uživatel
+tak může graf zpracovat přímo v callbacku bez vytvoření jeho úplné kopie.
+
+Návrh má také umožnit použití běžných grafových algoritmů a případné doplnění
+dalších generátorů. Rozhraní proto odděluje společné řízení generování od
+vlastností konkrétního backendu a přizpůsobuje grafová views vybraným
+konceptům Boost Graph Library.
 
 \section{Jednotné rozhraní pro více generátorů}
 \label{sec:unified-interface}
 
-Základním vstupním bodem knihovny je šablona \texttt{Generator\textless Backend\textgreater}.
-Parametr \texttt{Backend} určuje, který původní generátor se použije. Pro obecné grafy
-tedy pracujeme s typem \texttt{Generator\textless geng::Backend\textgreater}, zatímco
-pro rovinné grafy s typem \texttt{Generator\textless plantri::Backend\textgreater}.
 
-Toto uspořádání využívá princip policy-based design. Společná část rozhraní
-je implementována šablonou \texttt{Generator}, která poskytuje například
-metodu \texttt{run()} a metody pro registraci callbacků. Typ \texttt{Backend} 
-doplňuje funkce a nastavení specifická pro zvolený generátor.
+Základním vstupním bodem knihovny je šablona
+\texttt{Generator\textless Backend\textgreater}. Typ předaný jako
+\texttt{Backend} určuje, který původní generátor se použije a jaká specifická
+nastavení budou dostupná. Pro obecné grafy použijeme typ
+\texttt{Generator\textless geng::Backend\textgreater}, zatímco pro rovinné
+grafy typ \texttt{Generator\textless plantri::Backend\textgreater}.
 
-Uživatel proto pracuje s oběma generátory stejným způsobem; liší se pouze
-zvolený backend a nastavení dostupná pro daný generátor. Toto rozdělení také
-umožňuje případné doplnění dalšího generátoru vytvořením odpovídajícího
-backendu.
+Šablona \texttt{Generator} poskytuje společné operace, zejména spuštění
+generování metodou \texttt{run} a registraci callbacků. Zvolený backend
+doplňuje metody pro konfiguraci vlastností podporovaných konkrétním
+generátorem. Uživatel tak pracuje s oběma generátory stejným způsobem, ale
+zároveň má přístup k jejich specifickým možnostem.
+
+Toto uspořádání využívá návrh založený na politikách (policy-based design).
+Konkrétní backend je zvolen jako parametr šablony a poskytuje třídě 
+\texttt{Generator} chování závislé na daném generátoru. Volba backendu tak 
+probíhá při překladu a nevyžaduje virtuální funkce.
+
+Backend musí poskytovat typ grafového view, vlastní konfiguraci a operace
+potřebné ke spuštění generátoru. Díky tomuto rozdělení lze knihovnu rozšířit
+o další generátor vytvořením nového backendu, aniž by bylo nutné měnit způsob,
+jakým uživatel spouští generování nebo registruje callbacky.
 
 \section{Callbacky pro filtrování a zpracování grafů}
 \label{sec:design-callbacks}
 
-Při generování grafů často nechceme pouze vypsat všechny grafy do
-souboru. Chceme nad každým grafem spustit vlastní test, zahodit grafy, které nás
-nezajímají, nebo průběžně ukládat jen vybrané výsledky. Proto rozhraní obsahuje tři
-základní typy callbacků.
+V rozhraní PlanG rozlišujeme tři typy callbacků, které odpovídají různým
+fázím generování. Registrujeme je jako C++ funkční objekty před spuštěním
+metody \texttt{run}. Můžeme přitom použít běžnou funkci, lambda výraz nebo
+objekt s operátorem volání.
 
-Callback nastavený pomocí \texttt{setOutproc} slouží ke zpracování hotového grafu.
-Můžeme ho použít například pro vlastní výpis, sběr statistik nebo spuštění grafového
-algoritmu nad vygenerovaným grafem. Callback \texttt{setPrune} umožňuje odmítnout
-hotový graf. Callback \texttt{setPreprune} je určen pro prořezávání rozpracovaných
-větví během konstrukce.
+Pomocí metody \texttt{setPrune} filtrujeme výsledné grafy. Callback pro každý
+dokončený graf vrátí hodnotu \texttt{KEEP}, pokud jej chceme ponechat, nebo
+\texttt{PRUNE}, pokud jej chceme odmítnout.
 
-Tato trojice odpovídá možnostem původních generátorů, ale uživatel s nimi pracuje přes
-C++ funkční objekty. Nemusí tedy psát samostatný C plugin ani kompilovat generátor s
-vlastními makry. Z pohledu návrhu je důležité, že callback nedostává kopii grafu, ale
-view na právě generovaný graf.
+Metodu \texttt{setPreprune} používáme pro prořezávání rozpracovaných větví.
+Callback rozhoduje, zda má generátor pokračovat v aktuální větvi. Protože se
+může volat mnohem častěji než \texttt{setPrune}, měl by prováděný test být
+rychlý a nesmí odmítnout větev, která by mohla vést k přípustnému výsledku.
+
+Pomocí metody \texttt{setOutproc} zpracováváme přijaté výsledné grafy. Můžeme
+ji využít pro vlastní výstup, sběr statistik nebo spuštění dalšího grafového
+algoritmu.
+
+Do callbacků předáváme objekt \texttt{GraphView}, který zpřístupňuje aktuální
+graf bez vytvoření jeho úplné kopie. S grafem tak pracujeme stejným způsobem
+nezávisle na zvoleném backendu.
 
 \section{\texttt{View} na graf bez kopírování dat}
 \label{sec:graph-view}
 
-Třída \texttt{GraphView} představuje nevlastnící view na graf uložený uvnitř
-původního generátoru. U backendu \texttt{geng} ukazuje na reprezentaci grafu v nauty,
-U backendu \texttt{plantri} ukazuje na pole stupňů a strukturu orientovaných
-hran. V obou případech je cílem zpřístupnit graf přes srozumitelnější operace, aniž
-bychom museli vytvářet jeho úplnou kopii.
 
-Takové view je určeno hlavně pro použití uvnitř callbacku. Uživatel může procházet
-vrcholy, hrany nebo sousedy vrcholu, ale nemá vlastnictví nad daty generátoru. Proto
-\texttt{GraphView} nemá být dlouhodobě ukládán mimo callback, protože po
-pokračování generování se interní data mohou změnit.
 
-Výhodou tohoto návrhu je nízká režie. Uživatel má k dispozici data zpřístupněná
-objektem \texttt{GraphView} a sadu free funkcí pro práci s grafem.
+Při zpracování velkého počtu grafů nechceme každý výsledek převádět do nové
+vlastněné datové struktury. Pro každý backend proto definujeme samostatný typ
+\texttt{GraphView}, který zpřístupňuje graf uložený uvnitř původního
+generátoru.
+
+\texttt{geng::GraphView} uchovává ukazatel na bitovou reprezentaci nauty,
+zatímco \texttt{plantri::GraphView} pracuje s poli stupňů a orientovanými
+hranami rovinného vložení. Vytvořením objektu \texttt{GraphView} kopírujeme
+pouze několik ukazatelů a základních údajů o grafu, nikoli jeho vrcholy a
+hrany.
+
+Uvnitř callbacku pracujeme s grafem zpravidla prostřednictvím poskytovaných
+free funkcí, například \texttt{vertices}, \texttt{edges},
+\texttt{adjacent\_vertices} nebo \texttt{out\_edges}. Tyto funkce tvoří
+rozhraní požadované vybranými koncepty Boost Graph Library. Můžeme je používat
+přímo nebo objekt \texttt{GraphView} předat kompatibilnímu algoritmu z této
+knihovny.
+
 
 
 \section{Integrace s Boost Graph Library}
 \label{sec:boost-integration}
 
-Boost Graph Library je založena na grafových konceptech, které popisují, jaké typy a
-funkce musí graf poskytovat, aby nad ním šly spouštět obecné grafové algoritmy~\cite{boostGraphConcepts}.
-Důležité je, že graf nemusí být konkrétní třídou z Boostu. Stačí, aby poskytoval požadované rozhraní.
+Boost Graph Library je založena na grafových konceptech, které určují, jaké
+typy a operace musí graf poskytovat, aby nad ním bylo možné spouštět obecné
+grafové algoritmy~\cite{boostGraphConcepts}. Graf přitom nemusí být instancí
+konkrétní třídy z knihovny Boost, pokud splňuje požadované rozhraní.
 
-To dobře odpovídá našemu cíli.Objekt \texttt{GraphView}
-navrhujeme tak, aby jej bylo možné použít s vybranými algoritmy Boost.Graph
-přímo uvnitř callbacku. Uživatel tak může nad vygenerovaným grafem spouštět
-standardní grafové algoritmy v C++, aniž by graf převáděl do nové datové
-struktury nebo znal interní reprezentaci použitého generátoru.
+Pro oba typy \texttt{GraphView} definujeme typy vrcholů a hran, iterátory
+a podporované způsoby procházení grafu. Společně s free funkcemi z předchozí
+sekce tak oba typy splňují vybrané koncepty Boost Graph Library.
 
-Konkrétní implementaci tohoto rozhraní pro oba backendy popíšeme v
-kapitole~\ref{chap:implementation}.
+Díky této integraci můžeme v callbacku používat například algoritmy pro
+barvení vrcholů nebo testování rovinnosti. Konkrétní implementaci potřebných
+typů, iterátorů a traits popíšeme v kapitole o implementaci.
 
 \section{Podpora bohatších struktur}
 \label{sec:richer-structures}
 
-Backend \texttt{geng} umožňuje generovat grafy s barevnými třídami vrcholů.
- Uživatel může nastavit počet barev, přesné velikosti barevných tříd
-nebo jejich dolní a horní meze. Rozhraní nabízí také samostatnou volbu
-pro zakotvené vrcholy.
+Veřejné rozhraní backendu \texttt{geng} podporuje generování grafů s barevnými
+třídami vrcholů. Uživatel může nastavit počet barev, přesné velikosti tříd
+nebo jejich dolní a horní meze pomocí metod \texttt{setColors},
+\texttt{setColorClassSizes} a \texttt{setColorClassBounds}.
 
-Callbacky mohou při zpracování grafu číst přiřazené barvy prostřednictvím
-\texttt{GraphView}. Způsob předání barev do původního
-generátoru a jejich zahrnutí do generování popíšeme v kapitole o implementaci.
+Zakotvené vrcholy zadáváme metodou \texttt{setRootedVertices}. Každý
+zakotvený vrchol tvoří samostatnou jednoprvkovou barevnou třídu, kterou musí
+izomorfismus zachovat.
+
+Přiřazené barvy zpřístupňujeme také prostřednictvím
+\texttt{geng::GraphView}, aby s nimi mohly pracovat uživatelské callbacky.
+Způsob generování barev a jejich zahrnutí do kanonických testů popíšeme
+v kapitole o implementaci.

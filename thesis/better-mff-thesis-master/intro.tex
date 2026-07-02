@@ -2,29 +2,42 @@
 \chapwithtoc{Úvod}
 
 
-Generování grafů je důležitým nástrojem v experimentální teorii grafů a při testování grafových algoritmů.
-Umožňuje vytvářet množiny grafů splňujících zadané podmínky a následně na nich ověřovat hypotézy, hledat
-protipříklady nebo porovnávat chování algoritmů.
+Generování grafů je důležitým nástrojem experimentální teorie grafů a
+testování grafových algoritmů. Umožňuje systematicky procházet grafy splňující
+zadané podmínky, ověřovat na nich hypotézy, hledat protipříklady a porovnávat
+chování algoritmů. Efektivní generování je však obtížné, protože počet grafů
+rychle roste a stejný graf může vzniknout v mnoha izomorfních kopiích.
 
-Pro generování grafů existují specializované nástroje, například \texttt{geng} z balíku nauty
-a \texttt{plantri}. Tyto programy jsou velmi efektivní a používají se pro generování různých tříd grafů.
-Tyto nástroje lze snadno spustit z příkazové řádky, ale jejich rozšiřování vyžaduje psaní nízkoúrovňových pluginů
-a znalost interních datových struktur jednotlivých generátorů.
- 
+Pro tyto úlohy existují specializované generátory, například \texttt{geng}
+z balíku nauty pro obecné neorientované grafy a \texttt{plantri} pro rovinné
+grafy. Oba nástroje jsou velmi efektivní a lze je snadno spustit z příkazové
+řádky. Jejich zapojení do vlastního programu je však složitější. Filtrování
+grafů během generování obvykle vyžaduje psaní nízkoúrovňových pluginů a znalost
+interních datových struktur jednotlivých generátorů.
 
-Cílem této práce je navrhnout a implementovat jednotné C++ rozhraní pro generátory \texttt{geng} a \texttt{plantri}.
-Rozhraní má umožnit pohodlnou konfiguraci generování, vlastní filtrování grafů, zpracování výstupu a použití vybraných
-algoritmů z knihovny Boost Graph Library. Důraz je kladen na to, aby práce s grafy byla pohodlnější, ale aby nedocházelo
-ke zbytečnému kopírování dat a velké ztrátě efektivity.
+V této práci navrhujeme a implementujeme knihovnu PlanG, která zpřístupňuje
+oba generátory prostřednictvím jednotného rozhraní v jazyce C++. Uživatel může
+pomocí typově bezpečných metod nastavit parametry generování a registrovat
+callbacky pro prořezávání, filtrování a zpracování výsledků. Vygenerované grafy
+jsou callbackům předávány pomocí views přímo nad interními daty generátorů,
+takže nevzniká kopie celého grafu. Oba backendy navíc poskytují grafy
+kompatibilní s vybranými koncepty Boost Graph Library.
 
-Součástí práce je také rozšíření generátoru \texttt{geng} o podporu barevných tříd a zakotvených vrcholů.
-Tyto struktury umožňují generovat bohatší třídy grafů, u nichž izomorfismus musí respektovat dodatečné informace
-přiřazené vrcholům.
+Součástí práce je také rozšíření generátoru \texttt{geng} o barevné třídy
+a zakotvené vrcholy. Barvy jsou zahrnuty přímo do testů izomorfismu a
+kanonického rozhodování, což umožňuje generovat grafy s dodatečnou strukturou
+bez následného vytváření všech obarvení hotových grafů.
 
-Práce je rozdělena následovně. První kapitola shrnuje teoretické pozadí generování grafů a popisuje hlavní problémy,
-které se při něm objevují. Druhá kapitola se věnuje nástrojům \texttt{geng} a \texttt{plantri}. Třetí kapitola popisuje
-návrh knihovny PlanG. Čtvrtá kapitola se zabývá implementací rozhraní a úpravami původních generátorů. Pátá kapitola obsahuje
-testování a vyhodnocení výsledného řešení.
+Výsledná knihovna byla ověřena funkčními testy a porovnána s původními
+generátory. Měření ukazují, že při čistém generování dosahuje PlanG
+srovnatelného výkonu jako nativní programy.
+
+První kapitola shrnuje teoretické základy generování grafů. Druhá kapitola
+popisuje generátory \texttt{geng} a \texttt{plantri} a omezení jejich původních
+rozhraní. Třetí kapitola popisuje návrh knihovny PlanG. Čtvrtá kapitola se zabývá
+implementací rozhraní a úpravami původních generátorů. Pátá kapitola se věnuje funkčnímu
+testování a vyhodnocení výkonu.
+
 
 
 %Introduction should answer the following questions, ideally in this order:

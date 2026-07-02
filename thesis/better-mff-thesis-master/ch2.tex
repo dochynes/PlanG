@@ -5,8 +5,10 @@ V předchozí kapitole jsme popsali obecný problém generování grafů bez izo
 kopií. V této kapitole se podíváme na dva konkrétní generátory, na kterých je tato práce
 postavena: \texttt{geng} z balíku nauty a \texttt{plantri}. Oba nástroje řeší podobný
 typ úlohy, ale pracují s jinými třídami grafů a používají jiné interní reprezentace.
-Pro návrh jednotného rozhraní proto potřebujeme porozumět nejen tomu, jaké grafy
-generují, ale také tomu, jak se do jejich běhu dá zasáhnout z vlastního programu.
+
+Pro návrh společného rozhraní potřebujeme vědět, jak se oba generátory
+konfigurují, v jaké podobě zpřístupňují aktuální graf a jak umožňují zapojit
+uživatelský kód do procesu generování.
 
 \section{Generátor \texttt{geng}}
 \label{sec:geng}
@@ -23,103 +25,124 @@ tedy zajímá pouze zachování sousednosti. Reprezentace grafu v nauty je proto
 založena na bitových množinách
 sousedů, které jsou velmi kompaktní a dobře se hodí pro rychlé množinové operace.
 
-Z pohledu uživatele na příkazové řádce je práce s \texttt{geng} poměrně přímočará:
-zadáme počet vrcholů a přepínače popisující požadovanou třídu grafů. Uvnitř
-však \texttt{geng} generuje grafy inkrementálně: z grafu na
-\(n\) vrcholech vytváří graf na \(n+1\) vrcholech tak, že přidá nový poslední
-vrchol a zvolí jeho sousedy mezi již existujícími vrcholy. Aby přitom nevznikaly
-izomorfní kopie téhož grafu, nepřijme každé možné rozšíření. Nově vzniklý graf
-musí projít kanonickým testem, který mimo jiné rozhoduje, zda právě poslední
-přidaný vrchol může být považován za kanonicky zvolený.
-Při tomto rozhodování se používají i stupně vrcholů. Zjednodušeně řečeno,
-generátor nepracuje se všemi pořadími vzniku vrcholů stejně, ale využívá
-vlastnosti posledního vrcholu k tomu, aby omezil počet zkoušených možností.
+\texttt{geng} vytváří grafy inkrementálně. Z grafu na \(n\) vrcholech vytvoří
+kandidáty na \(n+1\) vrcholech přidáním nového posledního vrcholu a volbou
+jeho sousedů mezi původními vrcholy. Ne všechna rozšíření však dále zpracuje.
+Pomocí automorfismů a kanonického testu odmítá rozšíření, která by vedla
+k izomorfním kopiím. Při rychlém předběžném rozhodování využívá také jednoduše
+zjistitelné vlastnosti vrcholů, například jejich stupně.
 
-Při rozšíření generátoru o barvy je důležité, že barvy musí ovlivňovat také
-testy izomorfismu a kanonické rozhodování během generování. Konkrétní úpravy
-potřebné pro tuto podporu popíšeme v kapitole o implementaci.
+Z příkazové řádky uživatel zadá počet vrcholů a přepínače určující požadovanou
+třídu grafů. Výsledky může generátor zapisovat například ve formátech
+\texttt{graph6} nebo \texttt{sparse6}; výpis lze také vypnout a grafy pouze
+spočítat.
+
+Při rozšíření \texttt{geng} o barevné třídy a zakotvené vrcholy musí být barvy
+součástí testů izomorfismu a kanonického rozhodování. Konkrétní změny potřebné
+pro tuto podporu popíšeme v kapitole o implementaci.
 
 
 \section{Generátor \texttt{plantri}}
 \label{sec:plantri}
 
-Generátor \texttt{plantri} je specializovaný nástroj pro generování rovinných grafů.
-Umí generovat například rovinné triangulace, kvadrangulace, jednoduché rovinné grafy,
-triangulace disku. Stejně jako \texttt{geng} negeneruje všechny možné označené grafy, 
-ale jeden graf pro každou izomorfní třídu.
-%Principy fungování nástroje \texttt{plantri} popisují Brinkmann a McKay v článku
-%o rychlém generování rovinných grafů~\cite{brinkmann2007fast}.
-
-Generování v \texttt{plantri} je založeno na postupném zvětšování rovinného
-grafu pomocí lokálních operací, které se nazývají expanze. Opačné operace,
-které graf zmenšují, se nazývají redukce~\cite[Section~1.2]{brinkmann2007fast}.
-Jednoduše řečeno, expanze je krok, kterým graf zvětšíme, zatímco redukce je
-odpovídající krok, kterým jej zmenšíme.
-
-Například při generování triangulací můžeme začít od malého počátečního grafu a
-postupně jej zvětšovat operacemi, které přidávají vrchol nebo upravují lokální okolí
-některé stěny. Každé takové rozšíření zachovává rovinné vložení a strukturu
-triangulace. Protože stejný výsledný graf může vzniknout více různými posloupnostmi
-expanzí, musí generátor průběžně odmítat nekanonické větve výpočtu.
-
-Tento problém řeší metoda kanonické konstrukční cesty~\cite[Section~1.2]{brinkmann2007fast}.
-Pro nově vzniklý graf se určí kanonicky zvolená redukce, tedy opačný krok, kterým by
-se graf měl zmenšit. Rozšíření se přijme pouze tehdy, pokud právě provedená expanze
-odpovídá této kanonické redukci. Díky tomu generátor vytvoří pouze jeden reprezentant
-z každé izomorfní třídy.
+Generátor \texttt{plantri} je specializovaný nástroj pro generování rovinných
+grafů. Podporuje například triangulace, kvadrangulace, jednoduché rovinné
+grafy a triangulace disku. Uživatel může nastavit také omezení souvislosti,
+minimálního stupně nebo velikosti generovaných grafů
 
 
-\texttt{plantri} generuje rovinné grafy spolu s jejich vložením. U takového
-grafu nestačí vědět, které dvojice vrcholů jsou spojeny hranou. Potřebujeme
-také znát cyklické pořadí hran kolem každého vrcholu, protože právě toto pořadí
-určuje stěny rovinného vložení. \texttt{plantri} proto používá reprezentaci založenou na orientovaných
-hranách. Každá neorientovaná hrana je reprezentována dvojicí opačně orientovaných hran.
-Každá taková orientovaná hrana obsahuje odkazy na následující a předchozí hranu
-v cyklickém pořadí kolem vrcholu.
+\texttt{plantri} pracuje s grafem společně s jeho rovinným vložením. Nestačí
+proto znát pouze dvojice vrcholů spojené hranou. Součástí reprezentace je také
+cyklické pořadí hran kolem každého vrcholu, které určuje stěny vložení.
 
-Taková half-edge reprezentace umožňuje přirozeně procházet okolí vrcholu i stěny
-rovinného vložení.
+Generování probíhá rekurzivním zvětšováním malých počátečních grafů pomocí
+lokálních operací nazývaných expanze. Jejich opačné operace, které graf
+zmenšují, nazýváme redukce. Pro každou podporovanou třídu jsou expanze
+navrženy tak, aby zachovávaly požadované vlastnosti grafu a jeho rovinné
+vložení. Při generování triangulací může expanze například přidat nový vrchol
+do stěny a spojit jej s vrcholy na jejím okraji.
+
+Stejný výsledný graf může vzniknout několika různými posloupnostmi expanzí.
+\texttt{plantri} proto používá metodu kanonické konstrukční cesty popsanou
+v \cref{sec:canonical-representations}. Pro každý vytvořený graf určí
+kanonickou redukci a provedenou expanzi přijme pouze tehdy, pokud je opačnou
+operací k této redukci. Z více konstrukčních cest vedoucích k izomorfním
+grafům tak pokračuje pouze jedna
+~\cite[Section~1.2]{brinkmann2007fast}.
+
+Interní reprezentace \texttt{plantri} je založena na orientovaných hranách.
+Každá neorientovaná hrana je reprezentována dvojicí opačně orientovaných hran.
+Každá z nich obsahuje odkaz na opačnou orientaci a odkazy na předchozí a
+následující hranu v cyklickém pořadí kolem počátečního vrcholu.
+
+Tato reprezentace umožňuje efektivně procházet okolí vrcholů i hranice stěn.
+Pro uživatele, který chce nad vygenerovaným grafem spouštět běžné grafové
+algoritmy, je však práce přímo s orientovanými hranami a ukazateli méně
+pohodlná. Návrh rozhraní proto musí tuto reprezentaci zpřístupnit bez nutnosti
+kopírovat celý graf do jiné datové struktury.
 
 
 \section{Možnosti rozšíření pomocí callbacků}
 \label{sec:generator-callbacks}
 
-Oba generátory umožňují zasáhnout do generování vlastním kódem, ale dělají to způsobem
-typickým pro C programy. \texttt{geng} nabízí například mechanismy \texttt{OUTPROC},
-\texttt{PRUNE} a \texttt{PREPRUNE}. \texttt{OUTPROC} umožňuje nahradit standardní výpis
-grafu vlastní funkcí. \texttt{PRUNE} a \texttt{PREPRUNE} umožňují odmítat průběžně vytvářené grafy
-a tím prořezávat prohledávací strom.
 
-\texttt{plantri} používá podobnou myšlenku přes pluginy a makra jako \texttt{FILTER}
-a \texttt{PRE\_FILTER}. Uživatel může doplnit vlastní testy, které se spouštějí při
-generování, a rozhodovat, zda má být graf vypsán nebo zda má být větev výpočtu
-zahozena. Díky tomu můžeme ušetřit více času než při filtrování hotového 
-výstupu, protože nevhodné části prohledávacího prostoru zahodíme dříve.
+Oba generátory umožňují zapojit do generování vlastní kód. Původní programy
+však neposkytují registraci callbacků za běhu. Uživatelské funkce se připojují
+pomocí maker preprocesoru a generátor je nutné znovu sestavit.
 
-Tyto mechanismy jsou výkonné, ale jejich přímé použití z C++ vyžaduje znalost
-přesných signatur callbacků, způsobu sestavení generátoru s příslušnými makry
-a často také interní reprezentace aktuálního grafu.
+\texttt{geng} poskytuje mechanismy \texttt{OUTPROC}, \texttt{PRUNE} a
+\texttt{PREPRUNE}. Makro \texttt{OUTPROC} určuje funkci, která se zavolá pro
+každý výstupní graf namísto standardního zápisu. Uživatel tak může graf přímo
+zpracovat nebo jej zapsat ve vlastním formátu.
+
+Funkce určená makrem \texttt{PRUNE} se volá nad průběžně vytvářenými i
+výslednými grafy a může rozhodnout o ukončení aktuální větve generování.
+\texttt{PREPRUNE} má podobný účel, ale volá se dříve a častěji. Může proto
+odmítnout nevhodný kandidát před provedením dalších testů generátoru. Test
+použitý v \texttt{PREPRUNE} by měl být rychlý, protože se během generování
+vyhodnocuje mnohokrát.
+
+Rozšíření programu \texttt{plantri} se vytvářejí pomocí pluginů. Zdrojový
+soubor pluginu se při překladu vloží do programu a může definovat několik
+předem určených maker. Funkce zadaná makrem \texttt{FILTER} se volá pro
+vygenerované grafy a rozhoduje, zda mají být přijaty. Pro dřívější
+prořezávání slouží rodina maker \texttt{PRE\_FILTER\_*}. Konkrétní makro
+závisí na generované třídě, například na tom, zda generujeme jednoduché
+rovinné grafy, triangulace nebo kvadrangulace.
+
+Prořezávání během konstrukce může být výrazně účinnější než filtrování
+hotového výstupu, protože jedním rozhodnutím odstraníme celou část
+prohledávaného stromu. Musíme však zaručit, že callback neodmítne větev, která
+by mohla vést k přípustnému výsledku.
+
+Tyto mechanismy jsou výkonné, jejich použití však vyžaduje znalost přesných
+signatur funkcí, maker použitých při překladu a interní reprezentace grafu.
 
 \section{Omezení původních rozhraní}
 \label{sec:original-interface-limitations}
 
-Původní rozhraní generátorů \texttt{geng} a \texttt{plantri} je velmi vhodné pro použití
-z příkazové řádky. Pokud chceme pouze vygenerovat grafy dané třídy a uložit je do
-souboru, jsou oba nástroje rychlé a praktické. Pro použití jako součást většího C++
-programu však narážíme na několik omezení.
+Původní rozhraní generátorů \texttt{geng} a \texttt{plantri} jsou dobře
+přizpůsobena použití z příkazové řádky. Pokud chceme pouze nastavit požadovanou
+třídu grafů a zapsat výsledky do souboru, jsou oba programy rychlé a praktické.
+Jejich zapojení do většího programu je však obtížnější.
 
-Prvním omezením je rozdílný způsob konfigurace. Každý generátor má vlastní sadu
-přepínačů, vlastní výstupní formáty a vlastní pojmenování podobných voleb. Druhým
-omezením je nízkoúrovňové C rozhraní. Pokud chceme generátor volat přímo z programu,
-musíme připravovat argumenty ve tvaru podobném příkazové řádce a pracovat s globálním
-stavem původního generátoru.
+Každý generátor používá vlastní přepínače, výstupní formáty a způsob konfigurace.
+Při přímém volání z programu musíme sestavit pole argumentů odpovídající
+příkazové řádce. Část stavu generování je navíc uložena v globálních
+proměnných původních C programů.
 
-Třetím omezením je reprezentace grafů v callbackách. U \texttt{geng} pracujeme s
-bitovou reprezentací nauty, u \texttt{plantri} s poli stupňů a ukazateli na orientované
-hrany. Obě reprezentace jsou efektivní, ale uživatel musí znát jejich detaily, pokud chce
-nad grafem spustit vlastní algoritmus. Převod každého grafu do jiné datové struktury by
-rozhraní zjednodušil, ale při velkém počtu generovaných grafů by mohl znamenat
-výraznou ztrátu výkonu.
+Dalším omezením je způsob připojení vlastního kódu. Uživatelské funkce jsou
+určeny již při překladu generátoru pomocí maker nebo pluginů. Jejich změna
+proto vyžaduje nové sestavení příslušné varianty programu.
 
-Při návrhu rozhraní proto chceme tato omezení skrýt, aniž bychom ztratili
-výhody původních generátorů.
+Oba generátory také používají rozdílné interní reprezentace grafů.
+\texttt{geng} pracuje s bitovými množinami knihovny nauty, zatímco
+\texttt{plantri} používá pole stupňů a ukazatele na orientované hrany.
+Uživatel musí tyto reprezentace znát, pokud chce v callbacku procházet vrcholy,
+hrany nebo sousedy. Převod každého grafu do společné datové struktury by práci
+zjednodušil, ale při velkém počtu grafů by přidával opakovanou režii.
+
+Potřebujeme proto rozhraní, které poskytne společný způsob konfigurace,
+spouštění a registrace callbacků, ale současně zachová nastavení specifická
+pro jednotlivé generátory. Grafy by mělo zpřístupňovat bez automatického
+kopírování jejich interních dat.

@@ -4,7 +4,7 @@
 V této kapitole popíšeme implementaci knihovny PlanG. V předchozí kapitole jsme
 navrhli rozhraní, které má sjednotit práci s generátory \texttt{geng} a
 \texttt{plantri}. Nyní se podíváme na to, jak je toto rozhraní napojeno na původní
-C programy a jakým způsobem zpřístupňujeme grafy uživatelským callbackům.
+C programy.
 
 C++ část knihovny převádí konfiguraci uloženou v objektu na argumenty původního
 programu. Callbacky a konfiguraci obarvení, které nejsou součástí argumentů
@@ -14,96 +14,122 @@ graf následně zpřístupňuje pomocí view nad interními daty generátoru.
 \section{Architektura knihovny}
 \label{sec:implementation-architecture}
 
-Implementace je rozdělena do několika vrstev. Nejníže zůstávají původní zdrojové
-kódy generátorů. Tyto části obsahují samotné algoritmy pro generování grafů a knihovna je
-nepřepisuje, s výjimkou úprav generátoru \texttt{geng}, které doplňují podporu
-barevných tříd a zakotvených vrcholů.
+Implementaci rozdělujeme do několika vrstev. Nejnižší vrstvu tvoří zdrojové
+kódy původních generátorů. Zachováváme jejich algoritmy i způsob zpracování
+argumentů příkazové řádky. Výjimkou jsou úpravy generátoru \texttt{geng},
+kterými doplňujeme podporu barevných tříd a zakotvených vrcholů.
 
-Nad nimi je tenká C mezivrstva. Tato vrstva zpřístupňuje vybrané funkce
-a globální proměnné původních generátorů a umožňuje zaregistrovat callbacky z C++
-části programu.
+Nad původními generátory se nachází tenká C mezivrstva. Ta zpřístupňuje jejich
+vstupní funkce a vybrané části globálního stavu. Současně obsahuje funkce,
+na které jsou přesměrována původní makra pro filtrování, prořezávání a
+zpracování výstupu.
 
-Nad C mezivrstvou jsou implementovány C++ backendy. Každý backend uchovává konfiguraci
-generování, kontroluje její základní správnost a umí ji převést na argumenty
-původního generátoru. Backend také před spuštěním registruje callbacky a předává
-informace o barvách vrcholů.
+Další vrstvu tvoří C++ bridge. Uchovává uživatelské callbacky, převádí volání
+z C mezivrstvy na C++ funkční objekty a vytváří pro ně příslušný
+\texttt{GraphView}. Zajišťuje také, aby výjimky vyvolané callbackem
+neprocházely přes C kód.
+
+Nad bridge vrstvou jsou implementovány backendy \texttt{geng::Backend} a
+\texttt{plantri::Backend}. Každý backend uchovává konfiguraci jedné instance,
+ověřuje její správnost a převádí ji na argumenty odpovídajícího generátoru.
+Před spuštěním nastaví také callbacky a další stav, který nelze předat
+argumenty příkazové řádky.
 
 Nejvyšší vrstvu tvoří šablona
-\texttt{Generator\textless Backend\textgreater}, která uživateli poskytuje společné
-rozhraní nezávislé na konkrétním generátoru.
+\texttt{Generator\textless Backend\textgreater}. Poskytuje společný postup
+spuštění a zpřístupňuje veřejné metody zvoleného backendu. Tok volání tak vede
+od objektu \texttt{Generator} přes backend a mezivrstvy až k původnímu
+generátoru. Callbacky se následně vracejí opačným směrem zpět do uživatelského
+C++ kódu.
 
 
 \section{Vrstva \texttt{Generator} a backendy}
 \label{sec:implementation-generator-backends}
 
-Šablona \texttt{Generator\textless Backend\textgreater} dědí z konkrétního backendu.
-Díky tomu jsou metody backendu dostupné přímo na objektu generátoru, ale společná
-vrstva může zároveň definovat operace, které mají všechny backendy stejné. Patří sem
-zejména metoda \texttt{run} a metody pro registraci callbacků
-\texttt{setPrune}, \texttt{setPreprune} a \texttt{setOutproc}.
+Šablona \texttt{Generator\textless Backend\textgreater} veřejně dědí ze
+zvoleného backendu. Díky tomu můžeme na objektu generátoru přímo používat
+konfigurační metody backendu. Společná vrstva přidává metodu \texttt{run},
+typovou zkratku \texttt{GraphView} a metody pro registraci callbacků.
 
-Při spuštění generování metoda \texttt{run} zavolá backendovou metodu
-\texttt{prepare\_args}. Metoda \texttt{prepare\_args} vytvoří seznam řetězců které
-odpovídají argumentům příkazové řádky původního programu. Poté se zavolá
-\texttt{apply\_runtime\_state},
-která nastaví callbacky a případně nastaví konfiguraci obarvení.
-Nakonec se seznam
-řetězců převede na pole ukazatelů typu \texttt{char*} a předá se původní vstupní
-funkci generátoru.
+Při spuštění generování zavoláme nejprve metodu \texttt{prepare\_args}
+příslušného backendu. Ta ověří uloženou konfiguraci a vytvoří argumenty ve
+stejném tvaru, v jakém je očekává původní program. Zachováme tak existující
+zpracování argumentů v \texttt{geng} a \texttt{plantri}.
 
-Konkrétní backend tedy plní dvě role. Navenek nabízí typovější C++ metody pro
-nastavení parametrů (počet vrcholů, omezení stupňů nebo výstupní formát).
-Uvnitř ví, jak tyto volby vyjádřit pomocí přepínačů původního programu. Díky tomu
-uživatel nemusí skládat argumenty příkazové řádky ručně, a zároveň zůstává zachován
-původní způsob spuštění generátorů.
+Následně zavoláme metodu \texttt{apply\_runtime\_state}, která předá do bridge
+vrstvy uživatelské callbacky a nastavení, která nelze vyjádřit argumenty
+příkazové řádky. U backendu \texttt{geng} sem patří také konfigurace barevných
+tříd.
+
+Vytvořené argumenty převedeme do formátu \texttt{argc}/\texttt{argv}
+očekávaného původním C programem a předáme je metodě \texttt{Backend::run},
+která spustí odpovídající generátor.
+
+Konfiguraci uchováváme v konkrétní instanci backendu, takže můžeme v jednom
+procesu postupně spouštět více instancí s rozdílným nastavením. Původní
+generátory a bridge vrstva však používají globální stav nastavovaný před
+spuštěním. Současné paralelní běhy stejného backendu proto nepodporujeme.
+
 
 \section{Propojení s \texttt{geng}}
 \label{sec:implementation-geng}
 
-Backend pro \texttt{geng} uchovává parametry odpovídající přepínačům původního
-programu. Například počet vrcholů, rozsah počtu hran, požadavky na souvislost,
-omezení minimálního a maximálního stupně, volba výstupního formátu nebo rozdělení
-výpočtu na části. Metoda \texttt{prepare\_args} tyto hodnoty převede na argumenty,
-které by uživatel jinak zadal na příkazové řádce.
+Backend \texttt{geng::Backend} uchovává konfiguraci odpovídající přepínačům
+původního programu. Patří sem například počet vrcholů, rozsah počtu hran,
+omezení stupňů, požadovaná souvislost, výstupní formát a rozdělení výpočtu.
+Metoda \texttt{prepare\_args} z těchto hodnot sestaví argumenty pro
+\texttt{geng}.
 
-Samotné spuštění probíhá přes přejmenovanou vstupní funkci původního programu.
-Kód \texttt{geng} je při sestavení upraven tak, aby jeho hlavní funkce nebyla
-\texttt{main}, ale funkce volatelná z knihovny. Zároveň je generátor sestaven s
-makry \texttt{OUTPROC}, \texttt{PRUNE} a \texttt{PREPRUNE}, která směřují do C
-mezivrstvy. Díky těmto makrům se výpis nalezených grafů a volání prořezávacích testů
-přesměrují z původního programu do funkcí knihovny.
+Při sestavení knihovny přejmenujeme původní funkci \texttt{main} generátoru
+na funkci \texttt{geng\_main}, kterou lze volat z knihovny. Současně nastavíme
+makra \texttt{OUTPROC}, \texttt{PRUNE} a \texttt{PREPRUNE} tak, aby směřovala
+do C mezivrstvy. Původní generátor tak můžeme spustit jako běžnou funkci a jeho
+rozšiřující mechanismy přesměrovat do PlanG.
 
-Volání z \texttt{geng} projdou přes C mezivrstvu do trampoline funkcí v C++
-části. C++ část uchovává uživatelské callbacky a při jejich volání vytvoří
-\texttt{geng::GraphView}. Ten obsahuje ukazatel na graf v reprezentaci nauty,
-počet vrcholů aktuálního grafu a cílový počet vrcholů.
+C mezivrstva uchovává ukazatele na funkce registrované z C++ části. Když
+\texttt{geng} zavolá některý z rozšiřujících mechanismů, mezivrstva předá
+aktuální graf odpovídající trampoline funkci. Ta vytvoří
+\texttt{geng::GraphView} obsahující ukazatel na bitovou reprezentaci nauty,
+aktuální počet vrcholů, cílový počet vrcholů a případné barvy.
 
+Původní mechanismus \texttt{PRUNE} se volá nad mezilehlými i výslednými grafy.
+V rozhraní PlanG však metodou \texttt{setPrune} filtrujeme pouze hotové grafy.
+Trampoline funkce proto nejprve porovná aktuální a cílový počet vrcholů.
+Pokud se liší, uživatelský callback přeskočí. Pro prořezávání mezilehlých
+grafů používáme samostatný callback \texttt{setPreprune}, který je napojen na
+\texttt{PREPRUNE}.
 
-Důležitý rozdíl oproti původnímu \texttt{PRUNE} mechanismu je v tom, jakou
-semantiku nabízíme uživateli. V původním \texttt{geng} se \texttt{PRUNE} volá i
-pro mezilehlé grafy během konstrukce. V rozhraní PlanG chceme, aby
-\texttt{setPrune} filtroval hotové grafy, zatímco \texttt{setPreprune} sloužil k
-prořezávání rozpracovaných větví. C++ napojení proto u callbacku \texttt{setPrune}
-nejprve ověří, zda aktuální počet vrcholů odpovídá cílovému počtu vrcholů. 
-Pokud podmínka není splněna, uživatelský callback se nezavolá.
+Při čistém generování bez callbacku pro zpracování výstupu zachováváme původní
+výstupní funkce programu \texttt{geng}. Přechod přes \texttt{OUTPROC} aktivujeme
+pouze tehdy, když uživatel nastavil \texttt{setOutproc} nebo zapnul generování
+barevných grafů. Tím se při běžném generování vyhneme volání mezivrstvy pro
+každý nalezený graf.
 
 \section{Propojení s \texttt{plantri}}
 \label{sec:implementation-plantri}
 
-Backend pro \texttt{plantri} pracuje podobným způsobem, ale napojuje se na jiné
-vnitřní mechanismy původního generátoru. Konfigurace obsahuje například volbu třídy
-generovaných grafů, omezení minimálního stupně a souvislosti, volbu výstupního
-formátu, generování duálních grafů nebo rozdělení výpočtu. Metoda
-\texttt{prepare\_args} z těchto voleb sestaví argumenty pro původní program
-\texttt{plantri}.
+Backend \texttt{plantri::Backend} uchovává například třídu generovaných grafů,
+počet vrcholů, minimální stupeň, požadovanou souvislost, výstupní formát a
+parametry rozdělení výpočtu. Metoda \texttt{prepare\_args} tato nastavení
+převede na argumenty původního programu.
 
-Callbacky v \texttt{plantri} jsou navázány na makra \texttt{FILTER} a
-\texttt{PRE\_FILTER}. C mezivrstva je přesměruje do trampoline funkcí v C++
-části, které pak volají callbacky nastavené backendem. Callback \texttt{setPrune} odpovídá
-mechanismu \texttt{FILTER} a pracuje s kandidátem na výstupní graf. Přes stejnou trampoline funkci obsluhujeme také \texttt{setOutproc}, který se
-zavolá při zpracování nalezeného grafu. Callback \texttt{setPreprune} odpovídá mechanismu
-\texttt{PRE\_FILTER} a může být volán nad rozpracovaným grafem během rekurzivní
-konstrukce.
+Při sestavení přejmenujeme původní funkci \texttt{main} na
+\texttt{plantri\_run}. C mezivrstvu připojujeme pomocí pluginového mechanismu
+\texttt{plantri}, takže se její zdrojový kód vloží přímo do stejné překladové
+jednotky. Mezivrstva tak může přistupovat k interním funkcím a globálním
+proměnným generátoru.
+
+Makro \texttt{FILTER} přesměrujeme na společnou funkci C mezivrstvy. Stejným
+způsobem přesměrujeme běžné varianty maker \texttt{PRE\_FILTER\_*}, které
+\texttt{plantri} používá pro různé třídy grafů. Všechny tyto varianty tak
+můžeme v C++ rozhraní obsluhovat jednotným callbackem
+\texttt{setPreprune}.
+
+Callback \texttt{setPrune} obsluhujeme prostřednictvím mechanismu
+\texttt{FILTER}. Stejnou cestu používáme také pro \texttt{setOutproc}.
+Trampoline funkce nejprve zavolá filtr a při přijetí grafu případně předá graf
+callbacku pro zpracování výstupu. Pokud je nastaven \texttt{setOutproc},
+standardní zápis programu \texttt{plantri} se již neprovede.
 
 Protože \texttt{plantri} drží aktuální graf v globálních proměnných, C mezivrstva
 zpřístupňuje funkce pro čtení těchto hodnot. C++ vrstva z nich sestaví view pro
@@ -111,54 +137,95 @@ backend \texttt{plantri}. Do něj se předávají ukazatele na hrany, pole stup�
 počet orientovaných hran a cílový počet vrcholů.
 
 
-\section{Implementace \texttt{GraphView}}
-\label{sec:implementation-graph-view}
+\section{Integrace s Boost Graph Library}
+\label{sec:implementation-boost}
 
-Pro každý backend je implementován samostatný typ \texttt{GraphView}, protože
-oba generátory ukládají graf odlišným způsobem. Typ \texttt{geng::GraphView}
-uchovává ukazatel na graf v bitové reprezentaci nauty a počet jeho vrcholů.
-Při průchodu grafem iterátory procházejí sousedy a hrany přímo v této reprezentaci.
+Boost Graph Library používá šablonu \texttt{boost::graph\_traits}\footnote{\url{https://www.boost.org/doc/libs/latest/libs/graph/doc/graph_traits.html}}, pomocí
+které získává typy vrcholů, hran a iterátorů grafu. Potřebné typy definujeme
+přímo v obou třídách \texttt{GraphView}. Oba backendy podporují koncepty
+\texttt{VertexListGraph}, \texttt{IncidenceGraph} a \texttt{AdjacencyGraph}.
 
-Typ \texttt{plantri::GraphView} pracuje s poli stupňů a s orientovanými
-hranami původního rovinného vložení. Při procházení hran využívá odkazy mezi
-orientovanými hranami. Počítá také s hodnotou \texttt{missing\_vertex},
-protože některé vnitřní reprezentace \texttt{plantri} mohou přeskočit jeden
-index vrcholu.
 
-\subsection{Integrace s Boost Graph Library}
+Vrcholy v obou backendech reprezentujeme typem \texttt{int}, protože původní
+generátory již používají celočíselné indexy. Pro \texttt{geng} reprezentujeme
+hranu dvojicí koncových vrcholů. Generované grafy jsou jednoduché a interní
+bitová reprezentace neobsahuje samostatné objekty hran.
 
-Aby bylo možné nad objektem \texttt{GraphView} spouštět algoritmy z knihovny
-Boost Graph Library, implementujeme pro oba backendy rozhraní požadované
-grafovými koncepty této knihovny. Oba typy \texttt{GraphView} poskytují typy používané šablonou
-\texttt{boost::graph\_traits} \footnote{\url{https://www.boost.org/doc/libs/latest/libs/graph/doc/graph_traits.html}}, 
-například typ vrcholu, typ hrany, iterátory
-a podporované způsoby průchodu grafem.
+U \texttt{plantri} používáme jako descriptor hrany obal nad ukazatelem
+\texttt{EDGE*}. Samotná dvojice koncových vrcholů by nestačila, protože
+\texttt{plantri} pracuje s orientovanými hranami a může obsahovat paralelní
+hrany. Ukazatel zachovává identitu konkrétní hrany i přístup k její opačné
+orientaci a k sousedním hranám v rovinném vložení.
 
-Pro oba backendy dále implementujeme free funkce požadované grafovými koncepty
-Boost.Graph ~\cite{boostGraphConcepts}, 
-například \texttt{vertices}, \texttt{edges},
-\texttt{num\_vertices}, \texttt{out\_edges},
-\texttt{adjacent\_vertices}, \texttt{source} a \texttt{target}.
-Tyto operace pracují přímo s daty zpřístupněnými příslušným
-view a nevytvářejí kopii grafu.
+Iterátory implementujeme pomocí \texttt{boost::iterator\_facade}. U backendu
+\texttt{geng} iterátory hledají sousedy přímo v bitových množinách. U backendu \texttt{plantri}
+iterátory sledují odkazy \texttt{next} mezi orientovanými hranami. Při
+procházení všech hran vracíme pouze jednu orientaci každé neorientované hrany.
 
-Součástí integrace je také mapa indexů vrcholů. U backendu \texttt{geng}
-používáme identické mapování, protože vrcholy jsou číslovány souvisle od nuly.
-U backendu \texttt{plantri} vlastní mapa indexů přeskočí případný chybějící
-vrchol (\texttt{missing\_vertex}). Algoritmy z Boost Graph Library tak mohou pracovat s oběma backendy
-stejným způsobem.
-
-\section{UML diagram třid}
-\label{sec:uml-diagram}
+Požadované operace poskytujeme jako free funkce, například
+\texttt{vertices}, \texttt{edges}, \texttt{out\_edges},
+\texttt{adjacent\_vertices}, \texttt{source} a \texttt{target}. Pro indexování
+vrcholů používá \texttt{geng} identické mapování. U \texttt{plantri} vlastní
+mapa indexů přeskočí případnou hodnotu \texttt{missing\_vertex}, aby algoritmy
+dostaly souvislé indexy od nuly.
 
 \section{Obarvené a zakotvené vrcholy v \texttt{geng}}
 \label{sec:implementation-coloured-geng}
 
+Podporu barevných tříd implementujeme přímo v původním algoritmu
+\texttt{geng}. Pro každou barvu uchováváme dolní a horní mez velikosti třídy,
+aktuální počet jejích vrcholů a barvu každého vrcholu rozpracovaného grafu.
 
+Při přidávání nového vrcholu zkouší původní algoritmus přípustné množiny jeho
+sousedů. Při aktivním obarvení pro každou z nich navíc vyzkoušíme všechny
+barvy nového vrcholu. Zjednodušený průběh ukazuje
+\cref{lst:coloured-extension}.
 
+\begin{listing}
+\begin{lstlisting}
+extend(G, n):
+  for each admissible neighbourhood X:
+    if colouring is disabled:
+      continue with the original geng algorithm
 
-\section{Callbacky a přechod mezi C a C++}
-\label{sec:implementation-callbacks}
+    for each colour c:
+      assign colour c to the new vertex
+      increment the size of colour class c
 
-\section{Výstupní formáty}
-\label{sec:implementation-output-formats}
+      if all colour bounds can still be satisfied:
+        refine the canonical partition using colours
+        if the original accept test succeeds:
+          continue recursively
+
+      undo the colour assignment
+\end{lstlisting}
+\caption{Zjednodušené rozšíření grafu o obarvený vrchol.}
+\label{lst:coloured-extension}
+\end{listing}
+
+Před provedením kanonického testu ověříme, že žádná barevná třída
+nepřekročila horní mez a že zbývající vrcholy lze rozdělit tak, aby byly
+splněny všechny zadané meze. Pokud tato podmínka neplatí, přiřazení barvy
+ihned odmítneme.
+
+Aby kanonický test respektoval barvy, upravíme jeho počáteční partition, tedy
+rozdělení vrcholů do buněk. Každou existující buňku dále rozdělíme podle
+barev vrcholů. Vrcholy různých barev se tím dostanou do různých buněk a nauty
+je při hledání automorfismů nemůže vzájemně zaměnit.
+
+Rozdělení podle barev může vést k situaci, kdy každý vrchol tvoří samostatnou
+buňku ještě před zahájením refinementu. Původní implementace kontrolovala
+pozici posledního přidaného vrcholu až během dalšího dělení buněk, takže se
+tato kontrola v uvedeném případě neprovedla. Doplnili jsme proto zvláštní
+kontrolu pro úplné rozdělení. Pokud poslední přidaný vrchol neleží na poslední
+pozici výsledného uspořádání, rozšíření odmítneme.
+
+Podporu obarvení doplňujeme do standardní(\texttt{genextend}) i specializovaných(\texttt{spaextend}) větví generování,
+aby fungovala také při použití dalších omezení \texttt{geng}. Pokud obarvení
+není aktivní, pokračujeme původní cestou algoritmu bez zkoušení barev.
+
+Zakotvené vrcholy převádíme na samostatné barevné třídy velikosti jedna.
+Izomorfismus proto nemůže zakotvený vrchol zaměnit s ostatními vrcholy ani
+s jiným zakotveným vrcholem. Při kanonickém přeznačení grafu přeznačíme
+stejnou permutací také pole barev, aby přiřazené barvy odpovídaly výslednému
+označení vrcholů.
