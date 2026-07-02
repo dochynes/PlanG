@@ -90,6 +90,11 @@ void bridge_outproc(FILE* f, graph* g, int n)
     }
 }
 
+int bridge_outproc_active(void)
+{
+    return g_outproc != NULL || geng_vertex_color_count > 0;
+}
+
 
 int bridge_prune(graph* g, int n, int maxn) 
 {

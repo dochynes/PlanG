@@ -3004,7 +3004,13 @@ PLUGIN_SWITCHES
     if ((nautyformat!=0) + (graph6!=0) + (sparse6!=0) + (nooutput!=0) > 1)
         gt_abort(">E geng: -ungs are incompatible\n");
 
-#ifdef OUTPROC
+#if defined(OUTPROC) && defined(OUTPROC_ACTIVE)
+    if (OUTPROC_ACTIVE()) outproc = OUTPROC;
+    else if (nautyformat) outproc = writenauty;
+    else if (nooutput)   outproc = nullwrite;
+    else if (sparse6)    outproc = writes6x;
+    else                 outproc = writeg6x;
+#elif defined(OUTPROC)
     outproc = OUTPROC;
 #else
     if (nautyformat)   outproc = writenauty;

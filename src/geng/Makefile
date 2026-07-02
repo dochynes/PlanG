@@ -58,6 +58,7 @@ $(BUILD_DIR)/geng.o: $(GENG_SRC) $(SHIM_SRC)
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) \
 	  -DOUTPROC=bridge_outproc \
+	  -DOUTPROC_ACTIVE=bridge_outproc_active \
 	  -DPRUNE=bridge_prune \
 	  -DPREPRUNE=bridge_preprune \
 	  -DGENG_MAIN=geng_main \
