@@ -243,7 +243,7 @@ app.setNoOutput();
 
 ## Vlastní filtrování grafů
 
-Grafy lze filtrovat pomocí callbacku `setPrune`. Callback vrací:
+Dokončené grafy lze filtrovat pomocí callbacku `setFilter`. Callback vrací:
 
 - `KEEP`, pokud má být graf ponechán,
 - `PRUNE`, pokud má být graf zahozen.
@@ -251,7 +251,7 @@ Grafy lze filtrovat pomocí callbacku `setPrune`. Callback vrací:
 Jednoduchý příklad:
 
 ```cpp
-app.setPrune([](const App::GraphView& g) {
+app.setFilter([](const App::GraphView& g) {
     if (condition(g))
         return KEEP;
 
@@ -373,10 +373,10 @@ Zakotvené vrcholy jsou zvláštní případ barev. Předchozí příklad intern
 
 ### Přístup k barvám v callbacku
 
-V callbackách `setPrune`, `setPreprune` a `setOutproc` lze barvy číst přes `GraphView`:
+V callbackách `setFilter`, `setPreprune` a `setOutproc` lze barvy číst přes `GraphView`:
 
 ```cpp
-app.setPrune([](const App::GraphView& g) {
+app.setFilter([](const App::GraphView& g) {
     if (!g.has_coloring())
         return KEEP;
 

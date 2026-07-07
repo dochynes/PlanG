@@ -84,7 +84,7 @@ int main(int argc, char** argv)
 
 
     // 2. PRUNE (Final filter)
-    app.setPrune([=](const App::GraphView& g) {
+    app.setFilter([=](const App::GraphView& g) {
         
         int nv = num_vertices(g);
         for (int i = 0; i < nv; ++i) {

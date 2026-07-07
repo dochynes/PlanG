@@ -7,7 +7,7 @@
 extern "C"
 {
 void geng_set_outproc(void(*)(FILE*,void*,int));
-void geng_set_prune(int(*)(void*,int,int));
+void geng_set_filter(int(*)(void*,int,int));
 void geng_set_preprune(int(*)(void*,int,int));
 void geng_set_color_count(int count);
 void geng_clear_color_bounds(void);
@@ -22,11 +22,11 @@ namespace
 {
 using geng::GraphView;
 using geng::OutprocFn;
-using geng::PruneFn;
+using geng::FilterFn;
 using geng::PrepruneFn;
 
 static OutprocFn s_outproc;
-static PruneFn s_prune;
+static FilterFn s_filter;
 static PrepruneFn s_preprune;
 static std::exception_ptr callback_exception;
 static void c_outproc(FILE* f, void* gg, int n);
@@ -89,9 +89,9 @@ static int c_preprune(void* gg, int n, int maxn)
     }
 }
 
-static int c_prune(void* gg, int n, int maxn)
+static int c_filter(void* gg, int n, int maxn)
 {
-    if (!s_prune)
+    if (!s_filter)
         return 0;
     if (callback_exception)
         return 1;
@@ -107,7 +107,7 @@ static int c_prune(void* gg, int n, int maxn)
             ::geng_get_current_vertex_colors(),
             ::geng_get_current_color_count()
         };
-        return s_prune(view);
+        return s_filter(view);
     }
     catch(...)
     {
@@ -186,13 +186,13 @@ void setOutproc(OutprocFn f)
     refresh_outproc_registration();
 }
 
-void setPrune(PruneFn f)
+void setFilter(FilterFn f)
 {
-    s_prune = std::move(f);
-    if (s_prune)
-        ::geng_set_prune(&c_prune);
+    s_filter = std::move(f);
+    if (s_filter)
+        ::geng_set_filter(&c_filter);
     else
-        ::geng_set_prune(nullptr);
+        ::geng_set_filter(nullptr);
 }
 
 void setPreprune(PrepruneFn f)

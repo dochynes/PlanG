@@ -376,7 +376,7 @@ protected:
 
 
 public:
-    void setPrune(FilterFn f)
+    void setFilter(FilterFn f)
     {
         filter = std::move(f);
     }

@@ -39,7 +39,7 @@ class Generator_Backend {
   <<template>>
   +using GraphView
   +run() int
-  +setPrune(Func f) void
+  +setFilter(Func f) void
   +setPreprune(Func f) void
   +setOutproc(Func f) void
 }
@@ -68,7 +68,7 @@ class Geng_Backend {
   -OutputFormat out_format
   -string param_out_file
   -ColorMode color_mode
-  -PruneFn prune
+  -FilterFn filter
   -PrepruneFn preprune
   -OutprocFn outproc
   +setVertices(int) void
@@ -83,7 +83,7 @@ class Geng_Backend {
   +setFormat(OutputFormat) void
   +setOutputFile(string) void
   +setDistribution(int,int) void
-  +setPrune(PruneFn) void
+  +setFilter(FilterFn) void
   +setPreprune(PrepruneFn) void
   +setOutproc(OutprocFn) void
   +setColors(int) void
@@ -124,7 +124,7 @@ class Plantri_Backend {
   +setFormat(OutputFormat) void
   +setOutputFile(string) void
   +setDistribution(int,int) void
-  +setPrune(FilterFn) void
+  +setFilter(FilterFn) void
   +setPreprune(PrefilterFn) void
   +setOutproc(OutprocFn) void
   #prepare_args() vector_string
@@ -176,11 +176,11 @@ class Output {
 class C_Geng_Bridge {
   <<bridge>>
   -OutprocFn s_outproc
-  -PruneFn s_prune
+  -FilterFn s_filter
   -PrepruneFn s_preprune
   -exception_ptr callback_exception
   #setOutproc(OutprocFn) void
-  #setPrune(PruneFn) void
+  #setFilter(FilterFn) void
   #setPreprune(PrepruneFn) void
   #run(int,char**) int
 }
@@ -267,7 +267,7 @@ Spolecne metody:
 | Metoda | Popis |
 | --- | --- |
 | `run()` | sestavi argumenty, aplikuje runtime stav a spusti backend |
-| `setPrune(f)` | nastavi filtr grafu |
+| `setFilter(f)` | nastavi filtr dokoncenych grafu |
 | `setPreprune(f)` | nastavi predcasny filtr behem generovani |
 | `setOutproc(f)` | nastavi vlastni zpracovani vystupu |
 
@@ -277,7 +277,7 @@ Callbacky se predavaji jako `std::function` nebo lambda funkce.
 
 | Callback |  Vychozi vyznam |
 | --- |  --- |
-| `setPrune`  | rozhodne, jestli se graf ponecha |
+| `setFilter`  | rozhodne, jestli se dokonceny graf ponecha |
 | `setPreprune`  | rozhodne, jestli ma smysl pokracovat v rozpracovane vetvi |
 | `setOutproc` |  vlastni zpracovani nalezeneho grafu |
 
@@ -379,7 +379,7 @@ Pri zapnutem `setCanonicalLabeling()` se kanonicky preznači nejen graf, ale i p
 Obarveni je doplneno i do vetve `spaextend()`.
 
 
-Do C++ vrstvy se barvy predavaji pres `geng::GraphView`. V `setPrune` a `setPreprune` ukazuje `GraphView` na aktualni rozpracovane barvy. V `setOutproc` ukazuje na vystupni barvy, tedy po pripadnem kanonickem preznačení. Dostupne metody jsou `has_coloring()`, `color_count()`, `color(v)`, `vertex_colors()` a `vertices_of_color(color)`.
+Do C++ vrstvy se barvy predavaji pres `geng::GraphView`. V `setFilter` a `setPreprune` ukazuje `GraphView` na aktualni barvy grafu. V `setOutproc` ukazuje na vystupni barvy, tedy po pripadnem kanonickem preznačení. Dostupne metody jsou `has_coloring()`, `color_count()`, `color(v)`, `vertex_colors()` a `vertices_of_color(color)`.
 
 ## Backend `plantri`
 
@@ -489,7 +489,7 @@ struct NewBackend
     std::vector<std::string> prepare_args() const;
     void apply_runtime_state() const;
 
-    void setPrune(...);
+    void setFilter(...);
     void setPreprune(...);
     void setOutproc(...);
 
@@ -513,7 +513,7 @@ Protoze `Generator<Backend>` pouziva backend jako sablonovy parametr, pridani no
 | --- | --- |
 | Adapter / Wrapper | C generatory `geng` a `plantri` jsou obaleny C++ rozhranim |
 | Bridge | C shim a C++ API oddeluji puvodni C kod od verejneho C++ API |
-| Strategy | Uzivatelske callbacky `setPrune`, `setPreprune`, `setOutproc` meni chovani generovani |
+| Strategy | Uzivatelske callbacky `setFilter`, `setPreprune`, `setOutproc` meni chovani generovani |
 | Adapter pro Boost.Graph | `GraphView` typy jsou prizpusobene rozhrani Boost.Graph pomoci traits, property map a volnych funkci |
 | Policy-based design | `Generator<Backend>` dostava backend jako sablonovy parametr |
 | Facade | `MyGraphLib.hpp` slouzi jako jednotny vstupni bod knihovny |

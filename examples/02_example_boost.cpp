@@ -13,7 +13,7 @@ int main(int argc, char** argv)
     app.setVertices(13);
 
     // Search for graphs where this greedy vertex-order coloring uses at least 4 colors.
-    app.setPrune([=](const auto& g){
+    app.setFilter([=](const auto& g){
         
         // 1. Prepare Boost structures. boost can use the std::vector directly as a property map.
         std::vector<int> colors(num_vertices(g));

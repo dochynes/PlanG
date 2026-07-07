@@ -59,7 +59,7 @@ $(BUILD_DIR)/geng.o: $(GENG_SRC) $(SHIM_SRC)
 	$(CC) $(CFLAGS) \
 	  -DOUTPROC=bridge_outproc \
 	  -DOUTPROC_ACTIVE=bridge_outproc_active \
-	  -DPRUNE=bridge_prune \
+	  -DPRUNE=bridge_filter \
 	  -DPREPRUNE=bridge_preprune \
 	  -DGENG_MAIN=geng_main \
 	  -include $(SHIM_SRC) \

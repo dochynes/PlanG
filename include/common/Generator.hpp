@@ -31,9 +31,9 @@ struct Generator : public Backend
     }
 
     template <typename Func>
-    void setPrune(Func&& f) 
+    void setFilter(Func&& f)
     {
-        this->Backend::setPrune(std::forward<Func>(f));
+        this->Backend::setFilter(std::forward<Func>(f));
     }
 
     template <typename Func>

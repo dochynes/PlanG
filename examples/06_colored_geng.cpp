@@ -12,7 +12,7 @@ int main(int argc, char** argv)
     app.setColors(2);
     app.setCanonicalLabeling();
 
-    app.setPrune([](const App::GraphView& g) {
+    app.setFilter([](const App::GraphView& g) {
         if (g.num_vertices() != g.maxn())
             return KEEP;
 

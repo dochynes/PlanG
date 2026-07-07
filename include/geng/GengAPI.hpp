@@ -24,12 +24,12 @@ inline Output& operator<<(Output& out, const GraphView& g)
 }
 
 using OutprocFn = std::function<void(Output& out, const GraphView& g)>;
-using PruneFn = std::function<int (const GraphView& g)>;
+using FilterFn = std::function<int (const GraphView& g)>;
 using PrepruneFn = std::function<int (const GraphView& g)>;
 
 // registrace callbacku
 void setOutproc(OutprocFn);
-void setPrune(PruneFn);
+void setFilter(FilterFn);
 void setPreprune(PrepruneFn); 
 void setColors(int count);
 void setColorCount(int count);
@@ -111,7 +111,7 @@ private:
     std::vector<int> color_sizes;
     std::vector<std::pair<int,int>> color_bounds;
 
-    PruneFn prune;
+    FilterFn filter;
     PrepruneFn preprune;
     OutprocFn outproc;
 
@@ -396,9 +396,9 @@ protected:
 
 
 public:
-    void setPrune(PruneFn f)
+    void setFilter(FilterFn f)
     {
-        prune = std::move(f);
+        filter = std::move(f);
     }
 
     void setPreprune(PrepruneFn f)
@@ -501,7 +501,7 @@ protected:
                 break;
         }
 
-        geng::setPrune(prune);
+        geng::setFilter(filter);
         geng::setPreprune(preprune);
         geng::setOutproc(outproc);
     }

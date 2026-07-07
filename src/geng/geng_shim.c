@@ -3,11 +3,11 @@
 
 
 typedef void (*outproc_cb_t)(FILE* f, void* g, int n);
-typedef int (*prune_cb_t)(void* g, int n, int maxn);
+typedef int (*graph_predicate_cb_t)(void* g, int n, int maxn);
 
 static outproc_cb_t g_outproc = NULL;
-static prune_cb_t g_prune = NULL;
-static prune_cb_t g_preprune = NULL;
+static graph_predicate_cb_t g_filter = NULL;
+static graph_predicate_cb_t g_preprune = NULL;
 
 extern int sparse6, nooutput, nautyformat, canonise;
 extern int geng_vertex_color_count;
@@ -96,9 +96,9 @@ int bridge_outproc_active(void)
 }
 
 
-int bridge_prune(graph* g, int n, int maxn) 
+int bridge_filter(graph* g, int n, int maxn)
 {
-    return g_prune ? g_prune((void*)g, n, maxn) : 0;
+    return g_filter ? g_filter((void*)g, n, maxn) : 0;
 }
 
 int bridge_preprune(graph* g, int n, int maxn) 
@@ -111,11 +111,11 @@ void geng_set_outproc(outproc_cb_t f)
 { 
     g_outproc = f; 
 }
-void geng_set_prune(prune_cb_t f)
+void geng_set_filter(graph_predicate_cb_t f)
 {
-     g_prune = f;
+     g_filter = f;
 }
-void geng_set_preprune(prune_cb_t f)
+void geng_set_preprune(graph_predicate_cb_t f)
 {
     g_preprune = f;
 }
