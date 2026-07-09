@@ -146,9 +146,10 @@ rozhodování již během generování.
 \section{Backtracking a prořezávání}
 \label{sec:backtracking-pruning}
 
-Mnoho generátorů grafů je založeno na backtrackingu. Algoritmus postupně vytváří částečný graf
-a z něj zkouší všechny přípustné možnosti rozšíření. Pokud zjistíme, že daný částečný graf nemůže
-vést k žádnému požadovanému výsledku, vrátíme se a pokračujeme jinou větví výpočtu.
+Mnoho generátorů grafů je založeno na backtrackingu. Algoritmus postupně vytváří
+částečný graf a zkouší všechny přípustné možnosti jeho rozšíření. Pokud zjistí,
+že částečný graf nemůže vést k požadovanému výsledku, vrátí se a pokračuje jinou
+větví výpočtu.
 
 Tomuto předčasnému zahazování větví říkáme prořezávání. Prořezávání může být založeno na
 jednoduchých podmínkách, například na počtu hran nebo stupních vrcholů, ale také na složitějších

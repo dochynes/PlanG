@@ -1,45 +1,287 @@
-\chapter{Using CoolThesisSoftware}
+\chapter{Použití knihovny PlanG}
+\label{app:howto}
 
-Use this appendix to tell the readers (specifically the reviewer) how to use your software. A very reduced example follows; expand as necessary. Description of the program usage (e.g., how to process some example data) should be included as well.
+Tato příloha stručně popisuje, jak sestavit projekt PlanG a jak použít jeho
+nejdůležitější části v C++ programu. Úplnější přehled metod je uveden v souboru
+\texttt{README.md}; programátorská dokumentace v souboru \texttt{DEVELOPER.md}
+popisuje vnitřní návrh knihovny.
 
-To compile and run the software, you need dependencies XXX and YYY and a C compiler. On Debian-based Linux systems (such as Ubuntu), you may install these dependencies with APT:
+\section{Sestavení projektu}
+
+Projekt vyžaduje překladač C++, nástroj
+\texttt{make} a knihovnu Boost. Lze jej sestavit na Linuxu a macOS; na Windows
+je doporučené použít WSL. Na Linuxu se používá \texttt{gcc} a \texttt{g++},
+zatímco na macOS instalační skript použije \texttt{clang} a \texttt{clang++}.
+Projekt lze sestavit instalačním skriptem \texttt{install.sh}:
+
 \begin{Verbatim}
-apt-get install \
-  libsuperdependency-dev \
-  libanotherdependency-dev \
-  build-essential
+./install.sh
 \end{Verbatim}
 
-To unpack and compile the software, proceed as follows:
+Skript nejprve hledá hlavičkové soubory Boostu v běžných umístěních. Pokud je
+nenajde, pokusí se Boost automaticky doinstalovat: na Linuxu pomocí
+\texttt{apt-get} a na macOS pomocí Homebrew. Poté sestaví oba backendy,
+zkopíruje statické knihovny do adresáře \texttt{lib/} a vytvoří spustitelný
+soubor \texttt{plang}. Pokud je knihovna Boost v nestandardním umístění, lze
+její cestu předat proměnnou \texttt{BOOST\_DIR}:
+
 \begin{Verbatim}
-unzip coolsoft.zip
-cd coolsoft
-./configure
-make
+BOOST_DIR=/path/to/boost ./install.sh
 \end{Verbatim}
 
-The program can be used as a C++ library, the simplest use is demonstrated in \cref{lst:ex}. A demonstration program that processes demonstration data is available in directory \verb|demo/|, you can run the program on a demonstration dataset as follows:
+Výchozí program se spustí příkazem:
+
 \begin{Verbatim}
-cd demo/
-./bin/cool_process_data data/demo1
+./plang
 \end{Verbatim}
 
-After the program starts, control the data avenger with standard \verb-WSAD- controls.
+Soubor \texttt{main.cpp} slouží jako hlavní ukázkový program. Po jeho změně je
+potřeba projekt znovu sestavit.
+
+\section{Základní program}
+
+Veřejné API knihovny zpřístupňuje hlavičkový soubor \texttt{MyGraphLib.hpp}.
+Uživatel zvolí backend pomocí šablony \texttt{Generator<Backend>}. Backend
+\texttt{geng::Backend} používá generátor \texttt{geng}, zatímco backend
+\texttt{plantri::Backend} používá generátor \texttt{plantri}.
 
 \begin{listing}
-\begin{lstlisting}
-#include <CoolSoft.h>
-#include <iostream>
+\begin{lstlisting}[language=C++]
+#include "MyGraphLib.hpp"
 
-int main() {
-  int i;
-  if(i = cool::ProcessAllData()) // returns 0 on error
-    std::cout << i << std::endl;
-  else
-    std::cerr << "error!" << std::endl;
-  return 0;
+using App = Generator<geng::Backend>;
+
+int main()
+{
+    App app;
+    app.setVertices(10);
+    app.setConnected();
+    app.setTriangleFree();
+    return app.run();
 }
 \end{lstlisting}
-\caption{Example program.}
-\label{lst:ex}
+\caption{Jednoduché použití backendu \texttt{geng}.}
+\label{lst:howto-basic-geng}
 \end{listing}
+
+Stejný tvar programu lze použít i pro \texttt{plantri}. Liší se pouze zvolený
+backend a metody dostupné pro konkrétní generátor.
+
+\begin{listing}
+\begin{lstlisting}[language=C++]
+#include "MyGraphLib.hpp"
+
+using App = Generator<plantri::Backend>;
+
+int main()
+{
+    App app;
+    app.setVertices(12);
+    app.setFormat(App::OutputFormat::Graph6);
+    return app.run();
+}
+\end{lstlisting}
+\caption{Jednoduché použití backendu \texttt{plantri}.}
+\label{lst:howto-basic-plantri}
+\end{listing}
+
+Oba backendy umožňují vypnout výstup metodou \texttt{setNoOutput} nebo zapsat
+výsledek do souboru metodou \texttt{setOutputFile}. Backend \texttt{geng}
+podporuje například omezení počtu hran, souvislost, bipartitnost a stupňová
+omezení. Backend \texttt{plantri} podporuje volbu třídy rovinných grafů,
+minimální stupeň, konektivitu, výstup duálního grafu a různé výstupní formáty.
+
+\section{Callbacky}
+
+Knihovna nabízí tři základní callbacky. Callback \texttt{setFilter} se používá
+pro filtrování dokončených grafů. Callback \texttt{setPreprune} se volá během
+generování a může předčasně zahodit rozpracovanou větev. Callback
+\texttt{setOutproc} slouží k vlastnímu zpracování grafu, který prošel filtrem.
+
+Filtrační callbacky vracejí hodnotu \texttt{KEEP}, pokud má graf nebo větev
+zůstat zachována, a hodnotu \texttt{PRUNE}, pokud má být odmítnuta. Následující
+program generuje grafy pomocí \texttt{geng} a ponechá pouze grafy, které mají
+alespoň jednu hranu.
+
+\begin{listing}
+\begin{lstlisting}[language=C++]
+#include "MyGraphLib.hpp"
+
+using App = Generator<geng::Backend>;
+
+int main()
+{
+    App app;
+    app.setVertices(6);
+
+    app.setFilter([](const App::GraphView& g) {
+        return num_edges(g) > 0 ? KEEP : PRUNE;
+    });
+
+    return app.run();
+}
+\end{lstlisting}
+\caption{Filtrování dokončených grafů pomocí \texttt{setFilter}.}
+\label{lst:howto-filter}
+\end{listing}
+
+Callback \texttt{setOutproc} se hodí tehdy, když program nemá grafy pouze
+vypsat v původním formátu, ale chce nad nimi provést vlastní výpočet. V
+následujícím příkladu program pouze spočítá, kolik grafů generátor vytvořil.
+
+\begin{listing}
+\begin{lstlisting}[language=C++]
+#include "MyGraphLib.hpp"
+#include <iostream>
+
+using App = Generator<plantri::Backend>;
+
+int main()
+{
+    App app;
+    int count = 0;
+
+    app.setVertices(10);
+    app.setNoOutput();
+
+    app.setOutproc([&](Output&, const App::GraphView&) {
+        ++count;
+    });
+
+    int result = app.run();
+    std::cout << count << "\n";
+    return result;
+}
+\end{lstlisting}
+\caption{Vlastní zpracování výstupu pomocí \texttt{setOutproc}.}
+\label{lst:howto-outproc}
+\end{listing}
+
+\section{Práce s grafem}
+
+Callbacky dostávají objekt \texttt{GraphView}. Tento objekt je pohled na graf
+uložený uvnitř původního generátoru. Graf tedy není automaticky kopírován do
+nové datové struktury. Objekt \texttt{GraphView} je určený pro použití uvnitř
+callbacku; po pokračování generování se interní data mohou změnit.
+
+Pro práci s grafem poskytuje PlanG globální funkce, které berou graf jako
+parametr. Patří mezi ně například \texttt{vertices(g)}, \texttt{edges(g)},
+\texttt{num\_vertices(g)}, \texttt{num\_edges(g)}, \texttt{out\_edges(v, g)},
+\texttt{adjacent\_vertices(v, g)}, \texttt{source(e, g)} a
+\texttt{target(e, g)}. Tyto funkce lze používat přímo v uživatelském callbacku.
+
+\begin{listing}
+\begin{lstlisting}[language=C++]
+app.setFilter([](const App::GraphView& g) {
+    auto [first, last] = vertices(g);
+
+    for (auto it = first; it != last; ++it)
+    {
+        int v = *it;
+        if (out_degree(v, g) == 0)
+            return PRUNE;
+    }
+
+    return KEEP;
+});
+\end{lstlisting}
+\caption{Použití globálních funkcí pro práci s objektem \texttt{GraphView}.}
+\label{lst:howto-graphview-functions}
+\end{listing}
+
+U backendu \texttt{plantri} jsou navíc dostupné funkce pro práci s orientovanými
+hranami rovinného vložení, například \texttt{next\_edge},
+\texttt{prev\_edge} a \texttt{opposite\_edge}. Tyto funkce jsou užitečné u
+algoritmů, které potřebují pracovat přímo s cyklickým pořadím hran kolem
+vrcholů.
+
+\section{Použití algoritmů Boost Graph Library}
+
+Objekty \texttt{GraphView} jsou přizpůsobeny vybraným konceptům Boost Graph
+Library. Uživatel proto může v callbacku spustit standardní grafový algoritmus,
+aniž by graf převáděl do datové struktury z Boostu. Následující příklad používá
+algoritmus \texttt{boost::sequential\_vertex\_coloring}.
+
+\begin{listing}
+\begin{lstlisting}[language=C++]
+#include "MyGraphLib.hpp"
+#include <boost/graph/sequential_vertex_coloring.hpp>
+#include <vector>
+
+using App = Generator<plantri::Backend>;
+
+int main()
+{
+    App app;
+    app.setVertices(13);
+
+    app.setFilter([](const App::GraphView& g) {
+        std::vector<int> colors(num_vertices(g));
+        int used = boost::sequential_vertex_coloring(g, colors.data());
+        return used >= 4 ? KEEP : PRUNE;
+    });
+
+    return app.run();
+}
+\end{lstlisting}
+\caption{Použití algoritmu z Boost Graph Library nad objektem
+\texttt{GraphView}.}
+\label{lst:howto-boost}
+\end{listing}
+
+\section{Obarvené a zakotvené vrcholy v backendu \texttt{geng}}
+
+Backend \texttt{geng} podporuje také generování grafů s barevnými třídami
+vrcholů. Přesné velikosti barevných tříd se nastaví metodou
+\texttt{setColorClassSizes}. Pokud stačí zadat pouze počet barev, lze použít
+\texttt{setColors}. Zakotvené vrcholy se nastavují metodou
+\texttt{setRootedVertices}.
+
+\begin{listing}
+\begin{lstlisting}[language=C++]
+#include "MyGraphLib.hpp"
+
+using App = Generator<geng::Backend>;
+
+int main()
+{
+    App app;
+    app.setVertices(5);
+    app.setColorClassSizes({3, 2});
+    app.setCanonicalLabeling();
+
+    app.setFilter([](const App::GraphView& g) {
+        int cross_edges = 0;
+
+        auto [first, last] = edges(g);
+        for (auto it = first; it != last; ++it)
+        {
+            auto [u, v] = *it;
+            if (g.color(u) != g.color(v))
+                ++cross_edges;
+        }
+
+        return cross_edges >= 2 ? KEEP : PRUNE;
+    });
+
+    return app.run();
+}
+\end{lstlisting}
+\caption{Generování grafů s dvěma barevnými třídami.}
+\label{lst:howto-colored}
+\end{listing}
+
+Barvy lze v callbacku číst přímo z objektu \texttt{GraphView}. K dispozici jsou
+metody \texttt{has\_coloring()}, \texttt{color\_count()},
+\texttt{color(v)}, \texttt{vertex\_colors()} a
+\texttt{vertices\_of\_color(c)}. Zakotvené vrcholy jsou reprezentovány jako
+samostatné jednoprvkové barevné třídy.
+
+\section{Dostupné ukázky a benchmarky}
+
+Adresář \texttt{examples/} obsahuje další ukázkové programy demonstrující použití knihovny.
+Adresář \texttt{benchmarks/} obsahuje programy použité pro měření v této práci.
+
+
+
+Zdrojové kódy projektu jsou dostupné v repozitáři: \url{https://github.com/dochynes/PlanG/tree/main}

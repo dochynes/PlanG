@@ -1,10 +1,25 @@
 
-\chapwithtoc{Conclusion}
+\chapwithtoc{Závěr}
 
-In the conclusion, you should summarize what was achieved by the thesis. In a few paragraphs, try to answer the following:
-\begin{itemize}
-\item Was the problem stated in the introduction solved? (Ideally include a list of successfully achieved goals.)
-\item What is the quality of the result? Is the problem solved for good and the mankind does not need to ever think about it again, or just partially improved upon? (Is the incompleteness caused by overwhelming problem complexity that would be out of thesis scope\todo{This is quite common.}, or any theoretical reasons, such as computational hardness?)
-\item Does the result have any practical applications that improve upon something realistic?
-\item Is there any good future development or research direction that could further improve the results of this thesis? (This is often summarized in a separate subsection called `Future work'.)
-\end{itemize}
+V této práci jsme se zabývali zpřístupněním generátorů \texttt{geng} a
+\texttt{plantri} z moderního C++ kódu. Navrhli a implementovali jsme knihovnu
+PlanG, která nad těmito nástroji poskytuje jednotné rozhraní pro konfiguraci
+generování, filtrování a zpracování grafů.
+
+Součástí řešení je \texttt{GraphView}, které zpřístupňuje aktuální graf bez
+automatického kopírování do nové datové struktury. Pro oba backendy jsme
+připravili rozhraní použitelné s vybranými koncepty Boost Graph Library.
+Generátor \texttt{geng} jsme navíc rozšířili o podporu barevných tříd a
+zakotvených vrcholů.
+
+Výsledné řešení jsme ověřili funkčními testy a porovnali s původními
+generátory. Měření ukázala, že při čistém generování dosahuje PlanG výkonu
+srovnatelného s nativními programy. PlanG tak umožňuje používat výkonné
+generátory grafů pohodlněji z C++ programu, aniž by bylo nutné každý graf
+automaticky kopírovat nebo psát samostatné pluginy.
+
+\section*{Možná rozšíření}
+
+Dalším směrem rozvoje je podpora dalších generátorů grafů a rozšíření rozhraní
+o další globální funkce a algoritmy, které pracují přímo nad objekty
+\texttt{GraphView}.

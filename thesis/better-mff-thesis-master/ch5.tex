@@ -1,39 +1,37 @@
 \chapter{Testování a vyhodnocení}
 \label{chap:evaluation}
 
-V této kapitole ověříme, že knihovna PlanG zachovává chování původních
-generátorů, a porovnáme její rychlost s nativními programy. Zajímá nás hlavně
-to, jak velkou režii přidává C++ rozhraní a jak se tato režie projeví při
-použití callbacků.
+V této kapitole jsme ověřili, že knihovna PlanG zachovává chování původních
+generátorů, a porovnali jsme její rychlost s nativními programy. Měření se
+zaměřilo na režii C++ rozhraní, volání callbacků a generování grafů s
+dodatečnou strukturou.
 
 \section{Funkční testování}
 \label{sec:evaluation-functional}
 
-Nejdříve jsme ověřili, že wrapper pro malé instance vytváří stejný výstup jako
+Nejdříve jsme ověřili, že rozhraní pro malé instance vytváří stejný výstup jako
 původní programy. Pro \texttt{geng} jsme porovnali výstup ve formátu
 \texttt{graph6} pro grafy na šesti vrcholech. Pro \texttt{plantri} jsme stejným
 způsobem porovnali triangulace na osmi vrcholech vypsané také ve formátu
-\texttt{graph6}. V obou případech se soubory vytvořené přes PlanG shodovaly se
-soubory vytvořenými nativním generátorem.
+\texttt{graph6}. První porovnání obsahovalo 156 grafů a druhé 14 triangulací.
+V obou případech se soubory vytvořené přes PlanG shodovaly se soubory
+vytvořenými nativním generátorem.
 
-Dále jsme testovali běhy s callbacky \texttt{setPrune}, \texttt{setPreprune} a
-\texttt{setOutproc}. Tyto testy ověřují, že se callbacky volají ve správné fázi
-generování a že \texttt{GraphView} poskytuje aktuální graf bez nutnosti jeho
-kopírování. Pro rozšíření \texttt{geng} o barevné třídy jsme testovali také
+Dále jsme testovali běhy s callbacky \texttt{setFilter}, \texttt{setPreprune} a
+\texttt{setOutproc}. Testy ověřily, že PlanG volá callbacky ve správné fázi
+generování a prostřednictvím \texttt{GraphView} jim zpřístupňuje očekávaný
+aktuální graf. Pro rozšíření \texttt{geng} o barevné třídy jsme testovali také
 přesné velikosti barevných tříd, intervalové meze tříd a zakotvené vrcholy.
+Testy byly provedeny na vybraných konfiguracích
+a ověřují správnost testovaných případů.
 
 \section{Metodika měření}
 \label{sec:evaluation-methodology}
 
 Měření probíhalo na počítači s procesorem Intel Core i9-13900H v prostředí
-Linux/WSL2. Knihovna byla sestavena překladačem \texttt{g++} 11.4.0 s
-optimalizačními přepínači
-\texttt{-O3 -flto -march=native -std=c++20}. Pro porovnání jsme použili
-nativní binárky \texttt{geng} z balíku nauty 2.9.1 a \texttt{plantri} verze
-5.5.
-
-Nativní varianta \texttt{geng} a varianta integrovaná v PlanG byly sestaveny
-se stejnými optimalizačními přepínači
+Linux/WSL2. Pro porovnání jsme použili \texttt{geng} z balíku nauty 2.9.1 a
+\texttt{plantri} verze 5.5. Nativní programy i varianty integrované v PlanG
+jsme sestavili se stejnými optimalizačními přepínači
 \texttt{-O3 -flto -march=native -DNDEBUG}.
 
 Aby měření nebylo ovlivněno rychlostí zápisu na výstup, vypnuli jsme vypisování
@@ -42,17 +40,19 @@ navíc přepínač \texttt{-q}, který potlačí pomocný výstup. V PlanG jsme 
 odpovídající metodu \texttt{setNoOutput}. Každý běh jsme spustili jako
 samostatný proces a pomocí příkazu \texttt{time} jsme měřili jeho celkový čas
 \texttt{real}. Jednotlivé konfigurace jsme spustili alespoň třikrát a v
-tabulkách uvádíme medián naměřených časů.
+tabulkách uvádíme medián naměřených časů. Poslední sloupec s poměrem časů
+udává čas PlanG dělený časem nativního programu; hodnota jedna tedy odpovídá
+stejné době běhu.
 
 \section{Čisté generování}
 \label{sec:evaluation-baseline}
 
-Nejprve porovnáme běh bez uživatelských callbacků. V tomto případě C++ část
-knihovny pouze převede konfiguraci na argumenty původního programu, nastaví
-prázdný runtime stav a spustí nativní generátor. Neočekáváme proto výraznou
-ztrátu výkonu.
+Nejprve jsme porovnali běh bez uživatelských callbacků. V tomto režimu C++ část
+knihovny pouze převádí konfiguraci na argumenty původního programu, nastavuje
+prázdný runtime stav a spouští původní generátor. Měření tak zachycuje základní
+režii použití rozhraní PlanG.
 
-\begin{table}
+\begin{table}[htbp]
 \centering
 \begin{tabular}{rrrrr}
 \toprule
@@ -68,12 +68,11 @@ ztrátu výkonu.
 \label{tab:evaluation-geng-baseline}
 \end{table}
 
-Na základě výsledků uvedených v \cref{tab:evaluation-geng-baseline} můžeme
-dojít k závěru, že při čistém generování dosahuje PlanG srovnatelného
-výkonu jako nativní \texttt{geng}. V tomto scénáři tedy nepozorujeme
-významnou režii způsobenou použitím rozhraní PlanG.
+Výsledky v tabulce~\ref{tab:evaluation-geng-baseline} ukazují, že použití
+rozhraní PlanG nevedlo při čistém generování k výraznému zpomalení. Výkon obou
+variant tak zůstává srovnatelný.
 
-\begin{table}
+\begin{table}[htbp]
 \centering
 \begin{tabular}{rrrrr}
 \toprule
@@ -94,13 +93,18 @@ jak ukazuje \cref{tab:evaluation-plantri-baseline}.
 \section{Callbacky a srovnání s pluginem}
 \label{sec:evaluation-callbacks}
 
+Nejprve jsme změřili samotnou režii callbacků v backendu \texttt{geng}.
+Použité callbacky neprováděly žádný výpočet a vždy vracely hodnotu
+\texttt{KEEP}, takže neměnily průběh ani výsledek generování. Metoda
+\texttt{setFilter} registrovala callback volaný nad dokončenými grafy, zatímco
+callback registrovaný metodou \texttt{setPreprune} se volal také během
+generování rozpracovaných grafů.
 
-
-\begin{table}
+\begin{table}[htbp]
 \centering
 \begin{tabular}{rrrr}
 \toprule
-\(n\) & bez callbacku [s] & \texttt{setPrune} [s] & \texttt{setPreprune} [s] \\
+\(n\) & bez callbacku [s] & \texttt{setFilter} [s] & \texttt{setPreprune} [s] \\
 \midrule
 9  & 0{,}078 & 0{,}079 & 0{,}074 \\
 10 & 2{,}408 & 2{,}417 & 2{,}463 \\
@@ -110,9 +114,20 @@ jak ukazuje \cref{tab:evaluation-plantri-baseline}.
 \label{tab:evaluation-geng-callback-overhead}
 \end{table}
 
+Z výsledků v tabulce~\ref{tab:evaluation-geng-callback-overhead} vyplývá, že prázdné
+callbacky nepřidávají významnou režii. Pro \(n = 10\) zůstává rozdíl oproti
+běhu bez callbacku velmi malý. Callback \texttt{setPreprune} je o něco dražší,
+protože se volá i nad rozpracovanými grafy.
 
+Pro praktičtější porovnání jsme použili plugin \texttt{maxdeg.c} dodávaný s
+\texttt{plantri}. Plugin během generování triangulací prořezává větve, které
+nemohou vést ke grafu s požadovaným maximálním stupněm. Nativní variantu jsme
+sestavili přímo s pluginem. V PlanG jsme stejný test zapsali pomocí
+\texttt{setPreprune} a výslednou podmínku ověřili pomocí \texttt{setFilter}.
+V obou variantách jsme nastavili maximální stupeň sedm.\footnote{Použité
+benchmarky jsou dostupné ve složce \texttt{benchmarks} projektu.}
 
-\begin{table}
+\begin{table}[htbp]
 \centering
 \begin{tabular}{rrrrr}
 \toprule
@@ -127,14 +142,20 @@ jak ukazuje \cref{tab:evaluation-plantri-baseline}.
 \label{tab:evaluation-plantri-maxdeg}
 \end{table}
 
-TODO
+Obě implementace vytvořily pro každou hodnotu \(n\) stejný počet triangulací.
+Výsledky v tabulce~\ref{tab:evaluation-plantri-maxdeg} ukazují, že callbacková
+implementace v PlanG byla jen mírně pomalejší než nativní plugin. Zároveň je
+vidět, že relativní rozdíl mezi oběma variantami se pro větší hodnoty \(n\)
+zmenšuje.
 
 \section{Cena bohatších struktur}
 \label{sec:evaluation-colours}
 
-TODO
+Rozšíření \texttt{geng} o barevné třídy a zakotvené vrcholy nelze přímo
+porovnat s nativním \texttt{geng}, protože původní program tyto struktury
+nepodporuje. Přesto je užitečné změřit, jakou cenu tato podpora přináší.
 
-\begin{table}
+\begin{table}[htbp]
 \centering
 \begin{tabular}{rrrr}
 \toprule
@@ -148,9 +169,30 @@ TODO
 \label{tab:evaluation-coloured-geng}
 \end{table}
 
-
+Tabulka \ref{tab:evaluation-coloured-geng} neměří pouze režii API. Po zapnutí
+barev řeší generátor jinou úlohu: při rozšiřování grafu zkouší také barvu nového
+vrcholu, kontroluje meze velikostí barevných tříd a provádí kanonické testy s
+partition rozdělenou podle barev. Výrazné zpomalení je tedy očekávané. Na druhou
+stranu tím získáme možnost generovat grafy s dodatečnou strukturou přímo během
+kanonického generování, nikoli až následným filtrováním hotových neobarvených
+grafů.
 
 \section{Shrnutí}
 \label{sec:evaluation-summary}
 
-TODO
+Funkční testy pro vybrané malé instance poskytly stejné výstupy jako původní
+generátory. Při čistém generování dosáhl PlanG výkonu srovnatelného s nativními
+programy. Měření prázdných callbacků ukázalo, že samotné callbackové rozhraní
+nepřidává významnou režii.
+
+Praktické porovnání s pluginem \texttt{maxdeg.c} ukázalo, že callbacková
+implementace v PlanG zůstává výkonově blízko nativnímu pluginu. Uživatel přitom
+nemusí upravovat původní generátor ani sestavovat vlastní variantu
+\texttt{plantri}; filtr zapisuje jako běžný C++ callback nad objektem
+\texttt{GraphView}.
+
+Generování barevných a zakotvených grafů bylo výrazně náročnější, protože
+odpovídá obecnější generační úloze s větším množstvím navzájem rozlišitelných
+struktur. Výsledky celkově ukazují, že PlanG zachovává výkon původních
+generátorů v základním režimu a zároveň umožňuje pohodlnější filtrování,
+zpracování a rozšíření generování bez automatického kopírování každého grafu.
