@@ -3,9 +3,14 @@
 #include <exception>
 #include <utility>
 #include <functional>
-#include <iostream>
+
+// C++ strana bridge pro backend plantri. Soubor drzi C++ callbacky,
+// registruje C trampoliny do plantri_shim.c a prevadi interni stav plantri
+// na GraphView pouzivany verejnym API.
 
 extern "C" {
+
+// Funkce poskytovane souborem plantri_shim.c.
 
 void  pt_set_prefilter(int (*f)(void));
 void  pt_set_filter(int (*f)(int,int,int));
@@ -32,13 +37,25 @@ void enable_summary(void);
 
 namespace {
 
+    // callbacky od uživatele. Musí být globální/statické,
+    // protože původní plantri callback mechanismus neumí nést stav instance objektu
     plantri::PrefilterFn g_cpp_prefilter;
     plantri::FilterFn g_cpp_filter;
     plantri::OutprocFn g_cpp_outproc;
+
+    // místo, kam si dočasně uložíme výjimku vyhozenou uvnitř uživatelského callbacku
+    // Když C++ callback hodí výjimku, nesmí výjimka volně proletět přes C funkce z plantri.c
     std::exception_ptr callback_exception;
+
     constexpr int prune = 1;
     constexpr int keep = 0;
+
+    // hodnota doflip pro aktualni graf v outproc callbacku
     int g_current_doflip = 0;
+
+
+    // Zabali aktualni interni graf plantri do GraphView
+    // ulozi ukazatele na data a dulezite hodnoty
     inline plantri::GraphView make_view()
     {
         plantri::GraphView v{
@@ -52,9 +69,7 @@ namespace {
         return v;
     }
 
-    //std::function<int()> g_cpp_prefilter;
-    //std::function<int(int,int,int)> g_cpp_filter;
-
+    // Trampolina volana z PRE_FILTER_* maker v plantri_shim.c.
     int c_prefilter_trampoline() 
     {
         
@@ -79,10 +94,11 @@ namespace {
     }
 
 
+    // Trampolina volana z FILTER makra. Nejprve spusti uzivatelsky filter,
+    // potom pripadne outproc. Pokud outproc existuje, vraci PRUNE, aby plantri
+    // graf uz samo nevypisovalo podruhe.
     int c_filter_trampoline(int nbtot, int nbop, int doflip) 
     {
-
-        //std::cout << "trampoline";
 
         (void)nbtot;
         (void)nbop;
@@ -131,6 +147,7 @@ namespace {
         }
     }
 
+    // Pomocna funkce pro operator<<, zapise aktualni graf pres plantri.
     void write_current_graph(FILE* f)
     {
         ::pt_write_current_graph(f, g_current_doflip);
@@ -148,6 +165,7 @@ namespace {
 
 namespace plantri {
 
+// Registrace uzivatelskych callbacku do C shimu.
 void setPrefilter(PrefilterFn f) 
 {
     g_cpp_prefilter = std::move(f);
@@ -174,6 +192,7 @@ void setOutproc(OutprocFn f)
         ::enable_summary();
 }
 
+// Umoznuje v outproc callbacku pouzit "out << g" 
 Output& operator<<(Output& out, const GraphView& g)
 {
     (void)g;
@@ -188,6 +207,7 @@ Output& operator<<(Output& out, const GraphView& g)
     return out;
 }
 
+// Spusti puvodni plantri
 int pt_run(int argc, char** argv) 
 {
     callback_exception = nullptr;
@@ -197,6 +217,7 @@ int pt_run(int argc, char** argv)
     return result;
 }
 
+// funkce pouzivane pri tvorbe GraphView
 int pt_nv()
 { 
     return ::pt_nv(); 

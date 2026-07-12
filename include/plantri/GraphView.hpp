@@ -1,5 +1,4 @@
 #pragma once
-//#include "plantri/BridgeAPI.hpp"
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/properties.hpp>
 #include <boost/iterator/iterator_facade.hpp>
@@ -7,9 +6,24 @@
 #include <boost/range/iterator_range.hpp>
 #include <cstddef>
 #include <utility>
+
+
+// Poznamka k Boost.Graph:
+// GraphView spolu se soubory GraphViewBoost.hpp a GraphViewFunctions.hpp tvori
+// read-only rozhrani pro Boost Graph Library. Implementuje typy, iteratory,
+// property mapy a volne funkce pozadovane BGL koncepty; viz:
+// https://www.boost.org/doc/libs/latest/libs/graph/doc/graph_concepts.html
+// https://www.boost.org/doc/libs/latest/libs/graph/doc/graph_traits.html
+//
+// Tato BGL vrstva je oddelena od interni reprezentace plantri. Implementaci
+// iteratoru, property map a pomocnych volnych funkci je proto mozne dale
+// upravovat, optimalizovat nebo rozsirovat podle potreb pouzitych algoritmu.
 namespace plantri
 {
 
+    // Lehky read-only view na graf ulozeny uvnitr puvodniho plantri.(data nevlasnti)
+   
+    //Descriptor hrany
     struct edge
     {
         const EDGE* ptr = nullptr;
@@ -30,6 +44,8 @@ namespace plantri
     struct GraphView
     {
 
+        // firstedge[v] ukazuje na jednu half-edge vychazejici z vrcholu v,
+        // degree[v] obsahuje stupen vrcholu v.
         const EDGE* const* firstedge;
         const int* degree;
         int nv;
@@ -46,13 +62,14 @@ namespace plantri
             return ne_oriented / 2; 
         }
 
-         using vertex_descriptor = int;
+    using vertex_descriptor = int;
 
     static vertex_descriptor null_vertex() 
     {
         return -1;
     }
-    using edge_descriptor = plantri::edge;//const EDGE*; // kvuli paralelnim hranam
+
+    using edge_descriptor = plantri::edge;
     using directed_category = boost::undirected_tag;
     using edge_parallel_category = boost::allow_parallel_edge_tag;
 
@@ -60,12 +77,16 @@ namespace plantri
     using degree_size_type = std::size_t;
     using edges_size_type = std::size_t;
 
+   
     struct traversal_category: boost::vertex_list_graph_tag, boost::edge_list_graph_tag, boost::adjacency_graph_tag, boost::incidence_graph_tag
     {};
 
     using traversal_category = traversal_category;
 
 
+    // Iterator pres neorientovane hrany grafu. Interni struktura plantri ma
+    // pro kazdou hranu dve orientace, proto iterator vraci jen kanonickou
+    // orientaci oznacenou pres EDGE::min.
     struct edge_iterator : boost::iterator_facade<edge_iterator,edge_descriptor const,boost::forward_traversal_tag, edge_descriptor>
     {
         const plantri::GraphView* g;
@@ -87,6 +108,7 @@ namespace plantri
 
 
 
+        // Nastavi iterator na prvni dostupnou half-edge od vrcholu u.
         void init_at_u()
         {
             if(!g)
@@ -108,7 +130,7 @@ namespace plantri
             }
 
 
-            //preskocime missing vertex
+            // Preskocime missing_vertex, pokud ho aktualni rezim plantri pouziva.
             if(g->missing_vertex>=0 &&  u==g->missing_vertex)
             {
                 u++;
@@ -145,17 +167,19 @@ namespace plantri
 
             }
 
-            //konec
+            // Konec rozsahu.
             u=limit;
             e = nullptr;
             remaining = 0;
         }
 
+        
         bool is_canonical(const EDGE* x)
         {
             return x && (x==x->min); 
         }
 
+        
         void skip_non_canonical()
         {
             if(g)
@@ -185,7 +209,7 @@ namespace plantri
                 return;
             }
 
-            if( remaining > 1) //dalsi hrana u stejneho vrcholu
+            if( remaining > 1) // dalsi hrana u stejneho vrcholu
             {
                 e=e->next;
                 remaining--;
@@ -217,6 +241,8 @@ namespace plantri
     using edge_iterator = edge_iterator;
 
 
+    // Iterator pres vrcholy. Pracuje se surovymi deskriptory plantri, ale
+    // preskakuje missing_vertex, aby uzivatel videl jen platne vrcholy.
     struct vertex_iterator: boost::iterator_facade< vertex_iterator, vertex_descriptor, boost::forward_traversal_tag, vertex_descriptor>  
     {
         const plantri::GraphView* g;
@@ -234,6 +260,7 @@ namespace plantri
 
         friend class boost::iterator_core_access;
 
+        
         void skip_missing()
         {
             if(!g)
@@ -276,6 +303,7 @@ namespace plantri
 
     using vertex_iterator = vertex_iterator;
 
+    // Iterator pres sousedy jednoho vrcholu v cyklickem poradi plantri.
     struct adjacency_iterator : boost::iterator_facade<adjacency_iterator,vertex_descriptor,boost::forward_traversal_tag,vertex_descriptor>
     {
         const plantri::GraphView* g;
@@ -339,6 +367,7 @@ namespace plantri
     using adjacency_iterator = adjacency_iterator;
 
 
+    // Iterator pres orientovane hrany vychazejici z jednoho vrcholu.
     struct out_edge_iterator : boost::iterator_facade<out_edge_iterator, edge_descriptor,boost::forward_traversal_tag, edge_descriptor>
     {
         const plantri::GraphView* g;
@@ -410,16 +439,23 @@ namespace plantri
     friend std::pair<edge_iterator, edge_iterator> edges(const GraphView& g);
     friend std::pair<adjacency_iterator, adjacency_iterator> adjacent_vertices(vertex_descriptor u, const GraphView& g);
 
+
+    // plantri muze mit v internim cislovani vrcholu jeden chybejici slot
+    // (missing_vertex). Pomocne funkce tento slot preskakuji a prevadi
+    // cisla vrcholu na kompaktni indexy vhodne pro pole a Boost.Graph.
 private:
+
     int vertex_limit() const
     {
         return nv + (missing_vertex >= 0 ? 1 : 0);
     }
 
+    
     bool is_valid_vertex(int v) const
     {
         return v >= 0 && v < vertex_limit() && v != missing_vertex;
     }
+
 
     std::size_t vertex_index(int v) const
     {
@@ -427,6 +463,7 @@ private:
     }
     };
 
+  
     struct vertex_index_map
     {
         using key_type = GraphView::vertex_descriptor;
@@ -437,6 +474,7 @@ private:
         int missing_vertex = -1;
     };
 
+    // Funkce get pro property mapu: preskoci chybejici slot v indexech
     inline std::size_t get(vertex_index_map map, GraphView::vertex_descriptor v)
     {
         return static_cast<std::size_t>((map.missing_vertex >= 0 && v > map.missing_vertex) ? v - 1 : v);

@@ -7,10 +7,12 @@
 #include <vector>
 #include "common/Output.hpp"
 
-
-
+// Verejne C++ rozhrani backendu plantri. Backend uklada konfiguraci,
+// prevadi ji na argumenty puvodniho generatoru a pri spusteni registruje
+// callbacky pres C bridge v plantri_api.cpp a plantri_shim.c.
 
 extern "C" {
+
 
 
 typedef struct e /* The data type used for edges */
@@ -32,46 +34,38 @@ typedef struct e /* The data type used for edges */
 
 }
 
-extern "C" {
-    void pt_write_planar_code(FILE* f, int header);
-    void pt_mute_status_output();
-}
-
-
-
 #include "plantri/GraphView.hpp"
 
 
 namespace plantri {
 
 
+//calbacky
 using PrefilterFn = std::function<int(const GraphView&)>;
 using FilterFn = std::function<int (const GraphView&)>;
 using OutprocFn = std::function<void (Output& out, const GraphView&)>;
-    // PRE-FILTER / FILTER registrace
-//void setPrefilter(std::function<int()> f);
-//void setFilter(std::function<int(int,int,int)> f);
+
+
 
 void setPrefilter(PrefilterFn);
 void setFilter(FilterFn);
 void setOutproc(OutprocFn);
 
-
+// Interni wrapper nad prejmenovanym mainem puvodniho plantri
 int pt_run(int argc, char** argv);
 
 
-int pt_nv();   // pocet vrcholu aktualniho grafu
-int pt_ne_oriented();  // pocet orientovanych hran (2xpocet hran) 
-const int* pt_degree_array();  // ukazatel na interni pole stupnu vrcholu 
+/*
+int pt_nv();
+int pt_ne_oriented();
+const int* pt_degree_array();
 int pt_missing_vertex();
-
-// firstedge[v] -> EDGE*. pokud missing_vertex >= 0 platne jsou 0..nv krome missing_vertex
 const EDGE* const* pt_firstedge_array();
 int pt_maxnv();
+*/
 
-
-
-
+// Backend pro Generator<plantri::Backend>. Settery ukladaji konfiguraci a
+// prepare_args ji pred spustenim prevadi na argv puvodniho programu plantri
 class Backend
 {
 
@@ -79,25 +73,25 @@ public:
 
     enum class GraphClass
     {
-        Trinagulation, //dafault
+        Triangulation, // default
         Quadrangulation, // -q
         GeneralQuad, // -Q
         SimplePlane, // -p
-        Bipartite, // -bp  bipartite plane
-        Eulerian, // -b 
-        Disk, // -P   triangulations of a disk
-        Apollonian //--A
+        Bipartite, // -bp
+        Eulerian, // -b
+        Disk, // -P
+        Apollonian // -A
     };
 
     enum class OutputFormat
     {
         PlanarCode, // default
         Graph6, // -g
-        Sparse6, //-s
+        Sparse6, // -s
         Ascii, // -a
-        EdgeCode, //-E
-        DoubleCode, //-T
-        NoOutput //u
+        EdgeCode, // -E
+        DoubleCode, // -T
+        NoOutput // -u
 
     };
 
@@ -109,25 +103,25 @@ private:
     int n = 0;
     bool dual = false;
 
-    GraphClass graph_class = GraphClass::Trinagulation;
+    GraphClass graph_class = GraphClass::Triangulation;
 
     int param_min_deg = -1; // -m#
     int param_conn = -1; // -c#
     bool param_exact_conn = false; // -x
-    int param_disk_outer = -1;   // -P#   velikost vnejsi steny
-    int param_max_face = -1;  //-f#
+    int param_disk_outer = -1; // -P#
+    int param_max_face = -1; // -f#
 
     OutputFormat param_format = OutputFormat::PlanarCode;
-    bool param_header = false;   // -h
-    bool param_output_dual = false; // -d prepinac
-    bool param_one_iso_class= false; // -o  one member of each isomorphism class is written
-    bool param_group = false;       // -G  ensures that the full automorphism group is computed for each output graph, for PRUNE!!!
-    bool param_nontriv_group = false;  // -V   Only output graphs with non-trivial group
+    bool param_header = false; // -h prepina vychozi chovani hlavicky v plantri
+    bool param_output_dual = false; // -d
+    bool param_one_iso_class= false; // -o
+    bool param_group = false; // -G
+    bool param_nontriv_group = false; // -V
 
 
     int param_res = -1;
     int param_mod = -1;
-    int param_split_level = 0;  // -X , -XX...
+    int param_split_level = 0; // -X, -XX, ...
 
     std::string param_out_file = "";
 
@@ -205,6 +199,8 @@ public:
         param_output_dual = output_dual;
     }
 
+    // Mapuje primo prepinac -h
+    // chovani hlavicky: u graph6/sparse6 ji zapne, u planar_code ji vypne
     void setHeader(bool h = true)
     {
         param_header=h;
@@ -244,8 +240,8 @@ public:
     }
 
 
-    //TODO add params processor
 protected:
+    // Prevede ulozenou konfiguraci na argv pole pro puvodni plantri.
     std::vector<std::string> prepare_args() const
     {
         validate();
@@ -284,7 +280,7 @@ protected:
                     args.push_back("-P");
                 }
                 break;
-            case GraphClass::Trinagulation:
+            case GraphClass::Triangulation:
                 break;
        }
 
@@ -342,7 +338,7 @@ protected:
             args.push_back("-V");
         
 
-       //splitting
+       // Split level se zapisuje jako -X, -XX, ...
        if(param_split_level>0)
        {
             std::string x_flag = "-";
@@ -368,14 +364,8 @@ protected:
 
     }
 
-
-
-
-
-
-
-
 public:
+    
     void setFilter(FilterFn f)
     {
         filter = std::move(f);
@@ -398,6 +388,7 @@ protected:
         return plantri::pt_run(argc, argv); 
     }
 
+    // pred spustenim prenese ulozene C++ callbacky do C bridge.
     void apply_runtime_state() const
     {
         plantri::setPrefilter(prefilter);
