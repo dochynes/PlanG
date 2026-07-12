@@ -205,7 +205,7 @@ int pt_ne_oriented()
 { 
     return ::pt_ne_oriented(); 
 }
-int* pt_degree_array()
+const int* pt_degree_array()
 {
     return ::pt_degree_array(); 
 }
@@ -214,7 +214,7 @@ int pt_missing_vertex()
     return ::pt_missing_vertex(); 
 }
 
-EDGE** pt_firstedge_array() 
+const EDGE* const* pt_firstedge_array() 
 { 
     return ::pt_firstedge_array(); 
 }

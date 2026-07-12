@@ -62,11 +62,11 @@ int pt_run(int argc, char** argv);
 
 int pt_nv();   // pocet vrcholu aktualniho grafu
 int pt_ne_oriented();  // pocet orientovanych hran (2xpocet hran) 
-int* pt_degree_array();  // ukazatel na interni pole stupnu vrcholu 
+const int* pt_degree_array();  // ukazatel na interni pole stupnu vrcholu 
 int pt_missing_vertex();
 
 // firstedge[v] -> EDGE*. pokud missing_vertex >= 0 platne jsou 0..nv krome missing_vertex
-EDGE** pt_firstedge_array();
+const EDGE* const* pt_firstedge_array();
 int pt_maxnv();
 
 

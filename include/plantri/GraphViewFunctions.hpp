@@ -29,7 +29,7 @@ inline std::pair<Traits::out_edge_iterator, Traits::out_edge_iterator> out_edges
     }
 
     int deg = g.degree[u];
-    EDGE* first;
+    const EDGE* first;
     if(deg>0)
         first = g.firstedge[u];
     else
@@ -79,7 +79,7 @@ inline std::pair<Traits::adjacency_iterator, Traits::adjacency_iterator> adjacen
     }
 
     int deg = g.degree[u];
-    EDGE* start_edge = nullptr;
+    const EDGE* start_edge = nullptr;
 
     if (deg > 0) 
     {

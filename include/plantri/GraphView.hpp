@@ -30,8 +30,8 @@ namespace plantri
     struct GraphView
     {
 
-        EDGE** firstedge;
-        int* degree;
+        const EDGE* const* firstedge;
+        const int* degree;
         int nv;
         int ne_oriented;
         int missing_vertex;
@@ -70,7 +70,7 @@ namespace plantri
     {
         const plantri::GraphView* g;
         int u; //start
-        EDGE* e; // orient hrana z u
+        const EDGE* e; // orient hrana z u
         int remaining; // kolik hran zbyva jeste projit
 
         edge_iterator():g(nullptr),u(0),e(nullptr),remaining(0)
@@ -151,7 +151,7 @@ namespace plantri
             remaining = 0;
         }
 
-        bool is_canonical(EDGE* x)
+        bool is_canonical(const EDGE* x)
         {
             return x && (x==x->min); 
         }
@@ -280,7 +280,7 @@ namespace plantri
     {
         const plantri::GraphView* g;
         int u;
-        EDGE* e;
+        const EDGE* e;
         int remaining;
 
         adjacency_iterator(): g(nullptr),u(0),e(nullptr),remaining(0)
@@ -288,7 +288,7 @@ namespace plantri
 
         }
 
-        adjacency_iterator(const plantri::GraphView* gg,int uu, EDGE* e0, int deg):g(gg),u(uu),e(e0),remaining(deg)
+        adjacency_iterator(const plantri::GraphView* gg,int uu, const EDGE* e0, int deg):g(gg),u(uu),e(e0),remaining(deg)
         {
 
         }
@@ -343,7 +343,7 @@ namespace plantri
     {
         const plantri::GraphView* g;
         int u; 
-        EDGE* e;
+        const EDGE* e;
         int remaining;
 
         out_edge_iterator() : g(nullptr), u(0), e(nullptr), remaining(0)
@@ -351,7 +351,7 @@ namespace plantri
 
         }
 
-        out_edge_iterator(const plantri::GraphView* gg,int uu, EDGE* e0, int deg):g(gg),u(uu), e(e0),remaining(deg)
+        out_edge_iterator(const plantri::GraphView* gg,int uu, const EDGE* e0, int deg):g(gg),u(uu), e(e0),remaining(deg)
         {
 
         }
