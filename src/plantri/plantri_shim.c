@@ -1,19 +1,24 @@
 #include <stddef.h>
 #include <stdio.h>
 
+// Tento soubor se vklada do puvodniho plantri.c pres makro PLUGIN.
+// Slouzi jako C bridge mezi plantri a C++ wrapperem: registruje callbacky,
+// zpristupnuje aktualni graf a poskytuje vstupni body pro spusteni generatoru
+// a zapis grafu z uzivatelskeho outproc callbacku.
 
-//typy ukazatelu
+// Typy C callbacku, ktere sem registruje C++ vrstva z plantri_api.cpp.
 typedef int (*prefilter_cb_t)(void);
 typedef int (*filter_cb_t)(int nbtot, int nbop, int doflip);
 
-//drzaky na callbacky
+// Aktualne zaregistrovane callbacky. NULL znamena, ze callback neni nastaven.
 static prefilter_cb_t g_prefilter_cb = NULL;
-static filter_cb_t    g_filter_cb = NULL;
+static filter_cb_t g_filter_cb = NULL;
 
-// trampoliny ktere volaji plantri
+// Trampoliny prevadeji navratove hodnoty mezi PlanG a plantri.
+// PlanG pouziva KEEP = 0, PRUNE = 1; plantri ocekava 1 = pokracovat,
+// 0 = zahodit vetev nebo graf.
 static int bridge_prefilter_common(void)
 {
-    // 1=expandovat 0=orezat vetev
     if (!g_prefilter_cb) 
         return 1;
     return !g_prefilter_cb();
@@ -21,14 +26,14 @@ static int bridge_prefilter_common(void)
 
 static int bridge_filter_common(int nbtot, int nbop, int doflip)
 {
-    //0 = nepsat ven
     if (!g_filter_cb) 
-        return 1;  //   vratit 1
+        return 1;
     return !g_filter_cb(nbtot, nbop, doflip);
 }
 
 
-//premapovani vsech beznych pre-filter maker na jednu funkci
+// plantri ma ruzna PRE_FILTER_* makra pro ruzne rezimy generovani.
+// Vsechny bezne rezimy mapujeme na jednu prefilter trampolinu.
 #define PRE_FILTER_SIMPLE bridge_prefilter_common()
 #define PRE_FILTER_MIN4 bridge_prefilter_common()
 #define PRE_FILTER_BIP bridge_prefilter_common()
@@ -40,23 +45,26 @@ static int bridge_filter_common(int nbtot, int nbop, int doflip)
 #define PRE_FILTER_MIN5 bridge_prefilter_common()
 
 
+// FILTER se vola pri nalezeni hotoveho grafu.
 #define FILTER(nbtot, nbop, doflip) bridge_filter_common((nbtot),(nbop),(doflip))
 
-// setter funkce
+// Registracni funkce volane z plantri_api.cpp.
 void pt_set_prefilter (prefilter_cb_t f) { g_prefilter_cb = f; }
 void pt_set_filter (filter_cb_t f) { g_filter_cb = f; }
 
-// uzitecne glovbaly z plantri.c
+// Vybrane globalni promenne z plantri.c. C++ GraphView z nich cte aktualni
+// graf.
 extern int nv, ne, missing_vertex;
 extern int degree[];
 
-typedef struct e EDGE;     // 
+typedef struct e EDGE;
 extern EDGE *firstedge[];     // firstedge[v] -> hrana z vrcholu v
 
 extern int maxnv;
 extern FILE* outfile;
 extern int dosummary;
 
+// Pri vlastnim outproc callbacku nechceme standardni summary vypis plantri.
 void disable_summary(void)
 {
     dosummary = -1;
@@ -68,7 +76,7 @@ void enable_summary(void)
 }
 
 
-
+// Accessor funkce pro C++ wrapper.
 int pt_nv(void) { return nv; }
 int pt_ne_oriented(void) { return ne; }          // orient 2*E
 int* pt_degree_array(void) { return degree; }
@@ -78,13 +86,13 @@ EDGE** pt_firstedge_array(void) { return firstedge; }
 int pt_maxnv(void) { return maxnv; }
 
 
-
-
-int plantri_run(int argc, char** argv); //TODO: v CMake bude  -Dmain=plantri_run
+// Makefile prejmenuje main z plantri.c na plantri_run.
+int plantri_run(int argc, char** argv);
 int pt_run(int argc, char** argv) { return plantri_run(argc, argv); } 
 
 FILE* pt_outfile(void) { return outfile; }
 
+// Obaly kolem vystupnich funkci plantri pouzite pro operator<< a outproc.
 static void write_planar_code(FILE *f, int doflip);
 void pt_write_planar_code(FILE* f, int header)
 {
