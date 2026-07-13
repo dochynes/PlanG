@@ -15,6 +15,7 @@ namespace geng {
 
 struct GraphView;
 
+// umoznuje v callbacku zapsat graf pomoci out << g
 inline Output& operator<<(Output& out, const GraphView& g)
 {
     if(out.raw())
@@ -23,11 +24,12 @@ inline Output& operator<<(Output& out, const GraphView& g)
     return out;
 }
 
+// callbacky pouzivane backendem geng
 using OutprocFn = std::function<void(Output& out, const GraphView& g)>;
 using FilterFn = std::function<int (const GraphView& g)>;
 using PrepruneFn = std::function<int (const GraphView& g)>;
 
-// registrace callbacku
+// funkce volane backendem pri priprave behu generatoru
 void setOutproc(OutprocFn);
 void setFilter(FilterFn);
 void setPreprune(PrepruneFn); 
@@ -40,6 +42,9 @@ int distance_between(const GraphView& g, int src, int dst);
 
 int run(int argc, char** argv);
 
+// Konfigurace backendu geng. Objekt uklada volby uzivatele, prevadi je na
+// argumenty puvodniho programu geng a pred spustenim nastavi callbacky/barvy.
+// Bezne se pouziva pres Generator<geng::Backend>.
 class Backend
 {
 public:
@@ -49,13 +54,14 @@ public:
 
     enum class OutputFormat
     {
-        Graph6, //default nebo -g
-        Sparse6, //-s
-        NoOutput, //-u
-        NautyBinary // -n 
+        Graph6,      // vychozi vystup, odpovida -g
+        Sparse6,     // -s
+        NoOutput,    // -u
+        NautyBinary  // -n
     };
 
 private:
+    // zpusob prace s barvami vrcholu.
     enum class ColorMode
     {
         None,
@@ -122,8 +128,8 @@ private:
         return (vertices * (vertices - 1)) / 2;
     }
 
-
 public:
+    
     void setVertices(int nn)
     {
         if(nn < 1 || nn > max_vertices)
@@ -218,6 +224,7 @@ public:
         param_save_mem = m;
     }
 
+    // res/mod.
     void setDistribution(int res, int mod)
     {
         if(mod <= 0)
@@ -277,6 +284,7 @@ public:
     }
 
 protected:
+    // Sestavi argv pro puvodni geng podle ulozene konfigurace
     std::vector<std::string> prepare_args() const
     {
         validate();
@@ -319,7 +327,7 @@ protected:
             args.push_back("-F");
 
 
-        // -y chybi
+        // Stary y-format puvodniho geng neni podporovan.
         switch(out_format)
         {
             case OutputFormat::Sparse6:
@@ -396,6 +404,7 @@ protected:
 
 
 public:
+    
     void setFilter(FilterFn f)
     {
         filter = std::move(f);
@@ -418,6 +427,7 @@ protected:
     }
 
 public:
+    
     void setRootedVertices(int count)
     {
         if(count < 0)
@@ -437,6 +447,7 @@ public:
         setColorClassSizes(sizes);
     }
 
+    
     void setColors(int count)
     {
         if(count < 0)
@@ -483,6 +494,7 @@ public:
     }
 
 protected:
+    
     void apply_runtime_state() const
     {
         switch(color_mode)
@@ -563,6 +575,7 @@ protected:
     }
 
 public:
+    // Pomocna funkce pro vzdalenost dvou vrcholu v aktualnim GraphView
     static int distance_between(const GraphView& g, int src, int dst)
     {
         return geng::distance_between(g, src, dst);

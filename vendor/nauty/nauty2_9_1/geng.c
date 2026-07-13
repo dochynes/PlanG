@@ -460,6 +460,10 @@ static TLS_ATTR int mindeg,maxdeg,maxn,mine,maxe,mod,res;
 #define PRUNEMULT 50   /* bigger -> more even split at greater cost */
 static TLS_ATTR int min_splitlevel,odometer,splitlevel,multiplicity;
 static TLS_ATTR graph gcan[MAXN];
+
+// PlanG extension: vertex colour state configured through geng_shim.c.
+// lower/upper define allowed colour class sizes, current stores the partial
+// colouring, and canonical is used for output after -l.
 int TLS_ATTR geng_vertex_color_count = 0;
 int TLS_ATTR geng_vertex_color_lower[MAXN];
 int TLS_ATTR geng_vertex_color_upper[MAXN];
@@ -549,6 +553,8 @@ static TLS_ATTR int maxepft[66] =    /* max edges for -pft */
 /**************************************************************************/
 
 
+// PlanG helpers for coloured generation. Colours are assigned while vertices
+// are added, and colour class bounds are checked during generation.
 static boolean colouring_active(void)
 {
     return geng_vertex_color_count > 0;
@@ -562,13 +568,12 @@ static int colour_upper_limit(int colour)
     return upper;
 }
 
-// zadna barva nesmi presahnout horni mez a ze zbyvajicich vrcholu
-// musi byt mozne splnit vsechny dolni i horni meze
+// Check that the current partial colouring can still satisfy the class bounds.
 static boolean colour_assignment_feasible(int n)
 {
     int c,remaining,lower,upper;
-    int need_min; // min pocet vrcholu, ktere jeste musime nekam rozdat
-    int need_max; // max  ... , ktere jeste vubec muzeme rozdat
+    int need_min;
+    int need_max;
 
     if (!colouring_active()) 
         return TRUE;
@@ -598,7 +603,9 @@ static boolean colour_assignment_feasible(int n)
 
     return TRUE;
 }
-// vezmeme kazdou bunku, seskupime podle barvy, vyrobime nove bunky podle barev
+
+// Refine the nauty partition by colours so canonical labelling respects colour
+// classes.
 static void refine_partition_by_colours(int *lab, int *ptn, int n, int *numcells, set *active)
 {
     int i,j,k,start,end,newnumcells,colour;
@@ -1593,12 +1600,13 @@ makecanon(graph *g, graph *gcan, int n)
     options.getcanon = TRUE;
     if (colouring_active())
     {
-        options.defaultptn = FALSE; // rikame nauty nepouzivej svou implicitni partition, ale pouzij lab ptn co mu dame my
+        // With colours, pass nauty an initial partition by colour classes.
+        options.defaultptn = FALSE;
         for (numcells = 0; numcells < n; ++numcells)
         {
             lab[numcells] = numcells;
             ptn[numcells] = 1;
-        }   // jedna bunka 0,1,2...n-1
+        }
 
 
         if (n > 0)
@@ -1612,6 +1620,8 @@ makecanon(graph *g, graph *gcan, int n)
         nauty(g,lab,ptn,active,orbits,&options,&nauty_stats,
               workspace,50,1,n,gcan);
 
+        // lab gives the vertex order in the canonical graph; use it to prepare
+        // colours for output
         int i;
         for (i = 0; i < n; ++i)
             geng_canonical_vertex_color[i] = geng_current_vertex_color[lab[i]];
@@ -2374,6 +2384,7 @@ spaextend(graph *g, int n, int *deg, int ne, boolean rigid,
 #endif
     ++nodes[n];
 
+    // In coloured generation, first choose the colour of the initial vertex.
     if (colouring_active() && n == 1 && geng_current_vertex_color[0] < 0)
     {
         for (j = 0; j < geng_vertex_color_count; ++j)
@@ -2427,6 +2438,8 @@ spaextend(graph *g, int n, int *deg, int ne, boolean rigid,
                 && (xc > dmax || (xc == dmax && (x & d) == 0))
                 && (dlow & ~x) == 0)
             {
+                // With colours enabled, try all colours for the new vertex
+                // that can still satisfy the colour class bounds.
                 if (colouring_active())
                 {
                     for (j = 0; j < geng_vertex_color_count; ++j)
@@ -2532,6 +2545,7 @@ spaextend(graph *g, int n, int *deg, int ne, boolean rigid,
                 }
                 else if (xlbx <= xubx && colouring_active())
                 {
+                    // The same colour branching for intermediate states.
                     for (j = 0; j < geng_vertex_color_count; ++j)
                     {
                         if (colour_upper_limit(j) == 0)
@@ -2589,6 +2603,7 @@ genextend(graph *g, int n, int *deg, int ne, boolean rigid, int xlb, int xub)
 #endif
     ++nodes[n];
 
+    // In coloured generation, first choose the colour of the initial vertex.
     if (colouring_active() && n == 1 && geng_current_vertex_color[0] < 0)
     {
         for (j = 0; j < geng_vertex_color_count; ++j)
@@ -2643,6 +2658,8 @@ genextend(graph *g, int n, int *deg, int ne, boolean rigid, int xlb, int xub)
             if ((dlow & ~x) != 0) continue;
             if (colouring_active())
             {
+                // With colours enabled, try all colours for the new vertex
+                // that can still satisfy the colour class bounds.
                 for (j = 0; j < geng_vertex_color_count; ++j)
                 {
                     if (colour_upper_limit(j) == 0)
@@ -2742,6 +2759,7 @@ genextend(graph *g, int n, int *deg, int ne, boolean rigid, int xlb, int xub)
             }
             else if (colouring_active())
             {
+                // The same colour branching for intermediate states.
                 for (j = 0; j < geng_vertex_color_count; ++j)
                 {
                     if (colour_upper_limit(j) == 0)
@@ -2776,6 +2794,8 @@ genextend(graph *g, int n, int *deg, int ne, boolean rigid, int xlb, int xub)
 
 /**************************************************************************/
 
+// Reset the partial colouring before a new generation run.
+// Configured colour class bounds are kept.
 static void reset_current_colouring(void)
 {
     int i;
@@ -2829,6 +2849,7 @@ main(int argc, char *argv[])
     {
         geng_current_vertex_color[i] = -1;
         geng_current_color_size[i] = 0;
+        // If the shim did not configure colours, clear colour class bounds too.
         if (geng_vertex_color_count <= 0)
         {
             geng_vertex_color_lower[i] = 0;
@@ -3005,6 +3026,8 @@ PLUGIN_SWITCHES
         gt_abort(">E geng: -ungs are incompatible\n");
 
 #if defined(OUTPROC) && defined(OUTPROC_ACTIVE)
+    // PlanG needs OUTPROC only for a user callback or coloured output.
+    // Otherwise, keep geng's original output functions.
     if (OUTPROC_ACTIVE()) outproc = OUTPROC;
     else if (nautyformat) outproc = writenauty;
     else if (nooutput)   outproc = nullwrite;

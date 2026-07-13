@@ -6,13 +6,17 @@
 #include <utility>
 #include <vector>
 
+// Globalni funkce nad geng::GraphView. Cast z nich tvori rozhrani pozadovane
+// koncepty Boost.Graph, dalsi jsou uzitecne pomocne funkce nad aktualnim grafem.
+// Viz: https://www.boost.org/doc/libs/latest/libs/graph/doc/graph_concepts.html
+//
+// Soubor je vhodne misto pro dalsi rozsireni o podobne globalni funkce.
+// Prace s bitovou reprezentaci grafu z nauty muze byt dale optimalizovana
+// podle potreb konkretnich algoritmu.
 namespace geng
 {
 
     using Traits = boost::graph_traits<GraphView>;
-
-
-
 
     inline std::pair<Traits::vertex_iterator,Traits::vertex_iterator> vertices(const GraphView& g)
     {
@@ -47,21 +51,11 @@ namespace geng
         }
 
         return static_cast<Traits::degree_size_type>(deg);
-
-
-
-        /*auto [first, last] = out_edges(u,g); //pomalejsi nez pres Popcount??? 
-        std::size_t count = 0;
-        for (auto it = first; it != last; ++it)
-            ++count;
-        return static_cast<Traits::degree_size_type>(count);
-        */
     }
 
 
     inline std::pair<Traits::edge_iterator, Traits::edge_iterator> edges(const GraphView& g)
     {
-        //begin u=1, v=1   end: u=n v=ibovolne
         return {Traits::edge_iterator(&g, 0, 1), Traits::edge_iterator(&g, g.num_vertices(), 0)};
 
     }

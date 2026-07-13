@@ -4,6 +4,7 @@
 #include <exception>
 #include <utility>
 
+// C++ vrstva nad geng_shim.c. Z C callbacku vytvari GraphView a vola C++ callbacky
 extern "C"
 {
 void geng_set_outproc(void(*)(FILE*,void*,int));
@@ -18,6 +19,7 @@ int  geng_get_current_color_count(void);
 int  geng_run(int argc, char** argv);
 }
 
+// Ulozene C++ callbacky, ktere se volaji z C shimu
 namespace
 {
 using geng::GraphView;
@@ -31,6 +33,7 @@ static PrepruneFn s_preprune;
 static std::exception_ptr callback_exception;
 static void c_outproc(FILE* f, void* gg, int n);
 
+// Nastavi outproc callback v C shimu, pokud ho uzivatel zadal
 static void refresh_outproc_registration()
 {
     if (s_outproc)
@@ -39,6 +42,7 @@ static void refresh_outproc_registration()
         ::geng_set_outproc(nullptr);
 }
 
+// Funkce volana z C shimu. Zabali graf z gengu do GraphView a zavola C++ callback
 static void c_outproc(FILE* f, void* gg, int n)
 {
     if (!s_outproc || callback_exception)
@@ -63,6 +67,7 @@ static void c_outproc(FILE* f, void* gg, int n)
     }
 }
 
+//1=zahodit graf
 static int c_preprune(void* gg, int n, int maxn)
 {
     if (!s_preprune)
@@ -88,6 +93,7 @@ static int c_preprune(void* gg, int n, int maxn)
         return 1;
     }
 }
+
 
 static int c_filter(void* gg, int n, int maxn)
 {
@@ -121,6 +127,7 @@ static int c_filter(void* gg, int n, int maxn)
 
 namespace geng {
 
+// Pomocne funkce pro nastaveni barev a omezeni velikosti barevnych trid
 void setColorCount(int count)
 {
     if (count < 0)
@@ -130,6 +137,7 @@ void setColorCount(int count)
     ::geng_clear_color_bounds();
     refresh_outproc_registration();
 }
+
 
 void setColors(int count)
 {
@@ -141,6 +149,7 @@ void setColors(int count)
         ::geng_set_color_bounds(color, 1, MAXN);
     refresh_outproc_registration();
 }
+
 
 void setColorClassSizes(const std::vector<int>& sizes)
 {
@@ -159,6 +168,7 @@ void setColorClassSizes(const std::vector<int>& sizes)
         ::geng_set_color_bounds(static_cast<int>(i), sizes[i], sizes[i]);
     }
 }
+
 
 void setColorClassBounds(const std::vector<std::pair<int,int>>& bounds)
 {
@@ -180,6 +190,7 @@ void setColorClassBounds(const std::vector<std::pair<int,int>>& bounds)
     }
 }
 
+// Registrace uzivatelskych callbacku do C shimu.
 void setOutproc(OutprocFn f)
 {
     s_outproc = std::move(f);
@@ -205,6 +216,7 @@ void setPreprune(PrepruneFn f)
 }
 
 
+// Spusti geng a prenese ven pripadnou vyjimku z callbacku
 int run(int argc, char** argv)
 {
     callback_exception = nullptr;

@@ -4,6 +4,7 @@ INCLUDE_DIR := $(ROOT_DIR)/include
 BOOST_DIR := $(ROOT_DIR)/vendor
 
 NAUTY_CONFIG := $(NAUTY_DIR)/nauty.h
+NAUTY_GENERATED_HEADERS := $(NAUTY_DIR)/nauty.h $(NAUTY_DIR)/naututil.h $(NAUTY_DIR)/gtools.h
 
 INC_DIRS := -I$(NAUTY_DIR) -I$(INCLUDE_DIR) -I$(BOOST_DIR)
 
@@ -54,7 +55,7 @@ $(TARGET_LIB): $(OBJS)
 	$(AR) rcs $@ $^
 
 #geng compilation
-$(BUILD_DIR)/geng.o: $(GENG_SRC) $(SHIM_SRC)
+$(BUILD_DIR)/geng.o: $(GENG_SRC) $(SHIM_SRC) $(NAUTY_CONFIG)
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) \
 	  -DOUTPROC=bridge_outproc \
@@ -69,7 +70,7 @@ $(BUILD_DIR)/geng.o: $(GENG_SRC) $(SHIM_SRC)
 	  -c $< -o $@
 
 #  c++ api kompilation
-$(BUILD_DIR)/api.o: $(API_SRC)
+$(BUILD_DIR)/api.o: $(API_SRC) $(NAUTY_CONFIG)
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
@@ -84,7 +85,7 @@ $(BUILD_DIR)/nauty/%.o: $(NAUTY_DIR)/%.c $(NAUTY_CONFIG)
 	 -Wno-int-conversion \
 	 -c $< -o $@
 
-$(NAUTY_CONFIG):
+$(NAUTY_GENERATED_HEADERS):
 	cd $(NAUTY_DIR) && ./configure
 
 clean:

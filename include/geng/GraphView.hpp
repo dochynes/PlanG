@@ -9,13 +9,16 @@ extern "C" {
 
 namespace geng {
 
+// View na graf ulozeny ve formatu nauty/geng
+// drzi ukazatele predane z aktualniho behu
+// generatoru + definuje typy a iteratory potrebne pro Boost.Graph
 struct GraphView 
 {
-    const graph* g_;   
-    int n_;            
-    int maxn_;
-    const int* colors_ = nullptr;
-    int color_count_ = 0;
+    const graph* g_;             // matice sousednosti ve formatu nauty
+    int n_;                      // aktualni pocet vrcholu
+    int maxn_;                   // cilovy pocet vrcholu pro dany beh gengu
+    const int* colors_ = nullptr; // volitelne barvy vrcholu
+    int color_count_ = 0;         // pocet pouzitych barev
         
     int num_vertices() const
     { 
@@ -25,6 +28,8 @@ struct GraphView
     { 
         return maxn_; 
     }
+
+    // pocet slov typu set v jednom radku nauty matice.
     int m() const 
     { 
         return SETWORDSNEEDED(maxn_); 
@@ -74,10 +79,11 @@ struct GraphView
         return vertices;
     }
 
+    // Typy vyzadovane boost::graph_traits<GraphView>.
     using vertex_descriptor = int;
     using edge_descriptor = std::pair<int,int>;
-    using directed_category = boost::undirected_tag;  // nebo directed_tag
-    using edge_parallel_category = boost::disallow_parallel_edge_tag; // nebo allow...
+    using directed_category = boost::undirected_tag;
+    using edge_parallel_category = boost::disallow_parallel_edge_tag;
 
     struct traversal_category: boost::vertex_list_graph_tag, boost::adjacency_graph_tag, boost::incidence_graph_tag
     {};
@@ -134,7 +140,7 @@ struct GraphView
                 const set* row = GRAPHROW(g->data(), u, g->m());
 
                 if(ISELEMENT(row, v))
-                    break; // nasli jsme souseda
+                    break;
             }
 
         }
@@ -144,9 +150,6 @@ struct GraphView
 
     };
     using out_edge_iterator = out_edge_iterator;
-    //in_edge_iterator zatim ne, predpokladame neorientovany graf
-    //adjacency_iterator  ne, muzeme pouzit out_edge_iterator
-    //
 
     
     struct adjacency_iterator : boost::iterator_facade<adjacency_iterator,vertex_descriptor, boost::forward_traversal_tag, vertex_descriptor>
@@ -205,6 +208,7 @@ struct GraphView
 
     using adjacency_iterator = adjacency_iterator;
 
+    
     struct edge_iterator : boost::iterator_facade<edge_iterator, edge_descriptor const, boost::forward_traversal_tag, edge_descriptor>
     {
 
@@ -252,7 +256,7 @@ struct GraphView
             for(;u<n;++u)
             {
                 if(v<=u)
-                    v=u+1; // protoze musi platit v > u
+                    v=u+1;
 
                 const set* row = GRAPHROW(g->data(), u, g->m());
 
@@ -260,14 +264,14 @@ struct GraphView
                 {
                     if(ISELEMENT(row,v))
                     {
-                        return; //nasle jsme hranu
+                        return;
                     }
                 }
 
                 v = u + 1;
         
             }
-            v = 0; // normalizace na stejny stav jako end iterator
+            v = 0;
         }
 
     };
