@@ -9,21 +9,24 @@ dodatečnou strukturou.
 \section{Funkční testování}
 \label{sec:evaluation-functional}
 
-Nejdříve jsme ověřili, že rozhraní pro malé instance vytváří stejný výstup jako
-původní programy. Pro \texttt{geng} jsme porovnali výstup ve formátu
-\texttt{graph6} pro grafy na šesti vrcholech. Pro \texttt{plantri} jsme stejným
-způsobem porovnali triangulace na osmi vrcholech vypsané také ve formátu
-\texttt{graph6}. První porovnání obsahovalo 156 grafů a druhé 14 triangulací.
-V obou případech se soubory vytvořené přes PlanG shodovaly se soubory
-vytvořenými nativním generátorem.
+Funkční testování se zaměřilo na shodu s původními generátory a na správné
+volání uživatelských callbacků. Nejprve jsme pro vybrané malé instance
+porovnali výstup PlanG s výstupem nativních programů ve formátu
+\texttt{graph6}. Porovnání jsme provedli pro backendy \texttt{geng} i
+\texttt{plantri}. V obou případech se soubory vytvořené přes PlanG shodovaly
+se soubory vytvořenými nativním generátorem.
 
-Dále jsme testovali běhy s callbacky \texttt{setFilter}, \texttt{setPreprune} a
-\texttt{setOutproc}. Testy ověřily, že PlanG volá callbacky ve správné fázi
-generování a prostřednictvím \texttt{GraphView} jim zpřístupňuje očekávaný
-aktuální graf. Pro rozšíření \texttt{geng} o barevné třídy jsme testovali také
-přesné velikosti barevných tříd, intervalové meze tříd a zakotvené vrcholy.
-Testy byly provedeny na vybraných konfiguracích
-a ověřují správnost testovaných případů.
+Dále jsme ověřovali běhy s callbacky \texttt{setFilter}, \texttt{setPreprune}
+a \texttt{setOutproc}. Cílem bylo zkontrolovat, že PlanG volá callbacky ve
+správné fázi generování a že jim prostřednictvím \texttt{GraphView}
+zpřístupňuje očekávaný aktuální graf.
+
+Samostatně jsme ověřovali také rozšíření backendu \texttt{geng} o barevné
+třídy a zakotvené vrcholy. Kontrolovali jsme přesné velikosti barevných tříd,
+intervalové meze tříd a reprezentaci zakotvených vrcholů jako samostatných
+barevných tříd. Podporu obarvení v backendu \texttt{geng} jsme dále ověřovali
+manuálně na větším množství příkladů s různými počty barev, velikostmi
+barevných tříd a zakotvenými vrcholy. Tím jsme ověřili správnost chování knihovny pro použité konfigurace.
 
 \section{Metodika měření}
 \label{sec:evaluation-methodology}
@@ -98,7 +101,10 @@ Použité callbacky neprováděly žádný výpočet a vždy vracely hodnotu
 \texttt{KEEP}, takže neměnily průběh ani výsledek generování. Metoda
 \texttt{setFilter} registrovala callback volaný nad dokončenými grafy, zatímco
 callback registrovaný metodou \texttt{setPreprune} se volal také během
-generování rozpracovaných grafů.
+generování rozpracovaných grafů. U těchto měření lze očekávat, že případná
+režie rozhraní vzniká hlavně při přechodu z C kódu do C++ callbacku a při
+vytvoření objektu \texttt{GraphView}. Ten nekopíruje samotný graf; pouze předá
+několik ukazatelů a hodnot popisujících aktuální interní reprezentaci grafu.
 
 \begin{table}[htbp]
 \centering

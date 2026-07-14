@@ -80,25 +80,23 @@
     \endentry
     \entry{brinkmann2007fast}{article}{}
       \name{author}{2}{}{%
-        {{hash=4747918d34a783c214e9a049cde3335a}{%
+        {{hash=64f485fde9c4544429c876a66ec508b2}{%
            family={Brinkmann},
            familyi={B\bibinitperiod},
-           given={McKay},
-           giveni={M\bibinitperiod},
-           suffix={Gunnar},
-           suffixi={G\bibinitperiod}}}%
-        {{hash=0c020b10d59f9c03caba05caab351f6f}{%
-           family={D.},
-           familyi={D\bibinitperiod},
-           given={Brendan},
-           giveni={B\bibinitperiod}}}%
+           given={Gunnar},
+           giveni={G\bibinitperiod}}}%
+        {{hash=f4b53184c02d91105a428c12f3f437cc}{%
+           family={McKay},
+           familyi={M\bibinitperiod},
+           given={Brendan\bibnamedelima D.},
+           giveni={B\bibinitperiod\bibinitdelim D\bibinitperiod}}}%
       }
-      \strng{namehash}{a5b355dfb52537830bbeed0333bf0a14}
-      \strng{fullhash}{a5b355dfb52537830bbeed0333bf0a14}
-      \strng{bibnamehash}{a5b355dfb52537830bbeed0333bf0a14}
-      \strng{authorbibnamehash}{a5b355dfb52537830bbeed0333bf0a14}
-      \strng{authornamehash}{a5b355dfb52537830bbeed0333bf0a14}
-      \strng{authorfullhash}{a5b355dfb52537830bbeed0333bf0a14}
+      \strng{namehash}{1d67abb38082501503e657c7b569a0e2}
+      \strng{fullhash}{1d67abb38082501503e657c7b569a0e2}
+      \strng{bibnamehash}{1d67abb38082501503e657c7b569a0e2}
+      \strng{authorbibnamehash}{1d67abb38082501503e657c7b569a0e2}
+      \strng{authornamehash}{1d67abb38082501503e657c7b569a0e2}
+      \strng{authorfullhash}{1d67abb38082501503e657c7b569a0e2}
       \field{sortinit}{1}
       \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
       \field{labelnamesource}{author}
