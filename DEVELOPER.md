@@ -18,6 +18,10 @@ Knihovna je rozdelena do nekolika vrstev:
 | C shim | `src/geng/geng_shim.c`, `src/plantri/plantri_shim.c` | nizkourovnove propojeni s puvodnimi C zdroji |
 | Puvodni generatory | `vendor/nauty`, `vendor/plantri` | zdrojove kody tretich stran |
 
+Projekt obsahuje zmensenu kopii baliku nauty 2.9.1 obsahujici pouze soubory potrebne pro sestaveni backendu `geng` v PlanG. Tato konfigurace byla overena pro bezne sestaveni projektu; samostatne nastroje a testovaci soubory z puvodni distribuce nauty nejsou soucasti repozitare. Konfiguracni soubory potrebne pro `./configure` zustavaji zachovane; generovane soubory jako `nauty.h`, `gtools.h` a `naututil.h` vznikaji pri sestaveni. Pokud by se na nektere platforme objevila chyba zpusobena chybejicim souborem, je potreba doplnit prislusny soubor z plne distribuce nauty 2.9.1.
+
+Backend `geng` se v PlanG sestavuje s nastavenim `WORDSIZE=64` a `MAXN=WORDSIZE`. Hodnota `WORDSIZE` urcuje velikost bitoveho slova, ktere nauty pouziva pro reprezentaci mnozin vrcholu a radku matice sousednosti. Varianta 64 odpovida beznym 64bitovym pocitacum a umoznuje v teto jednoslovove reprezentaci pracovat s grafy az do 64 vrcholu. Pri vykonnostnim porovnani je proto vhodne pouzit stejnou konfiguraci i u nativniho `geng`, napriklad program `gengL`; vychozi `geng` sestaveny z makefilu nauty muze pouzivat jinou hodnotu `WORDSIZE`.
+
 Tok spusteni:
 
 1. Uzivatel vytvori `Generator<geng::Backend>` nebo `Generator<plantri::Backend>`.
@@ -52,6 +56,13 @@ class Generator_Plantri {
   <<Generator plantri Backend>>
 }
 
+class UserCode {
+  <<user code>>
+  +Generator_Geng app
+  +Generator_Plantri app
+  +callbacks(GraphView, Output)
+}
+
 class Geng_Backend {
   -int n
   -int mine
@@ -60,14 +71,29 @@ class Geng_Backend {
   -int param_mod
   -bool param_connected
   -bool param_biconnected
+  -bool param_save_mem
   -bool param_triangle_free
   -bool param_square_free
+  -bool param_regular
   -bool param_bipartite
+  -bool param_chordal
+  -bool param_split
+  -bool param_perfect
+  -bool param_claw_free
   -int param_min_deg
   -int param_max_deg
   -OutputFormat out_format
+  -bool param_header
+  -bool param_label
+  -bool param_verbose
+  -bool param_quiet
+  -int param_adv_split
+  -int param_adv_start
   -string param_out_file
   -ColorMode color_mode
+  -int color_count
+  -vector_int color_sizes
+  -vector_bounds color_bounds
   -FilterFn filter
   -PrepruneFn preprune
   -OutprocFn outproc
@@ -81,8 +107,21 @@ class Geng_Backend {
   +setMinDegree(int) void
   +setMaxDegree(int) void
   +setFormat(OutputFormat) void
+  +setNoOutput() void
+  +setCanonicalLabeling(bool) void
+  +setHeader(bool) void
+  +setQuiet(bool) void
+  +setVerbose(bool) void
+  +setSaveMemory(bool) void
   +setOutputFile(string) void
   +setDistribution(int,int) void
+  +setAdvancedSplit(int) void
+  +setAdvancedStartLevel(int) void
+  +setRegular(bool) void
+  +setChordal(bool) void
+  +setSplit(bool) void
+  +setPerfect(bool) void
+  +setClawFree(bool) void
   +setFilter(FilterFn) void
   +setPreprune(PrepruneFn) void
   +setOutproc(OutprocFn) void
@@ -109,21 +148,33 @@ class Plantri_Backend {
   -OutputFormat param_format
   -bool param_header
   -bool param_output_dual
+  -bool param_one_iso_class
+  -bool param_group
+  -bool param_nontriv_group
   -int param_res
   -int param_mod
+  -int param_split_level
   -string param_out_file
   -PrefilterFn prefilter
   -FilterFn filter
   -OutprocFn outproc
+  +setOutputFile(string) void
   +setVertices(int) void
+  +setDualCountMode(bool) void
   +setClass(GraphClass) void
   +setDiskSize(int) void
   +setMinDegree(int) void
   +setConnectivity(int,bool) void
   +setMaxFaceSize(int) void
   +setFormat(OutputFormat) void
-  +setOutputFile(string) void
+  +setNoOutput() void
+  +setOutputDual(bool) void
+  +setHeader(bool) void
+  +setOrientationPreserving(bool) void
+  +setFullGroup(bool) void
+  +setNonTrivialGroup(bool) void
   +setDistribution(int,int) void
+  +setSplitLevel(int) void
   +setFilter(FilterFn) void
   +setPreprune(PrefilterFn) void
   +setOutproc(OutprocFn) void
@@ -150,8 +201,8 @@ class Geng_GraphView {
 }
 
 class Plantri_GraphView {
-  -EDGE** firstedge
-  -int* degree
+  -const EDGE* const* firstedge
+  -const int* degree
   -int nv
   -int ne_oriented
   -int missing_vertex
@@ -169,8 +220,12 @@ class Output {
   +raw() FILE*
   +operator<<(const char*) Output&
   +operator<<(string) Output&
+  +operator<<(string_view) Output&
+  +operator<<(char) Output&
   +operator<<(int) Output&
   +operator<<(double) Output&
+  +operator<<(long) Output&
+  +operator<<(unsigned long) Output&
 }
 
 class C_Geng_Bridge {
@@ -207,6 +262,11 @@ Generator_Geng --|> Geng_Backend : public
 Generator_Plantri --|> Plantri_Backend : public
 Generator_Geng ..|> Generator_Backend : instance sablony
 Generator_Plantri ..|> Generator_Backend : instance sablony
+UserCode --> Generator_Geng : vytvari a nastavuje
+UserCode --> Generator_Plantri : vytvari a nastavuje
+UserCode ..> Geng_GraphView : cte v callbacku
+UserCode ..> Plantri_GraphView : cte v callbacku
+UserCode ..> Output : zapisuje v outproc
 Geng_Backend --> Geng_GraphView : GraphView
 Plantri_Backend --> Plantri_GraphView : GraphView
 Geng_Backend --> Output : OutprocFn
@@ -409,7 +469,7 @@ Vybrane metody:
 
 | Hodnota | Vyznam |
 | --- | --- |
-| `Trinagulation` | triangulace, vychozi rezim |
+| `Triangulation` | triangulace, vychozi rezim |
 | `Quadrangulation` | kvadrangulace |
 | `GeneralQuad` | obecne kvadrangulace |
 | `SimplePlane` | jednoduche rovinné grafy |
@@ -467,6 +527,8 @@ using traversal_category = ...;
 ```
 
 Algoritmy Boost.Graph pak volaji standardni free funkce jako `vertices(g)`, `out_edges(v, g)` , `source(e, g)`. Tyto funkce jsou definovane ve stejnem namespace jako konkretni `GraphView`.
+
+U `plantri::GraphView` je `edge_parallel_category` nastavena na `boost::allow_parallel_edge_tag`, protoze nektere rezimy `plantri` mohou pracovat i s grafy s paralelnimi hranami. U `geng::GraphView` pouzivame `boost::disallow_parallel_edge_tag`, protoze `geng` generuje jednoduche grafy.
 
 U backendu `geng` jsou hrany cteny z bitove reprezentace grafu z knihovny nauty. Napriklad `out_degree` pouziva interni radek matice sousednosti a pocita nastavene bity pomoci `POPCOUNT`, aby nebylo nutne prochazet vsechny iteratory hran.
 

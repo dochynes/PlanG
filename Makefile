@@ -46,7 +46,7 @@ plantri_lib:
 demo: $(DEMO_EXE)
 
 $(DEMO_EXE): $(DEMO_SRC) $(LIB_DIR)/$(GENG_LIB_NAME) $(LIB_DIR)/$(PLANTRI_LIB_NAME)
-	@echo "--- Building Demo App ---"
+	@echo "--- Building App ---"
 	$(CXX) $(APP_FLAGS) $(INC_FLAGS) \
 	$< -L$(LIB_DIR) -lgeng_wrapper -lplantri_wrapper -o $@
 

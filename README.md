@@ -16,13 +16,14 @@ Součástí projektu jsou také ukázkové programy ve složce `examples/`, kter
 
 ### Hardware
 
-Pro sestavení projektu a spouštění běžných experimentálních příkladů stačí běžný 64bitový počítač, alespoň 4 GB RAM, alespoň 500 MB volného místa na disku:
-
+PlanG je nadstavba nad generátory `geng` a `plantri`, takže náročnost závisí
+hlavně na zadaném generování. Pro sestavení a ukázkové programy stačí běžný
+64bitový počítač s několika GB RAM a alespoň 500 MB volného místa na disku.
 
 ### Software
 
 Projekt lze sestavit na Linuxu a macOS. Na Windows je doporučené použít WSL.
-Na Linuxu se ve výchozím nastavení používá optimalizované sestavení přes GCC. Na macOS instalační skript automaticky použije `clang` a `clang++`, aby bylo sestavení kompatibilní se standardními vývojářskými nástroji od Applu.
+Na Linuxu se ve výchozím nastavení používá optimalizované sestavení přes GCC. Na macOS instalační skript automaticky použije `clang` a `clang++`, aby bylo sestavení kompatibilní se standardními vývojářskými nástroji od Applu (na Linuxu se projekt staví agresivněji pro výkon, na macOS opatrněji kvůli kompatibilitě; uživatel může kompilační volby upravit podle vlastních potřeb).
 
 Je potřeba:
 

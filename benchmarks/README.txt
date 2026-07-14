@@ -26,5 +26,13 @@ flagy:
     -O3 -flto -march=native -DNDEBUG
 
 Referencni spusteni puvodnich generatoru byla provedena mimo tento Makefile se
-stejnymi optimalizacnimi flagy; u geng bylo pouzito nastaveni MAXN=WORDSIZE a u
-testu maximalniho stupne byl puvodni plantri sestaven s pluginem maxdeg.c.
+stejnymi optimalizacnimi flagy. Backend geng v PlanG se sestavuje s nastavenim
+WORDSIZE=64 a MAXN=WORDSIZE. Hodnota WORDSIZE urcuje velikost bitoveho slova,
+ktere nauty pouziva pro reprezentaci mnozin vrcholu a radku matice sousednosti.
+Varianta WORDSIZE=64 odpovida beznym 64bitovym pocitacum a dovoluje v teto
+jednoslovove reprezentaci pracovat s grafy az do 64 vrcholu.
+
+Pri porovnani s puvodnim geng je proto potreba pouzit stejnou konfiguraci,
+napriklad nativni program gengL.
+
+U testu maximalniho stupne byl puvodni plantri sestaven s pluginem maxdeg.c.
