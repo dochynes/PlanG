@@ -5,8 +5,10 @@
 #include <vector>
 
 
-// T = geng::Backend nebo plantri::Backend
-
+// Spolecny wrapper nad backendy geng::Backend a plantri::Backend.
+// Backend uklada konfiguraci generatoru, Generator ji pri run() prevede na
+// argv, prenese runtime stav (callbacky apod.) a spusti prislusny C generator.
+// Backend musi poskytovat prepare_args(), apply_runtime_state() a run(argc,argv).
 template<typename Backend>
 struct Generator : public Backend
 {

@@ -5,6 +5,8 @@
 #include <string_view>
 
 
+// Jednoduchy obal nad FILE* pouzivany v outproc callbacku.
+// Umoznuje zapisovat text a cisla pomoci operatoru <<
 class Output
 {
     FILE* f_;
@@ -12,6 +14,7 @@ class Output
     public:
         explicit Output(FILE* f) : f_(f) {}
 
+        // Pristup k puvodnimu FILE* pro backendove zapisovaci funkce.
         FILE* raw() const 
         { 
             return f_; 
