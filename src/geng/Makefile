@@ -86,7 +86,7 @@ $(BUILD_DIR)/nauty/%.o: $(NAUTY_DIR)/%.c $(NAUTY_CONFIG)
 	 -c $< -o $@
 
 $(NAUTY_GENERATED_HEADERS):
-	cd $(NAUTY_DIR) && ./configure
+	cd $(NAUTY_DIR) && if [ -f ./configure ]; then $(SHELL) ./configure; else $(SHELL) ./configure.txt; fi
 
 clean:
 	$(RM) -r $(BUILD_DIR) $(TARGET_LIB)

@@ -44,6 +44,10 @@ Na Debianu, Ubuntu nebo WSL se skript pokusí potřebné build nástroje doinsta
 
 Skript zkontroluje základní nástroje, v případě potřeby doinstaluje Boost a spustí sestavení projektu. Na Debianu, Ubuntu nebo WSL používá `apt-get`, na macOS používá Homebrew.
 
+Potřebný soubor z balíku nauty, který při sestavení vytváří konfigurační
+hlavičky, je kvůli omezení odevzdávacího systému přejmenován na
+`configure.txt`. Při ručním použití je potřeba odstranit příponu `.txt`.
+
 Po úspěšném dokončení vznikne spustitelný soubor:
 
 ```bash
